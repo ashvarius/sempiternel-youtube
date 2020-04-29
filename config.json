@@ -1,0 +1,35 @@
+{
+	"presence": {
+		"status": "idle",
+		"activity": {
+			"name": "the passion",
+			"type": "WATCHING"
+		}
+	},
+	"token": "token",
+	"dictionary": "en_US",
+	"prefix": "$",
+	"embed": {
+		"color": "adc5da",
+		"footer": "Made by 𝓐𝓵𝓮𝔁𝓪𝓷𝓭𝓻𝓮"
+	},
+	"permissions": [
+		"SEND_MESSAGES",
+		"EMBED_LINKS",
+		"READ_MESSAGE_HISTORY",
+		"MANAGE_MESSAGES",
+		"MANAGE_ROLES",
+		"MANAGE_CHANNELS",
+		"MUTE_MEMBERS",
+		"MOVE_MEMBERS",
+		"ADD_REACTIONS"
+	],
+	"owners": [
+		"360795716500848660"
+	],
+	"debug": false,
+	"level": {
+		"multiply": 450,
+		"minimum": 400
+	}
+}
