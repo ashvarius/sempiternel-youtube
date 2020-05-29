@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 08:11:44 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/25 05:01:00 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:39:05 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,9 @@ module.exports = {
 	aliases: ['guild'],
 	description: 'Display information on a server.',
 	privateMessage: false,
-	message: async message => {
+	message: async (message, object) => {
 		const guilds = [];
-		for (const arg of message.args) {
+		for (const arg of object.args) {
 			const guild = message.client.guilds.cache.get(arg);
 			if (guild)
 				guilds.push(guild);
@@ -72,13 +72,13 @@ module.exports = {
 			embed.addField('Emojis', Array.from(guild.emojis.cache.values()).length);
 			embed.addField('Channels', Array.from(guild.channels.cache.keys()).length);
 			embed.addField('Roles', Array.from(guild.roles.cache.values()).length);
-			utils.sendEmbed(message.channel, message.dictionary, embed);
+			utils.sendEmbed(message.channel, object.dictionary, embed);
 			const banner = guild.bannerURL({
 				dynamic: true,
 				size: 4096
 			});
 			if (banner)
-				utils.sendEmbed(message.channel, message.dictionary, new MessageEmbed()
+				utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed()
 					.setTitle('BannerURL')
 					.setImage(banner));
 		}

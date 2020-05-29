@@ -6,569 +6,440 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/28 22:32:45 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/29 14:43:25 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
+const { MessageEmbed, GuildAuditLogs } = require('discord.js');
 const utils = require('../../utils.js');
-const events = ['join', 'leave'];
-const args = ['<user>', '<displayname>', '<tag>'];
 
-const getLogChannel = (guild) => {
-    const path = `guilds/${guild.id}.json`;
-    const object = utils.readFile(path);
-    if (!(object.events && object.events.log))
-        return;
-    const log = guild.channels.cache.get(object.events.log);
-    return log;
+const events = {
+	guildmemberadd: ['displayName', 'tag', 'member', 'inviter', 'uses', 'member_count'],
+	guildmemberremove: ['displayName', 'tag', 'member', 'member_count'],
+	messageupdate: ['displayName', 'tag', 'member', 'oldcontent', 'newcontent', 'link'],
+	messagedelete: ['displayName', 'tag', 'member', 'content', 'deleter'],
+	voiceadd: ['displayName', 'tag', 'member', 'channel'],
+	voiceremove: ['displayName', 'tag', 'member', 'channel'],
+	voiceupdate: ['displayName', 'tag', 'member', 'oldchannel', 'newchannel']
 };
-const getDictionary = (guild) => {
-    const path = `guilds/${guild.id}.json`;
-    const object = utils.readFile(path);
-    if (!object.dictionary)
-        object.dictionary = guild.client._config.dictionary;
-    const dictionary = guild.client._dictionaries[object.dictionary];
-    if (object.customDictionary) {
-        for (const key of Object.keys(object.customDictionary))
-            dictionary[key] = object.customDictionary[key];
-        object.dictionary += ' (custom)';
-    }
-    return dictionary;
+
+const codes = {};
+let logDeletedCount = {};
+
+const getObject = (guild) => {
+	const object = utils.readFile(`guilds/${guild.id}.json`);
+	if (!object.dictionary)
+		object.dictionary = {};
+	if (!object.dictionary.language)
+		object.dictionary.language = guild.client._config.dictionary;
+	if (!object.prefix)
+		object.prefix = guild.client._config.prefix;
+	const dictionary = JSON.parse(JSON.stringify(guild.client._dictionaries[object.dictionary.language]));
+	if (object.dictionary.custom) {
+		for (const key of Object.keys(object.dictionary.custom))
+			dictionary[key] = object.dictionary.custom[key];
+		object.dictionary.language += ' *(custom)*';
+	}
+	Object.assign(object, {
+		language: object.dictionary.language,
+		dictionary
+	});
+	return object;
 };
 
 module.exports = {
-    name: 'event',
-    aliases: [],
-    description: 'Manage events on the server.',
-    privateMessage: false,
-    message: message => {
-        if (!message.member.hasPermission('MANAGE_MESSAGES')) {
-            utils.sendMessage(message.channel, message.dictionary, 'error_no_permission', {
-                '<permission>': 'MANAGE_MESSAGES'
-            });
-            return;
-        }
-        if (!message.args.length) {
-            utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-                '<format>': `${message.prefix}event <option>`
-            });
-            return;
-        }
-        const option = message.args[0].toLowerCase();
-        if (!['set', 'reset', 'log'].includes(option)) {
-            let options = '';
-            for (const option of ['set', 'reset', 'log']) {
-                if (options.length)
-                    options += ', ';
-                options += `\`${option}\``;
-            }
-            utils.sendMessage(message.channel, message.dictionary, 'error_invalid_option', {
-                '<option>': message.args[0],
-                '<options>': options
-            });
-            return;
-        }
-        const path = `guilds/${message.guild.id}.json`;
-        const object = utils.readFile(path);
-        if (option == 'set') {
-            if (message.args.length < 2) {
-                utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-                    '<format>': `${message.prefix}event set <event> <type>`
-                });
-                return;
-            }
-            const event = message.args[1].toLowerCase();
-            if (!events.includes(event)) {
-                let options = '';
-                for (const option of events) {
-                    if (options.length)
-                        options += ', ';
-                    options += `\`${option}\``;
-                }
-                utils.sendMessage(message.channel, message.dictionary, 'error_invalid_option', {
-                    '<option>': message.args[1],
-                    '<options>': options
-                });
-                return;
-            }
-            if (message.args.length < 3) {
-                utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-                    '<format>': `${message.prefix}event set ${event} <type>`
-                });
-                return;
-            }
-            const type = message.args[2].toLowerCase();
-            if (!['role', 'message'].includes(type)) {
-                let options = '';
-                for (const option of ['role', 'message']) {
-                    if (options.length)
-                        options += ', ';
-                    options += `\`${option}\``;
-                }
-                utils.sendMessage(message.channel, message.dictionary, 'error_invalid_option', {
-                    '<option>': message.args[2],
-                    '<options>': options
-                }); getLogChannel
-                return;
-            }
-            let value;
-            if (type == 'role') {
-                if (message.args.length < 4) {
-                    utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-                        '<format>': `${message.prefix}event set ${event} ${type} <role>`
-                    });
-                    return;
-                }
-                const roles = Array.from(message.mentions.roles.values());
-                if (roles.length != 1) {
-                    utils.sendMessage(message.channel, message.dictionary, 'error_event_role_not_one');
-                    return;
-                }
-                value = roles[0];
-            } else {
-                if (message.args.length < 4) {
-                    utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-                        '<format>': `${message.prefix}event set ${event} ${type} <message...>`
-                    });
-                    return;
-                }
-                let inputMessage = '';
-                for (let index = 3; index < message.args.length; index++) {
-                    if (inputMessage.length)
-                        inputMessage += ' ';
-                    inputMessage += message.args[index];
-                }
-                for (let arg of args)
-                    if (inputMessage.includes(arg)) {
-                        value = {
-                            channel: message.channel.id,
-                            message: inputMessage
-                        };
-                        break;
-                    }
-                if (!value) {
-                    utils.sendMessage(message.channel, message.dictionary, 'error_event_no_custom_arg', {
-                        '<args>': `\`${args.join('\`, \`')}\``
-                    });
-                    return;
-                }
-            }
-            if (!object.events)
-                object.events = {};
-            if (!object.events[event])
-                object.events[event] = {};
-            object.events[event][type] = value.id ? value.id : value;
-            utils.savFile(path, object);
-            utils.sendMessage(message.channel, message.dictionary, 'event_set', {
-                '<event>': event,
-                '<type>': type,
-                '<value>': value.message ? value.message : value
-            });
-        } else if (option == 'reset') {
-            if (!object.events) {
-                utils.sendMessage(message.channel, message.dictionary, 'error_event_already_reset');
-                return;
-            }
-            delete object.events;
-            utils.savFile(path, object);
-            utils.sendMessage(message.channel, message.dictionary, 'event_reset');
-        } else if (option == 'log') {
-            if (!object.events)
-                object.events = {};
-            object.events.log = message.channel.id;
-            utils.savFile(path, object);
-            utils.sendMessage(message.channel, message.dictionary, 'event_log', {
-                '<channel>': message.channel
-            });
-        }
-    },
-    channelCreate: channel => {
-        if (channel.type == 'dm')
-            return;
-        const log = getLogChannel(channel.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(channel.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_channelCreate', {
-            '<name>': channel.name,
-            '<type>': channel.type
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    channelDelete: channel => {
-        if (channel.type == 'dm')
-            return;
-        const log = getLogChannel(channel.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(channel.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_channelDelete', {
-            '<name>': channel.name,
-            '<type>': channel.type
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    channelPinsUpdate: channel => {
-        if (channel.type == 'dm')
-            return;
-        const log = getLogChannel(channel.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(channel.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_channelPinsUpdate', {
-            '<name>': channel.name,
-            '<type>': channel.type
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    channelUpdate: (oldChannel, newChannel) => {
-        if (newChannel.type == 'dm')
-            return;
-        const log = getLogChannel(newChannel.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newChannel.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_channelUpdate', {
-            '<name>': newChannel.name,
-            '<type>': newChannel.type
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    emojiCreate: (emoji) => {
-        const log = getLogChannel(emoji.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(emoji.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_emojiCreate', {
-            '<name>': emoji.name
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    emojiDelete: (emoji) => {
-        const log = getLogChannel(emoji.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(emoji.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_emojiDelete', {
-            '<name>': emoji.name
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    emojiUpdate: (oldEmoji, newEmoji) => {
-        const log = getLogChannel(newEmoji.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newEmoji.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_emojiUpdate', {
-            '<oldName>': oldEmoji.name,
-            '<newName>': newEmoji.name
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildBanAdd: (guild, user) => {
-        const log = getLogChannel(guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_guildBanAdd', {
-            '<tag>': user.tag
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildBanRemove: (guild, user) => {
-        const log = getLogChannel(guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_guildBanRemove', {
-            '<tag>': user.tag
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildIntegrationsUpdate: guild => {
-        const log = getLogChannel(guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_guildIntegrationsUpdate');
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildMemberAdd: member => {
-        const path = `guilds/${member.guild.id}.json`;
-        const object = utils.readFile(path);
-        const dictionary = getDictionary(member.guild);
-        if (object.events && object.events.join) {
-            if (object.events.join.role) {
-                const role = member.guild.roles.cache.get(object.events.join.role);
-                if (role)
-                    member.roles.add(role);
-            }
-            if (object.events.join.message) {
-                const message = object.events.join.message;
-                const channel = member.guild.channels.cache.get(message.channel);
-                if (channel) {
-                    let description = message.message;
-                    const editObject = {
-                        '<user>': member.user,
-                        '<displayname>': member.displayName,
-                        '<tag>': member.user.tag,
-                    };
-                    for (const objectKey of Object.keys(editObject))
-                        description = `${description}`.replace(new RegExp(objectKey, 'g'), editObject[objectKey]);
-                    utils.sendEmbed(channel, dictionary, new MessageEmbed().setDescription(description));
-                }
-            }
-        }
-        const log = getLogChannel(member.guild);
-        if (!log)
-            return;
-        const embed = utils.getEmbed(dictionary, 'event_log_guildMemberAdd');
-        embed.setAuthor(member.user.tag, member.user.displayAvatarURL({
-            dynamic: true,
-            size: 4096
-        }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildMemberRemove: member => {
-        const path = `guilds/${member.guild.id}.json`;
-        const object = utils.readFile(path);
-        const dictionary = getDictionary(member.guild);
-        if (object.events && object.events.leave && object.events.leave.message) {
-            const message = object.events.leave.message;
-            const channel = member.guild.channels.cache.get(message.channel);
-            if (channel) {
-                let description = message.message;
-                const editObject = {
-                    '<user>': member.user,
-                    '<displayname>': member.displayName,
-                    '<tag>': member.user.tag,
-                };
-                for (const objectKey of Object.keys(editObject))
-                    description = `${description}`.replace(new RegExp(objectKey, 'g'), editObject[objectKey]);
-                utils.sendEmbed(channel, dictionary, new MessageEmbed().setDescription(description));
-            }
-        }
-        const log = getLogChannel(member.guild);
-        if (!log)
-            return;
-        const embed = utils.getEmbed(dictionary, 'event_log_guildMemberRemove');
-        embed.setAuthor(member.user.tag, member.user.displayAvatarURL({
-            dynamic: true,
-            size: 4096
-        }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildMemberUpdate: (oldMember, newMember) => {
-        const log = getLogChannel(newMember.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newMember.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_guildMemberUpdate');
-        embed.setAuthor(newMember.user.tag, newMember.user.displayAvatarURL({
-            dynamic: true,
-            size: 4096
-        }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    guildUpdate: (oldGuild, newGuild) => {
-        const log = getLogChannel(newGuild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newGuild);
-        const embed = utils.getEmbed(dictionary, 'event_log_guildUpdate');
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    inviteCreate: invite => {
-        const log = getLogChannel(invite.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(invite.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_inviteCreate', {
-            '<url>': invite.url,
-            '<maxAge>': invite.maxAge,
-            '<maxUses>': invite.maxUses
-        });
-        embed.setAuthor(invite.inviter.tag, invite.inviter.displayAvatarURL({
-            dynamic: true,
-            size: 4096
-        }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    inviteDelete: invite => {
-        const log = getLogChannel(invite.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(invite.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_inviteDelete', {
-            '<code>': invite.code
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    messageDelete: message => {
-        if (message.channel.type == 'dm'
-            || message.type != 'DEFAULT')
-            return;
-        const log = getLogChannel(message.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(message.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_messageDelete', {
-            '<content>': message.embeds.length ? message.embeds[0].description : message.content,
-            '<channel>': message.channel
-        });
-        if (message.author)
-            embed.setAuthor(message.author.tag, message.author.displayAvatarURL({
-                dynamic: true,
-                size: 4096
-            }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    messageDeleteBulk: messages => {
-        messages = Array.from(messages.values());
-        const firstMessage = messages[0];
-        if (firstMessage.type != 'DEFAULT')
-            return;
-        const log = getLogChannel(firstMessage.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(firstMessage.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_messageDeleteBulk', {
-            '<length>': messages.length,
-            '<channel>': firstMessage.channel
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    messageReactionRemoveAll: message => {
-        if (message.type != 'DEFAULT')
-            return;
-        const log = getLogChannel(message.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(message.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_messageReactionRemoveAll', {
-            '<content>': message.embeds.length ? message.embeds[0].description : message.content,
-            '<channel>': message.channel,
-            '<url>': message.url
-        });
-        if (message.author)
-            embed.setAuthor(message.author.tag, message.author.displayAvatarURL({
-                dynamic: true,
-                size: 4096
-            }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    messageUpdate: (oldMessage, newMessage) => {
-        if (newMessage.author.bot
-            || newMessage.type != 'DEFAULT')
-            return;
-        const log = getLogChannel(newMessage.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newMessage.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_messageUpdate', {
-            '<oldContent>': oldMessage.content,
-            '<newContent>': newMessage.content,
-            '<channel>': newMessage.channel,
-            '<url>': newMessage.url
-        });
-        if (newMessage.author)
-            embed.setAuthor(newMessage.author.tag, newMessage.author.displayAvatarURL({
-                dynamic: true,
-                size: 4096
-            }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    presenceUpdate: (oldPresence, newPresence) => {
-        const log = getLogChannel(newPresence.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newPresence.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_presenceUpdate');
-        embed.setAuthor(newPresence.user.tag, newPresence.user.displayAvatarURL({
-            dynamic: true,
-            size: 4096
-        }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    roleCreate: role => {
-        const log = getLogChannel(role.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(role.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_roleCreate', {
-            '<role>': role
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    roleDelete: role => {
-        const log = getLogChannel(role.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(role.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_roleDelete', {
-            '<name>': role.name
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    roleUpdate: role => {
-        const log = getLogChannel(role.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(role.guild);
-        const embed = utils.getEmbed(dictionary, 'event_log_roleUpdate', {
-            '<role>': role
-        });
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    },
-    voiceStateUpdate: (oldState, newState) => {
-        const log = getLogChannel(newState.guild);
-        if (!log)
-            return;
-        const dictionary = getDictionary(newState.guild);
-        let embed;
-        if (!newState.channel)
-            embed = utils.getEmbed(dictionary, 'event_log_voiceRemove', {
-                '<channel>': oldState.channel
-            });
-        else if (!oldState.channel)
-            embed = utils.getEmbed(dictionary, 'event_log_voiceAdd', {
-                '<channel>': newState.channel
-            });
-        else
-            embed = utils.getEmbed(dictionary, 'event_log_voiceUpdate', {
-                '<oldChannel>': oldState.channel,
-                '<newChannel>': newState.channel
-            });
-        embed.setAuthor(newState.member.user.tag, newState.member.user.displayAvatarURL({
-            dynamic: true,
-            size: 4096
-        }));
-        embed.setTimestamp();
-        utils.sendEmbed(log, dictionary, embed);
-    }
+	name: 'event',
+	aliases: [],
+	description: 'Manage events on the server.',
+	privateMessage: false,
+	message: (message, object) => {
+		if (!object.args.length) {
+			utils.sendMessage(message.channel, object.dictionary, 'event_help', {
+				'<prefix>': object.prefix
+			});
+			return;
+		}
+		const option = object.args[0].toLowerCase();
+		if (option == 'help') {
+			utils.sendMessage(message.channel, object.dictionary, 'event_help', {
+				'<prefix>': object.prefix
+			});
+			return;
+		} else if (!['add', 'remove', 'list', 'reset'].includes(option)) {
+			let options = '';
+			for (const option of ['help', 'add', 'remove', 'list', 'reset']) {
+				if (options.length)
+					options += ', ';
+				options += `\`${option}\``;
+			}
+			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
+				'<option>': object.args[0],
+				'<options>': options
+			});
+			return;
+		}
+		if (!message.member.hasPermission('ADMINISTRATOR')) {
+			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
+				'<permission>': 'ADMINISTRATOR'
+			});
+			return;
+		}
+		const path = `guilds/${message.guild.id}.json`;
+		const loadedObject = utils.readFile(path);
+		if (option == 'add') {
+			if (object.args.length < 2) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
+					'<format>': `${object.prefix}event add <event> [channelId] [message...]`
+				});
+				return;
+			}
+			const event = object.args[1].toLowerCase();
+			if (!Object.keys(events).includes(event)) {
+				let options = '';
+				for (const option of Object.keys(events)) {
+					if (options.length)
+						options += ', ';
+					options += `\`${option}\``;
+				}
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
+					'<option>': object.args[1],
+					'<options>': options
+				});
+				return;
+			}
+			let channel;
+			if (object.args.length == 2)
+				channel = message.channel;
+			else {
+				channel = message.guild.channels.cache.get(object.args[2]);
+				if (!channel) {
+					utils.sendMessage(message.channel, object.dictionary, 'error_event_channel_not_found', {
+						'<id>': object.args[2]
+					});
+					return;
+				}
+			}
+			let eventMessage;
+			if (object.args.length < 4)
+				eventMessage = utils.getMessage(object.dictionary, `event_message_${event}`);
+			else {
+				eventMessage = '';
+				for (let index = 3; index < object.args.length; index++) {
+					if (eventMessage.length)
+						eventMessage += ' ';
+					eventMessage += object.args[index];
+				}
+				let check = false;
+				for (const arg of events[event])
+					if (eventMessage.includes(`<${arg}>`)) {
+						check = true;
+						break;
+					}
+				if (!check) {
+					let args = '';
+					for (const arg of events[event]) {
+						if (args.length)
+							args += ', ';
+						args += `\`<${arg}>\``;
+					}
+					utils.sendMessage(message.channel, object.dictionary, 'error_event_no_args', {
+						'<message>': eventMessage,
+						'<args>': args
+					});
+					return;
+				}
+			}
+			if (!loadedObject.events)
+				loadedObject.events = {};
+			loadedObject.events[event] = {
+				channel: channel.id,
+				message: eventMessage
+			};
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'event_add', {
+				'<event>': event,
+				'<channel>': channel
+			});
+		} else if (option == 'remove') {
+			if (object.args.length < 2) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
+					'<format>': `${object.prefix}event remove <event>`
+				});
+				return;
+			}
+			const event = object.args[1].toLowerCase();
+			if (!Object.keys(events).includes(event)) {
+				let options = '';
+				for (const option of Object.keys(events)) {
+					if (options.length)
+						options += ', ';
+					options += `\`${option}\``;
+				}
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
+					'<option>': object.args[1],
+					'<options>': options
+				});
+				return;
+			}
+			if (!loadedObject.events[event]) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_event_event_not_found', {
+					'<event>': event
+				});
+				return;
+			}
+			delete loadedObject.events[event];
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'event_remove', {
+				'<event>': event
+			});
+		} else if (option == 'list') {
+			if (!(object.events && Object.keys(object.events).length)) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_event_no_data');
+				return;
+			}
+			const embed = new MessageEmbed();
+			embed.setTitle('Event list');
+			const eventObject = {};
+			for (const event of Object.keys(object.events)) {
+				if (!eventObject[object.events[event].channel])
+					eventObject[object.events[event].channel] = {};
+				eventObject[object.events[event].channel][event] = object.events[event].message;
+			}
+			for (const id of Object.keys(eventObject)) {
+				const channel = message.guild.channels.cache.get(id);
+				if (!channel)
+					continue;
+				let events = '';
+				for (const event of Object.keys(eventObject[id])) {
+					if (events.length)
+						events += '\n';
+					events += `**${event}**: \`${eventObject[id][event]}\``;
+				}
+				embed.addField(channel.name, events);
+			}
+			utils.sendEmbed(message.channel, object.dictionary, embed);
+		} else if (option == 'reset') {
+			if (!loadedObject.events) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_event_no_data');
+				return;
+			}
+			delete loadedObject.events;
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'event_reset');
+		}
+	},
+	ready: async client => {
+		for (const guild of client.guilds.cache.values()) {
+			if (guild.me.permissions.has('MANAGE_GUILD')) {
+				codes[guild.id] = {};
+				for (const invite of (await guild.fetchInvites()).values())
+					codes[invite.guild.id][invite.code] = {
+						inviter: invite.inviter.id,
+						uses: invite.uses
+					};
+			}
+			if (!guild.me.permissions.has('VIEW_AUDIT_LOG'))
+				continue;
+			const timestamp = new Date().getTime() - 20 * 60 * 1000;
+			for (const entrie of (await guild.fetchAuditLogs({
+				limit: 5,
+				type: GuildAuditLogs.Actions.MESSAGE_DELETE
+			})).entries.values())
+				if (entrie.createdTimestamp > timestamp)
+					logDeletedCount[entrie.executor.id] = entrie.extra.count;
+		}
+	},
+	inviteCreate: invite => {
+		if (!codes[invite.guild.id])
+			codes[invite.guild.id] = {};
+		codes[invite.guild.id][invite.code] = {
+			inviter: invite.inviter.id,
+			uses: invite.uses
+		};
+	},
+	inviteDelete: invite => {
+		if (!codes[invite.guild.id])
+			codes[invite.guild.id] = {};
+		delete codes[invite.guild.id][invite.code];
+	},
+	guildMemberAdd: async member => {
+		object = getObject(member.guild);
+		if (!(object.events && object.events.guildmemberadd))
+			return;
+		let invite = {};
+		if (codes[member.guild.id] && member.guild.me.permissions.has('MANAGE_GUILD')) {
+			const invites = await member.guild.fetchInvites();
+			for (const value of invites.values())
+				if (codes[value.guild.id][value.code].uses < value.uses) {
+					codes[value.guild.id][value.code].uses = value.uses;
+					invite = codes[value.guild.id][value.code];
+					break;
+				}
+		}
+		const inviter = invite.inviter ? member.guild.members.cache.get(invite.inviter) : invite.inviter;
+		const channel = member.guild.channels.cache.get(object.events.guildmemberadd.channel);
+		if (!channel)
+			return;
+		const embed = new MessageEmbed();
+		embed.setColor('0F9D58');
+		let description = object.events.guildmemberadd.message;
+		const settings = {
+			'<displayName>': member.displayName,
+			'<tag>': member.user.tag,
+			'<member>': member,
+			'<inviter>': inviter ? inviter : utils.getMessage(object.dictionary, 'event_message_unknown'),
+			'<uses>': invite.uses ? invite.uses : utils.getMessage(object.dictionary, 'event_message_unknown'),
+			'<member_count>': member.guild.memberCount
+		};
+		for (const key of Object.keys(settings))
+			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+		embed.setDescription(description);
+		utils.sendEmbed(channel, object.dictionary, embed);
+	},
+	guildMemberRemove: member => {
+		object = getObject(member.guild);
+		if (!(object.events && object.events.guildmemberremove))
+			return;
+		const channel = member.guild.channels.cache.get(object.events.guildmemberremove.channel);
+		if (!channel)
+			return;
+		const embed = new MessageEmbed();
+		embed.setColor('DB4437');
+		let description = object.events.guildmemberremove.message;
+		const settings = {
+			'<displayName>': member.displayName,
+			'<tag>': member.user.tag,
+			'<member>': member,
+			'<member_count>': member.guild.memberCount
+		};
+		for (const key of Object.keys(settings))
+			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+		embed.setDescription(description);
+		utils.sendEmbed(channel, object.dictionary, embed);
+	},
+	messageUpdate: (oldMessage, newMessage) => {
+		if (newMessage.author.bot
+			|| oldMessage.content == newMessage.content
+			|| newMessage.channel.type == 'dm')
+			return;
+		object = getObject(newMessage.guild);
+		if (!(object.events && object.events.messageupdate))
+			return;
+		const channel = newMessage.guild.channels.cache.get(object.events.messageupdate.channel);
+		if (!channel)
+			return;
+		const embed = new MessageEmbed();
+		embed.setColor('F4B400');
+		let description = object.events.messageupdate.message;
+		const settings = {
+			'<displayName>': newMessage.member.displayName,
+			'<tag>': newMessage.author.tag,
+			'<member>': newMessage.member,
+			'<oldcontent>': oldMessage.content,
+			'<newcontent>': newMessage.content,
+			'<link>': newMessage.url
+		};
+		for (const key of Object.keys(settings))
+			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+		embed.setDescription(description);
+		utils.sendEmbed(channel, object.dictionary, embed);
+	},
+	messageDelete: async message => {
+		if (message.channel.type == 'dm')
+			return;
+		let deleter;
+		const timestamp = new Date().getTime() - 1000;
+		if (message.guild.me.permissions.has('VIEW_AUDIT_LOG')) {
+			const entries = (await message.guild.fetchAuditLogs({
+				limit: 5,
+				type: GuildAuditLogs.Actions.MESSAGE_DELETE
+			})).entries;
+			let entrie = entries.first();
+			if (entrie.target.id == message.author.id
+				&& entrie.createdTimestamp > timestamp)
+				deleter = entrie.executor.id;
+			else
+				for (entrie of entries.values())
+					if (entrie.target.id == message.author.id
+						&& logDeletedCount[entrie.executor.id] < entrie.extra.count) {
+						deleter = entrie.executor.id;
+						break;
+					}
+			if (deleter)
+				logDeletedCount[entrie.executor.id] = entrie.extra.count;
+			else
+				deleter = message.author.id;
+			deleter = message.guild.members.cache.get(deleter);
+		}
+		object = getObject(message.guild);
+		if (!(object.events && object.events.messagedelete))
+			return;
+		const channel = message.guild.channels.cache.get(object.events.messagedelete.channel);
+		if (!channel)
+			return;
+		const embed = new MessageEmbed();
+		embed.setColor('DB4437');
+		let description = object.events.messagedelete.message;
+		const settings = {
+			'<displayName>': message.member.displayName,
+			'<tag>': message.author.tag,
+			'<member>': message.member,
+			'<content>': message.content.length ? message.content : (message.embeds.length ? message.embeds[0].description : utils.getMessage(object.dictionary, 'event_message_unknown')),
+			'<deleter>': deleter ? deleter : utils.getMessage(object.dictionary, 'event_message_unknown')
+		};
+		for (const key of Object.keys(settings))
+			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+		embed.setDescription(description);
+		utils.sendEmbed(channel, object.dictionary, embed);
+	},
+	voiceStateUpdate: (oldState, newState) => {
+		if (oldState.channelID == newState.channelID)
+			return;
+		object = getObject(newState.guild);
+		if (!object.events)
+			return;
+		let channel;
+		let description;
+		const settings = {
+			'<displayName>': newState.member.displayName,
+			'<tag>': newState.member.user.tag,
+			'<member>': newState.member
+		};
+		const embed = new MessageEmbed();
+		if (!newState.channelID) {
+			if (!object.events.voiceremove)
+				return;
+			channel = newState.guild.channels.cache.get(object.events.voiceremove.channel);
+			description = object.events.voiceremove.message;
+			Object.assign(settings, {
+				'<channel>': oldState.channel
+			});
+			embed.setColor('DB4437');
+		} else if (!oldState.channelID) {
+			if (!object.events.voiceadd)
+				return;
+			channel = newState.guild.channels.cache.get(object.events.voiceadd.channel);
+			description = object.events.voiceadd.message;
+			Object.assign(settings, {
+				'<channel>': newState.channel
+			});
+			embed.setColor('0F9D58');
+		} else {
+			if (!object.events.voiceupdate)
+				return;
+			channel = newState.guild.channels.cache.get(object.events.voiceupdate.channel);
+			description = object.events.voiceupdate.message;
+			Object.assign(settings, {
+				'<oldchannel>': oldState.channel,
+				'<newchannel>': newState.channel
+			});
+			embed.setColor('F4B400');
+		}
+		if (!channel)
+			return;
+		for (const key of Object.keys(settings))
+			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+		embed.setDescription(description);
+		utils.sendEmbed(channel, object.dictionary, embed);
+	}
 };

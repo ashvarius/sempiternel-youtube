@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   rate.js                                            :+:      :+:    :+:   */
+/*   choose.js                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:38:24 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:38:11 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,23 +14,22 @@ const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
-	name: 'rate',
+	name: 'choose',
 	aliases: [],
-	description: 'Rate a question.',
+	description: 'Choose between a few arguments.',
+	privateMessage: true,
 	message: (message, object) => {
 		if (!object.args.length) {
-			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}rate <question...>`
+			utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
+				'<format>': `${message.prefix}chose <question...>`
 			});
 			return;
 		}
-		let question = '';
-		for (const word of object.args) {
-			if (question.length)
-				question += ' ';
-			question += word;
+		const args = object.args.join(' ').split(',').map(item => item.trim());
+		if (args.length < 2) {
+			utils.sendMessage(message.channel, message.dictionary, 'error_chose_less');
+			return;
 		}
-		const score = utils.getUserScore(message.author) % 100 + utils.getStringScore(question);
-		utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed().setDescription(`${score % 10}/10`));
+		utils.sendEmbed(message.channel, message.dictionary, new MessageEmbed().setDescription(args[Math.floor(Math.random() * args.length)]));
 	}
 };

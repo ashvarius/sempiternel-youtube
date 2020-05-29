@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/21 05:36:52 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/28 15:43:53 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/29 16:26:59 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,84 +15,91 @@ const utils = require('../../utils.js');
 
 module.exports = {
 	name: 'authorize',
-	aliases: ['permit', 'allow'],
+	aliases: ['permit', 'allow', 'rule'],
 	description: 'Activate or deactivate one or more commands in a specific channel.',
 	privateMessage: false,
-	message: message => {
-		if (!message.args.length) {
-			utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-				'<format>': `${message.prefix}authorize <option> ...`
+	message: (message, object) => {
+		if (!object.args.length) {
+			utils.sendMessage(message.channel, object.dictionary, 'authorize_help', {
+				'<prefix>': object.prefix
 			});
 			return;
 		}
-		const option = message.args[0].toLowerCase();
-		if (!['add', 'list', 'reset'].includes(option)) {
-			let options = '';
-			for (const option of ['add', 'list', 'reset']) {
-				if (options.length)
-					options += ', ';
-				options += `\`${option}\``;
-			}
-			utils.sendMessage(message.channel, message.dictionary, 'error_invalid_option', {
-				'<option>': message.args[0],
-				'<options>': options
+		const option = object.args[0].toLowerCase();
+		if (option == 'help') {
+			utils.sendMessage(message.channel, object.dictionary, 'authorize_help', {
+				'<prefix>': object.prefix
 			});
 			return;
 		} else if (option == 'list') {
-			if (!message.authorize) {
-				utils.sendMessage(message.channel, message.dictionary, 'error_authorize_not_defined');
+			if (!object.authorize) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_authorize_not_defined');
 				return;
 			}
 			const lines = [];
-			for (const command of Object.keys(message.authorize)) {
+			for (const command of Object.keys(object.authorize)) {
 				lines.push(`\n**${command}**:`);
-				for (const channelId of Object.keys(message.authorize[command]))
+				for (const channelId of Object.keys(object.authorize[command]))
 					if (channelId != 'disable') {
 						const channel = message.guild.channels.cache.get(channelId);
 						if (channel)
-							lines.push(`${channel}: \`${message.authorize[command][channelId]}\``);
+							lines.push(`${channel}: \`${object.authorize[command][channelId]}\``);
 					}
 			}
 			const messages = utils.remakeList(lines);
 			for (const description of messages) {
 				const embed = new MessageEmbed();
 				embed.setDescription(description);
-				utils.sendEmbed(message.channel, message.dictionary, embed);
+				utils.sendEmbed(message.channel, object.dictionary, embed);
 			}
+			return;
+		} else if (!['add', 'remove', 'reset'].includes(option)) {
+			let options = '';
+			for (const option of ['help', 'add', 'remove', 'list', 'reset']) {
+				if (options.length)
+					options += ', ';
+				options += `\`${option}\``;
+			}
+			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
+				'<option>': object.args[0],
+				'<options>': options
+			});
 			return;
 		}
 		if (!message.member.hasPermission('ADMINISTRATOR')) {
-			utils.sendMessage(message.channel, message.dictionary, 'error_no_permission', {
+			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
 				'<permission>': 'ADMINISTRATOR'
 			});
 			return;
 		}
 		const path = `guilds/${message.guild.id}.json`;
-		const object = utils.readFile(path);
+		const loadedObject = utils.readFile(path);
 		if (option == 'add') {
-			if (message.args.length < 3) {
-				utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-					'<format>': `${message.prefix}authorize add <command/all> <enable/disable> [channelId]`
+			if (object.args.length < 3) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
+					'<format>': `${object.prefix}authorize add ${option} ${object.args.length == 1 ? '<command/categorie/all>' : object.args[1]} <enable/disable> [channelId]`
 				});
 				return;
 			}
-			let commands = {
+			let rules = {
 				all: 'all'
 			};
-			for (const category of Object.keys(message.client._commands))
+			for (const category of Object.keys(message.client._commands)) {
+				rules[category] = category;
 				for (const command of message.client._commands[category]) {
-					commands[command.name] = command.name;
+					rules[command.name] = command.name;
 					for (const aliase of command.aliases)
-						commands[aliase] = command.name;
+						rules[aliase] = command.name;
 				}
-			const command = commands[message.args[1].toLowerCase()];
-			if (!command) {
-				utils.sendMessage(message.channel, message.dictionary, 'error_authorize_command_not_found', {
-					'<command>': message.args[1]
+			}
+			const rule = rules[object.args[1].toLowerCase()];
+			if (!rule) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_authorize_command_cannot_set', {
+					'<command>': object.args[1]
 				});
 				return;
 			}
-			const setting = message.args[2].toLowerCase();
+			const setting = object.args[2].toLowerCase();
 			if (!['enable', 'disable'].includes(setting)) {
 				let options = '';
 				for (const option of ['enable', 'disable']) {
@@ -100,56 +107,75 @@ module.exports = {
 						options += ', ';
 					options += `\`${option}\``;
 				}
-				utils.sendMessage(message.channel, message.dictionary, 'error_invalid_option', {
-					'<option>': message.args[2],
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
+					'<option>': object.args[2],
 					'<options>': options
 				});
 				return;
 			}
 			let channel;
-			if (message.args.length < 4)
+			if (object.args.length < 4)
 				channel = message.channel;
 			else {
-				channel = message.guild.channels.cache.get(message.args[3]);
+				channel = message.guild.channels.cache.get(object.args[3]);
 				if (!channel) {
-					utils.sendMessage(message.channel, message.dictionary, 'error_authorize_channel_not_found', {
-						'<id>': message.args[3]
+					utils.sendMessage(message.channel, object.dictionary, 'error_authorize_channel_not_found', {
+						'<id>': object.args[3]
 					});
 					return;
 				}
 			}
-			if (!object.authorize)
-				object.authorize = {};
-			if (!object.authorize[command])
-				object.authorize[command] = {};
-			for (const channelId of Object.keys(object.authorize[command]))
+			if (!loadedObject.authorize)
+				loadedObject.authorize = {};
+			if (!loadedObject.authorize[rule])
+				loadedObject.authorize[rule] = {};
+			for (const channelId of Object.keys(loadedObject.authorize[rule]))
 				if (!message.guild.channels.cache.get(channelId))
-					delete object.authorize[command][channelId];
-			object.authorize[command][channel.id] = setting == 'enable' ? true : false;
-			if (object.authorize[command][channel.id])
-				object.authorize[command].disable = true;
+					delete loadedObject.authorize[rule][channelId];
+			loadedObject.authorize[rule][channel.id] = setting == 'enable' ? true : false;
+			if (loadedObject.authorize[rule][channel.id])
+				loadedObject.authorize[rule].disable = true;
 			else {
-				delete object.authorize[command].disable;
-				for (const channelId of Object.keys(object.authorize[command]))
-					if (object.authorize[command][channelId]) {
-						object.authorize[command].disable = true;
+				delete loadedObject.authorize[rule].disable;
+				for (const channelId of Object.keys(loadedObject.authorize[rule]))
+					if (loadedObject.authorize[rule][channelId]) {
+						loadedObject.authorize[rule].disable = true;
 						break;
 					}
 			}
-			utils.savFile(path, object);
-			utils.sendMessage(message.channel, message.dictionary, 'authorize_add', {
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'authorize_add', {
 				'<setting>': setting,
-				'<command>': command,
+				'<command>': rule,
 				'<channel>': channel
 			});
-		} else if (option == 'reset') {
-			if (!object.authorize) {
-				utils.sendMessage(message.channel, message.dictionary, 'error_authorize_not_defined');
+		} else if (option == 'remove') {
+			if (object.args.length < 2) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
+					'<format>': `${object.prefix}authorize remove <command/categorie/all>`
+				});
 				return;
 			}
-			delete object.authorize;
-			utils.savFile(path, object);
-			utils.sendMessage(message.channel, message.dictionary, 'authorize_reset');
+			const rule = object.args[1].toLowerCase();
+			if (!(loadedObject.authorize && loadedObject.authorize[rule])) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_authorize_rule_not_found', {
+					'<rule>': object.args[1]
+				});
+				return;
+			}
+			delete loadedObject.authorize[rule];
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'authorize_remove', {
+				'<rule>': rule
+			});
+		} else if (option == 'reset') {
+			if (!loadedObject.authorize) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_authorize_not_defined');
+				return;
+			}
+			delete loadedObject.authorize;
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'authorize_reset');
 		}
 	}
 };

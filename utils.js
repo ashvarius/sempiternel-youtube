@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:19 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/28 16:38:07 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/29 03:19:25 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,14 +30,13 @@ module.exports = {
 	},
 	readFile: path => {
 		if (loadedFiles[path])
-			return loadedFiles[path];
-		let parsed;
-		if (fs.existsSync(path))
-			parsed = JSON.parse(fs.readFileSync(path));
-		else
-			parsed = module.exports.savFile(path, {});
-		loadedFiles[path] = parsed;
-		return parsed;
+			return JSON.parse(JSON.stringify(loadedFiles[path]));
+		if (fs.existsSync(path)) {
+			const parsed = JSON.parse(fs.readFileSync(path));
+			loadedFiles[path] = parsed;
+			return JSON.parse(JSON.stringify(parsed));
+		}
+		return {};
 	},
 	deleteFile: path => {
 		if (!fs.statSync(path).isDirectory()) {

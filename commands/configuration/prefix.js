@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:04 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/21 19:37:56 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/21 23:13:14 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,43 +17,77 @@ module.exports = {
 	aliases: [],
 	description: 'Get the prefix or change it.',
 	privateMessage: true,
-	message: message => {
-		if (message.args.length) {
-			let path;
-			if (message.channel.type == 'dm')
-				path = `members/${message.author.id}.json`;
-			else {
-				if (!message.member.hasPermission('ADMINISTRATOR')) {
-					utils.sendMessage(message.channel, message.dictionary, 'error_no_permission', {
-						'<permission>': 'ADMINISTRATOR'
-					});
-					return;
-				}
-				path = `guilds/${message.guild.id}.json`;
+	message: (message, object) => {
+		if (!object.args.length) {
+			utils.sendMessage(message.channel, object.dictionary, 'prefix_help', {
+				'<prefix>': object.prefix
+			});
+			return;
+		}
+		const option = object.args[0].toLowerCase();
+		if (option == 'help') {
+			utils.sendMessage(message.channel, object.dictionary, 'prefix_help', {
+				'<prefix>': object.prefix
+			});
+			return;
+		} else if (option == 'get') {
+			utils.sendMessage(message.channel, object.dictionary, 'prefix_display', {
+				'<prefix>': object.prefix
+			});
+			return;
+		} else if (!['set', 'reset'].includes(option)) {
+			let options = '';
+			for (const option of ['help', 'set', 'get', 'reset']) {
+				if (options.length)
+					options += ', ';
+				options += `\`${option}\``;
 			}
-			const object = utils.readFile(path);
+			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
+				'<option>': object.args[0],
+				'<options>': options
+			});
+			return;
+		}
+		let path;
+		if (message.channel.type == 'dm')
+			path = `members/${message.author.id}.json`;
+		else {
+			if (!message.member.hasPermission('ADMINISTRATOR')) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
+					'<permission>': 'ADMINISTRATOR'
+				});
+				return;
+			}
+			path = `guilds/${message.guild.id}.json`;
+		}
+		const loadedObject = utils.readFile(path);
+		if (option == 'set') {
+			if (object.args.length < 2) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
+					'<format>': `${object.prefix}prefix set <prefix...>`
+				});
+				return;
+			}
 			let prefix = '';
-			for (const arg of message.args) {
+			for (let index = 1; index < object.args.length; index++) {
+				const arg = object.args[index];
 				if (prefix.length)
 					prefix += ' ';
 				prefix += arg;
 			}
-			if (prefix == 'reset')
-				delete object.prefix;
-			else
-				object.prefix = prefix;
-			utils.savFile(path, object);
-			if (object.prefix)
-				utils.sendMessage(message.channel, message.dictionary, 'prefix_changed', {
-					'<prefix>': object.prefix
-				});
-			else
-				utils.sendMessage(message.channel, message.dictionary, 'prefix_reset');
-		} else if (message.prefix.length)
-			utils.sendMessage(message.channel, message.dictionary, 'prefix_display', {
-				'<prefix>': message.prefix
+			loadedObject.prefix = prefix;
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'prefix_changed', {
+				'<prefix>': loadedObject.prefix
 			});
-		else
-			utils.sendMessage(message.channel, message.dictionary, 'error_prefix_nothing');
+		} else if (option == 'reset') {
+			if (!loadedObject.prefix) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_prefix_nothing');
+				return;
+			}
+			delete loadedObject.prefix;
+			utils.savFile(path, loadedObject);
+			utils.sendMessage(message.channel, object.dictionary, 'prefix_reset');
+		}
 	}
 };

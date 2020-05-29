@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:00 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/21 05:09:48 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:38:43 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ module.exports = {
 	name: 'bot',
 	aliases: [],
 	description: 'Get information about the bot.',
-	message: message => {
+	message: (message, object) => {
 		const embed = new MessageEmbed();
 		embed.setTitle('Bot');
 		for (const key of Object.keys(package))
@@ -58,6 +58,6 @@ module.exports = {
 			dynamic: true,
 			size: 4096
 		}));
-		utils.sendEmbed(message.channel, message.dictionary, embed);
+		utils.sendEmbed(message.channel, object.dictionary, embed);
 	}
 };

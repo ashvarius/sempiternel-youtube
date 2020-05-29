@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/22 12:16:56 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/26 13:23:22 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:39:14 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,32 +18,39 @@ module.exports = {
 	aliases: ['wipe', 'clean', 'bulk'],
 	description: 'Delete messages from a channel.',
 	privateMessage: false,
-	message: async message => {
+	message: async (message, object) => {
 		if (pending.includes(message.channel.id)) {
 			message.delete();
 			return;
 		}
 		if (!message.channel.permissionsFor(message.member).has('MANAGE_MESSAGES')) {
-			utils.sendMessage(message.channel, message.dictionary, 'error_no_permission', {
+			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
 				'<permission>': 'MANAGE_MESSAGES'
 			});
 			return;
 		}
-		if (!message.args.length) {
-			utils.sendMessage(message.channel, message.dictionary, 'error_invalid_format', {
-				'<format>': `${message.prefix}clear <number>`
+		for (const permission of ['MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+			if (!message.guild.me.hasPermission(permission)) {
+				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
+					'<permission>': permission
+				});
+				return;
+			}
+		if (!object.args.length) {
+			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
+				'<format>': `${object.prefix}clear <number>`
 			});
 			return;
 		}
-		if (isNaN(message.args[0])) {
-			utils.sendMessage(message.channel, message.dictionary, 'error_isnana', {
-				'<arg>': message.args[0]
+		if (isNaN(object.args[0])) {
+			utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
+				'<arg>': object.args[0]
 			});
 			return;
 		}
-		const numberMax = parseInt(message.args[0]);
+		const numberMax = parseInt(object.args[0]);
 		if (numberMax <= 0) {
-			utils.sendMessage(message.channel, message.dictionary, 'error_clear_number_too_small');
+			utils.sendMessage(message.channel, object.dictionary, 'error_clear_number_too_small');
 			return;
 		}
 		let bulkLength;
@@ -62,7 +69,7 @@ module.exports = {
 		}
 		while (bulkLength && number);
 		pending.splice(index, 1);
-		utils.sendMessage(message.channel, message.dictionary, 'clear_success', {
+		utils.sendMessage(message.channel, object.dictionary, 'clear_success', {
 			'<count>': deleted
 		});
 	}

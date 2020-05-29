@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:57 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/28 15:42:06 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:38:47 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,11 @@ module.exports = {
 	name: 'help',
 	aliases: ['h'],
 	description: 'Get a list of commands or information about a particular command.',
-	message: message => {
+	message: (message, object) => {
 		let embed;
-		if (message.args.length) {
+		if (object.args.length) {
 			let category;
-			let command = message.args[0].toLowerCase();
+			let command = object.args[0].toLowerCase();
 			for (const category of Object.keys(message.client._commands)) {
 				for (const commandFile of message.client._commands[category])
 					if (commandFile.name == command
@@ -33,9 +33,9 @@ module.exports = {
 					break;
 			}
 			if (typeof command == 'string') {
-				utils.sendMessage(message.channel, message.dictionary, 'error_command_not_found', {
+				utils.sendMessage(message.channel, object.dictionary, 'error_command_not_found', {
 					'<command>': command,
-					'<prefix>': message.prefix
+					'<prefix>': object.prefix
 				});
 				return;
 			}
@@ -58,20 +58,20 @@ module.exports = {
 					embed.addField(name, message);
 			}
 		} else {
-			embed = utils.getEmbed(message.dictionary, 'help_desciption', {
-				'<prefix>': message.prefix
+			embed = utils.getEmbed(object.dictionary, 'help_desciption', {
+				'<prefix>': object.prefix
 			});
 			for (const category of Object.keys(message.client._commands)) {
 				let commands = '';
 				for (const command of message.client._commands[category]) {
 					if (commands.length)
-						commands += ',\n';
-					commands += `\`${command.name}\``;
+						commands += '\n';
+					commands += `\`${command.name}\` - ${command.description}`;
 				}
 				embed.addField(category.charAt(0).toUpperCase() + category.slice(1), commands);
 			}
 		}
 		embed.setTitle('Help');
-		utils.sendEmbed(message.channel, message.dictionary, embed);
+		utils.sendEmbed(message.channel, object.dictionary, embed);
 	}
 };

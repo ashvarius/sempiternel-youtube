@@ -8,10 +8,10 @@
 	},
 	"token": "token",
 	"dictionary": "en_US",
-	"prefix": "$",
+	"prefix": ",",
 	"embed": {
-		"color": "adc5da",
-		"footer": "Made by 𝓐𝓵𝓮𝔁𝓪𝓷𝓭𝓻𝓮"
+		"color": "01d6d2",
+		"footer": "(◕‿◕✿) Made by 𝓐𝓵𝓮𝔁𝓪𝓷𝓭𝓻𝓮 | Designed by 𝓣𝓮𝓪𝓼𝓹𝓪𝓴"
 	},
 	"permissions": [
 		"SEND_MESSAGES",
@@ -20,9 +20,13 @@
 		"MANAGE_MESSAGES",
 		"MANAGE_ROLES",
 		"MANAGE_CHANNELS",
+		"MANAGE_GUILD",
 		"MUTE_MEMBERS",
 		"MOVE_MEMBERS",
-		"ADD_REACTIONS"
+		"ADD_REACTIONS",
+		"VIEW_AUDIT_LOG",
+		"CONNECT",
+		"SPEAK"
 	],
 	"owners": [
 		"360795716500848660"
@@ -31,5 +35,6 @@
 	"level": {
 		"multiply": 450,
 		"minimum": 400
-	}
+	},
+	"nasa": "token"
 }

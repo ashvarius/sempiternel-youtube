@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/20 11:09:56 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:38:52 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ module.exports = {
 	name: 'invite',
 	aliases: [],
 	description: 'Get the bot invitation link.',
-	message: async message => {
+	message: async (message, object) => {
 		let link = await message.client.generateInvite(config.permissions);
 		if (package.homepage) {
 			const parsed = url.parse(link, true);
@@ -28,7 +28,7 @@ module.exports = {
 			parsed.query.redirect_uri = package.homepage;
 			link = url.format(parsed);
 		}
-		utils.sendMessage(message.channel, message.dictionary, 'invite_success', {
+		utils.sendMessage(message.channel, object.dictionary, 'invite_success', {
 			'<invite>': link
 		});
 	}

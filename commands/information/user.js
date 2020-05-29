@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/22 08:52:41 by ahallain          #+#    #+#             */
-/*   Updated: 2020/04/27 13:06:21 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/05/24 15:39:10 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ module.exports = {
 	name: 'user',
 	aliases: ['member'],
 	description: 'See information about someone.',
-	message: async message => {
+	message: async (message, object) => {
 		const users = Array.from(message.mentions.users.values());
 		if (!users.length)
 			users.push(message.author);
@@ -49,7 +49,7 @@ module.exports = {
 				if (member.premiumSince)
 					embed.addField('PremiumSince', member.premiumSince.toGMTString());
 			}
-			utils.sendEmbed(message.channel, message.dictionary, embed);
+			utils.sendEmbed(message.channel, object.dictionary, embed);
 		}
 	}
 };
