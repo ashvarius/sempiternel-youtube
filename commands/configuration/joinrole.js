@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/29 13:41:36 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/01 23:37:45 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,16 +164,20 @@ module.exports = {
 		if (!loadedObject.joinrole)
 			return;
 		if (loadedObject.joinrole.restore) {
-			path = `roles/${member.guild.id}.json`;
-			const loadedRoles = utils.readFile(path);
-			if (loadedRoles[member.id]) {
-				for (const id of loadedRoles[member.id]) {
+			path = `members/${member.guild.id}.json`;
+			const loadedMember = utils.readFile(path);
+			if (!loadedMember.guilds)
+				loadedMember.guilds = {};
+			if (!loadedMember.guilds[member.guild.id])
+				loadedMember.guilds[member.guild.id] = {};
+			if (loadedMember.guilds[member.guild.id].roles) {
+				for (const id of loadedMember.guilds[member.guild.id].roles) {
 					const role = member.guild.roles.cache.get(id);
 					if (role && role.editable)
 						member.roles.add(role);
 				}
-				delete loadedRoles[member.id];
-				utils.savFile(path, loadedRoles);
+				delete loadedMember.guilds[member.guild.id].roles;
+				utils.savFile(path, loadedMember);
 				return;
 			}
 		}
@@ -190,9 +194,13 @@ module.exports = {
 		if (!(loadedObject.joinrole && loadedObject.joinrole.restore))
 			return;
 		const roles = Array.from(member.roles.cache.keys()).filter(id => id != member.guild.roles.everyone.id);
-		path = `roles/${member.guild.id}.json`;
-		const loadedRoles = utils.readFile(path);
-		loadedRoles[member.id] = roles;
-		utils.savFile(path, loadedRoles);
+		path = `members/${member.guild.id}.json`;
+		const loadedMember = utils.readFile(path);
+		if (!loadedMember.guilds)
+			loadedMember.guilds = {};
+		if (!loadedMember.guilds[member.guild.id])
+			loadedMember.guilds[member.guild.id] = {};
+		loadedMember.guilds[member.guild.id].roles = roles;
+		utils.savFile(path, loadedMember);
 	}
 };

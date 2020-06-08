@@ -6,12 +6,28 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 10:53:54 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/29 03:39:25 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/08 19:36:41 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const Permissions = require('discord.js').Permissions;
 const utils = require('../../utils.js');
+
+const getDictionary = (guild) => {
+	const path = `guilds/${guild.id}.json`;
+	const object = utils.readFile(path);
+	if (!object.dictionary)
+		object.dictionary = {};
+	if (!object.dictionary.language)
+		object.dictionary.language = guild.client._config.dictionary;
+	const dictionary = JSON.parse(JSON.stringify(guild.client._dictionaries[object.dictionary.language]));
+	if (object.dictionary.custom) {
+		for (const key of Object.keys(object.dictionary.custom))
+			dictionary[key] = object.dictionary.custom[key];
+		object.dictionary.language += ' *(custom)*';
+	}
+	return dictionary;
+};
 
 module.exports = {
 	name: 'mute',
@@ -25,7 +41,7 @@ module.exports = {
 			});
 			return;
 		}
-		for (const permission of ['MANAGE_ROLES', 'MANAGE_CHANNELS', 'SPEAK'])
+		for (const permission of ['MANAGE_ROLES', 'MANAGE_CHANNELS', 'SEND_MESSAGES', 'SEND_MESSAGES', 'SPEAK', 'ADD_REACTIONS', 'MANAGE_MESSAGES', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS', 'MOVE_MEMBERS'])
 			if (!message.guild.me.hasPermission(permission)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
 					'<permission>': permission
@@ -76,24 +92,32 @@ module.exports = {
 				if (['text', 'voice'].includes(channel.type) && channel.manageable)
 					channel.updateOverwrite(role, {
 						SEND_MESSAGES: false,
-						SPEAK: false
+						SPEAK: false,
+						ADD_REACTIONS: false,
+						MANAGE_MESSAGES: false,
+						MUTE_MEMBERS: false,
+						DEAFEN_MEMBERS: false,
+						MOVE_MEMBERS: false
 					}, 'Initialization of the mute command');
 			loadedObject.mute = role.id;
 			utils.savFile(path, loadedObject);
 		}
 		path = `members/${member.id}.json`;
-		loadedMember = utils.readFile(path);
+		const loadedMember = utils.readFile(path);
 		if (!loadedMember.punishments)
 			loadedMember.punishments = {};
 		if (!loadedMember.punishments[message.guild.id])
 			loadedMember.punishments[message.guild.id] = {};
 		if (loadedMember.punishments[message.guild.id].mute) {
-			member.roles.remove(role);
+			member.roles.remove(role, 'Mute command executed.');
 			delete loadedMember.punishments[message.guild.id].mute;
 			utils.savFile(path, loadedMember);
 			utils.sendMessage(message.channel, object.dictionary, 'mute_remove', {
 				'<member>': member
 			});
+			utils.sendMessage(await member.createDM(), object.dictionary, 'mute_remove_dm', {
+				'<guild>': member.guild.name
+			}).catch(() => { });
 			return;
 		}
 		if (object.args.length < 4) {
@@ -144,7 +168,7 @@ module.exports = {
 				reason += ' ';
 			reason += object.args[index];
 		}
-		member.roles.add(role);
+		member.roles.add(role, reason);
 		let timestamp = new Date().getTime();
 		if (!loadedMember.punishments[message.guild.id].logs)
 			loadedMember.punishments[message.guild.id].logs = {};
@@ -157,16 +181,17 @@ module.exports = {
 			'<unit>': unit,
 			'<reason>': reason
 		});
-		(await member.createDM()).send(utils.getEmbed(object.dictionary, 'mute_private', {
+		utils.sendMessage(await member.createDM(), object.dictionary, 'mute_private', {
 			'<number>': number,
 			'<unit>': unit,
-			'<reason>': reason
-		})).catch(() => { });
+			'<reason>': reason,
+			'<guild>': member.guild.name
+		}).catch(() => { });
 	},
 	channelCreate: channel => {
 		if (!['text', 'voice'].includes(channel.type))
 			return;
-		for (const permission of ['MANAGE_ROLES', 'MANAGE_CHANNELS', 'SPEAK'])
+		for (const permission of ['MANAGE_ROLES', 'MANAGE_CHANNELS', 'SEND_MESSAGES', 'SPEAK', 'ADD_REACTIONS', 'MANAGE_MESSAGES', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS', 'MOVE_MEMBERS'])
 			if (!channel.guild.me.hasPermission(permission))
 				return;
 		const path = `guilds/${channel.guild.id}.json`;
@@ -175,13 +200,19 @@ module.exports = {
 		if (role)
 			channel.updateOverwrite(role, {
 				SEND_MESSAGES: false,
-				SPEAK: false
+				SPEAK: false,
+				ADD_REACTIONS: false,
+				MANAGE_MESSAGES: false,
+				MUTE_MEMBERS: false,
+				DEAFEN_MEMBERS: false,
+				MOVE_MEMBERS: false
 			}, 'Mute Role');
 	},
 	timer: async client => {
 		const timestamp = new Date().getTime();
 		for (const guild of client.guilds.cache.values()) {
 			let role;
+			let dictionary;
 			for (const member of guild.members.cache.values()) {
 				const path = `members/${member.id}.json`;
 				const loadedMember = utils.readFile(path);
@@ -215,9 +246,14 @@ module.exports = {
 							utils.savFile(path, loadedObject);
 						}
 					}
-					member.roles.remove(role);
+					member.roles.remove(role, 'End of mute.');
 					delete loadedMember.punishments[guild.id].mute;
 					utils.savFile(path, loadedMember);
+					if (!dictionary)
+						dictionary = getDictionary(guild);
+					utils.sendMessage(await member.createDM(), dictionary, 'mute_remove_dm', {
+						'<guild>': guild.name
+					}).catch(() => { });
 				}
 			}
 		}

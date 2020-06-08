@@ -10,10 +10,11 @@
 	"dictionary": "en_US",
 	"prefix": ",",
 	"embed": {
-		"color": "01d6d2",
+		"color": "0b0b0b",
 		"footer": "(◕‿◕✿) Made by 𝓐𝓵𝓮𝔁𝓪𝓷𝓭𝓻𝓮 | Designed by 𝓣𝓮𝓪𝓼𝓹𝓪𝓴"
 	},
 	"permissions": [
+		"CREATE_INSTANT_INVITE",
 		"SEND_MESSAGES",
 		"EMBED_LINKS",
 		"READ_MESSAGE_HISTORY",
@@ -26,7 +27,10 @@
 		"ADD_REACTIONS",
 		"VIEW_AUDIT_LOG",
 		"CONNECT",
-		"SPEAK"
+		"SPEAK",
+		"USE_EXTERNAL_EMOJIS",
+		"DEAFEN_MEMBERS",
+		"BAN_MEMBERS"
 	],
 	"owners": [
 		"360795716500848660"

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/29 14:43:25 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/08 19:46:24 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@ const utils = require('../../utils.js');
 const events = {
 	guildmemberadd: ['displayName', 'tag', 'member', 'inviter', 'uses', 'member_count'],
 	guildmemberremove: ['displayName', 'tag', 'member', 'member_count'],
-	messageupdate: ['displayName', 'tag', 'member', 'oldcontent', 'newcontent', 'link'],
-	messagedelete: ['displayName', 'tag', 'member', 'content', 'deleter'],
+	messageupdate: ['displayName', 'tag', 'member', 'channel', 'oldcontent', 'newcontent', 'link'],
+	messagedelete: ['displayName', 'tag', 'member', 'channel', 'content', 'deleter'],
 	voiceadd: ['displayName', 'tag', 'member', 'channel'],
 	voiceremove: ['displayName', 'tag', 'member', 'channel'],
 	voiceupdate: ['displayName', 'tag', 'member', 'oldchannel', 'newchannel']
@@ -233,10 +233,12 @@ module.exports = {
 			if (guild.me.permissions.has('MANAGE_GUILD')) {
 				codes[guild.id] = {};
 				for (const invite of (await guild.fetchInvites()).values())
-					codes[invite.guild.id][invite.code] = {
-						inviter: invite.inviter.id,
-						uses: invite.uses
-					};
+					try {
+						codes[invite.guild.id][invite.code] = {
+							inviter: invite.inviter.id,
+							uses: invite.uses
+						};
+					} catch { }
 			}
 			if (!guild.me.permissions.has('VIEW_AUDIT_LOG'))
 				continue;
@@ -294,6 +296,7 @@ module.exports = {
 		for (const key of Object.keys(settings))
 			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
 		embed.setDescription(description);
+		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	guildMemberRemove: member => {
@@ -315,6 +318,7 @@ module.exports = {
 		for (const key of Object.keys(settings))
 			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
 		embed.setDescription(description);
+		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	messageUpdate: (oldMessage, newMessage) => {
@@ -335,6 +339,7 @@ module.exports = {
 			'<displayName>': newMessage.member.displayName,
 			'<tag>': newMessage.author.tag,
 			'<member>': newMessage.member,
+			'<channel>': newMessage.channel,
 			'<oldcontent>': oldMessage.content,
 			'<newcontent>': newMessage.content,
 			'<link>': newMessage.url
@@ -342,6 +347,7 @@ module.exports = {
 		for (const key of Object.keys(settings))
 			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
 		embed.setDescription(description);
+		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	messageDelete: async message => {
@@ -384,12 +390,14 @@ module.exports = {
 			'<displayName>': message.member.displayName,
 			'<tag>': message.author.tag,
 			'<member>': message.member,
+			'<channel>': message.channel,
 			'<content>': message.content.length ? message.content : (message.embeds.length ? message.embeds[0].description : utils.getMessage(object.dictionary, 'event_message_unknown')),
 			'<deleter>': deleter ? deleter : utils.getMessage(object.dictionary, 'event_message_unknown')
 		};
 		for (const key of Object.keys(settings))
 			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
 		embed.setDescription(description);
+		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	voiceStateUpdate: (oldState, newState) => {
@@ -440,6 +448,7 @@ module.exports = {
 		for (const key of Object.keys(settings))
 			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
 		embed.setDescription(description);
+		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
 	}
 };

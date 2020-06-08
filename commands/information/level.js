@@ -6,13 +6,14 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/28 23:20:11 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/29 16:35:02 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/08 19:48:12 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
+const cache = [];
 const getDictionary = (guild) => {
 	const path = `guilds/${guild.id}.json`;
 	const object = utils.readFile(path);
@@ -98,13 +99,16 @@ module.exports = {
 			let current;
 			let length = 20;
 			while (length--) {
-				for (const id of Object.keys(level))
-					if (!orderLevel[id]
+				for (const id of Object.keys(level)) {
+					const member = message.guild.members.cache.get(id);
+					if (member
+						&& !orderLevel[id]
 						&& (!current
 							|| level[id].level > level[current].level
 							|| (level[id].level == level[current].level
 								&& level[id].experience > level[current].experience)))
 						current = id;
+				}
 				if (!current)
 					continue;
 				orderLevel[current] = level[current];
@@ -369,7 +373,11 @@ module.exports = {
 		}
 	},
 	message_offline: message => {
-		if (message.author.bot || message.channel.type == 'dm')
+		if (message.author.bot
+			|| message.channel.type == 'dm'
+			|| cache[message.author.id]
+			&& (message.content.includes(cache[message.author.id])
+				|| cache[message.author.id].includes(message.content)))
 			return;
 		const settings = JSON.parse(JSON.stringify(message.client._config.level));
 		let path = `guilds/${message.guild.id}.json`;
@@ -388,6 +396,7 @@ module.exports = {
 				level: 0,
 				experience: 0
 			};
+		cache[message.author.id] = message.content;
 		level[message.author.id].experience += message.content.length;
 		let maxExperience;
 		let up = 0;
@@ -400,11 +409,11 @@ module.exports = {
 		if (!up)
 			return;
 		const dictionary = getDictionary(message.guild);
-		utils.sendMessage(channel, dictionary, 'level_up', {
+		utils.sendMessage(channel, utils.getEmbed(dictionary, 'level_up', {
 			'<name>': message.member.displayName,
 			'<up>': up,
 			'<level>': level[message.author.id].level
-		});
+		}).setTimestamp());
 		if (!message.guild.me.hasPermission('MANAGE_ROLES'))
 			return;
 		if (settings.roles)

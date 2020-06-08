@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 16:10:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/27 13:54:51 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/08 15:08:39 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ module.exports = {
 				return;
 			}
 			const channel = message.guild.channels.cache.get(object.args[1]);
-			if (!channel) {
+			if (!(channel && channel.permissionsFor(message.guild.me).has('VIEW_CHANNEL'))) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_stats_channel_not_found', {
 					'<channel>': object.args[1]
 				})
@@ -162,11 +162,13 @@ module.exports = {
 			}
 			for (const id of Object.keys(loadedObject.stats)) {
 				const channel = guild.channels.cache.get(id);
-				if (!channel) {
+				if (!(channel && !channel.deleted)) {
 					delete loadedObject.stats[id];
 					utils.savFile(path, loadedObject);
 					continue;
 				}
+				if (!channel.permissionsFor(guild.me).has('VIEW_CHANNEL'))
+					continue;
 				let newName = loadedObject.stats[id];
 				for (const count of ['member', 'human', 'bot', 'online', 'online_human', 'online_bot', 'voice', 'voice_human', 'voice_bot'])
 					if (newName.includes(`<${count}>`))
