@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 08:11:44 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:39:05 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 21:02:43 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ module.exports = {
 				embed.addField('Description', guild.description);
 			embed.addField('Owner', guild.owner);
 			embed.addField('Region', guild.region, true);
-			embed.addField('CreatedAt', guild.createdAt.toGMTString(), true);
+			embed.addField('CreatedAt', guild.createdAt, true);
 			embed.addField('\u200B', '\u200B');
 			if (guild.features.length)
 				embed.addField('Features', `\`${guild.features.join('`,\n`')}\``);

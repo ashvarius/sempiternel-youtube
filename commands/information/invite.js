@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:38:52 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 18:29:08 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ module.exports = {
 	name: 'invite',
 	aliases: [],
 	description: 'Get the bot invitation link.',
+	privateMessage: true,
 	message: async (message, object) => {
 		let link = await message.client.generateInvite(config.permissions);
 		if (package.homepage) {

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:19 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/29 03:19:25 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/09 05:49:40 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,10 +97,12 @@ module.exports = {
 			embed.setColor(config.embed.color);
 		embed.setFooter(config.embed.footer);
 		try {
-			if (message.channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES'))
+			if (message.channel.type != 'dm'
+				&& message.channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES'))
 				await message.reactions.removeAll();
 			return await message.edit(embed);
-		} catch {
+		} catch (err) {
+			console.error(err);
 			return module.exports.sendEmbed(message.channel, dictionary, embed);
 		}
 	},

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/29 03:15:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 19:28:49 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/09 20:06:14 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,9 @@ module.exports = {
 		for (const log of Object.keys(loadedMember.punishments[message.guild.id].logs))
 			lines.push(`**${new Date(parseInt(log))}**:\n\`${loadedMember.punishments[message.guild.id].logs[log]}\`\n`);
 		const messages = utils.remakeList(lines, 2048 - object.dictionary.punishment_success.length);
-		for (const logs of messages) {
+		for (const logs of messages)
 			utils.sendMessage(message.channel, object.dictionary, 'punishment_success', {
 				'<logs>': logs
 			});
-		}
 	}
 }

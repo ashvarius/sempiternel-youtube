@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/08 10:03:49 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:38:19 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 18:27:52 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ module.exports = {
 	name: 'nasa',
 	aliases: [],
 	description: 'Get the astronomical picture of the day.',
+	privateMessage: true,
 	message: async (message, object) => {
 		const date = new Date();
 		date.setTime(date.getTime() - date.getTimezoneOffset() * 60 * 1000);

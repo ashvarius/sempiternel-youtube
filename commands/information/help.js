@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:57 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:38:47 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 18:34:13 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ module.exports = {
 	name: 'help',
 	aliases: ['h'],
 	description: 'Get a list of commands or information about a particular command.',
+	privateMessage: true,
 	message: (message, object) => {
 		let embed;
 		if (object.args.length) {
@@ -61,14 +62,18 @@ module.exports = {
 			embed = utils.getEmbed(object.dictionary, 'help_desciption', {
 				'<prefix>': object.prefix
 			});
+			const dm = message.channel.type == 'dm';
 			for (const category of Object.keys(message.client._commands)) {
 				let commands = '';
 				for (const command of message.client._commands[category]) {
+					if (dm && !command.privateMessage)
+						continue;
 					if (commands.length)
 						commands += '\n';
 					commands += `\`${command.name}\` - ${command.description}`;
 				}
-				embed.addField(category.charAt(0).toUpperCase() + category.slice(1), commands);
+				if (commands.length)
+					embed.addField(category.charAt(0).toUpperCase() + category.slice(1), commands);
 			}
 		}
 		embed.setTitle('Help');

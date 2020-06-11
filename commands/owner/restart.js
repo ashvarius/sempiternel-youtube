@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/21 05:37:01 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/22 17:24:33 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 18:29:57 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ module.exports = {
 	name: 'restart',
 	aliases: ['reboot', 'rb', 'reload', 'rl'],
 	description: 'Restart the bot.',
+	privateMessage: true,
 	message: async (message, object) => {
 		if (!config.owners.includes(message.author.id)) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_not_owner');

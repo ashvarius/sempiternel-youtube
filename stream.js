@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   stream.js                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/06/10 18:03:02 by ahallain          #+#    #+#             */
+/*   Updated: 2020/06/10 18:03:06 by ahallain         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 const url = require('url');
 const http = require('http');
 const https = require('https');
@@ -8,16 +20,22 @@ const httpLibs = {
 }
 const redirectCode = [302, 303, 307];
 
-const stream = (_url, callback) => {
-	const parsed = url.parse(_url);
-	const httpLib = httpLibs[parsed.protocol];
-	if (!httpLib)
-		throw 'Invalid URL';
+const stream = (options, callback) => {
+	if (typeof options == 'string')
+		options = url.parse(options);
+	if (!options.headers)
+		options.headers = {};
+	if (!options.headers['User-Agent'])
+		options.headers['User-Agent'] = 'Mozilla/5.0';
 	return new Promise(resolve => {
 		const doDownload = () => {
-			httpLib.get(parsed, res => {
+			const httpLib = httpLibs[options.protocol];
+			if (!httpLib)
+				throw 'Invalid URL';
+			console.log(options);
+			httpLib.get(options, res => {
 				if (redirectCode.includes(res.statusCode)) {
-					Object.assign(parsed, url.parse(res.headers.location));
+					Object.assign(options, url.parse(res.headers.location));
 					process.nextTick(doDownload);
 					return;
 				}
@@ -34,9 +52,9 @@ const stream = (_url, callback) => {
 	});
 };
 
-stream.promise = (url) => {
+stream.promise = (options) => {
 	return new Promise((resolve, reject) => {
-		stream(url, (err, body) => {
+		stream(options, (err, body) => {
 			if (err)
 				reject(err);
 			resolve(body);

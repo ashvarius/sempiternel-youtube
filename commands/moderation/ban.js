@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 10:53:54 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 19:49:26 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 22:54:09 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ const getDictionary = (guild) => {
 module.exports = {
 	name: 'ban',
 	aliases: [],
-	description: 'Prohibit someone\'s messages and speeches.',
+	description: 'Ban someone from a server.',
 	privateMessage: false,
 	message: async (message, object) => {
 		if (!message.member.hasPermission('BAN_MEMBERS')) {
@@ -40,28 +40,33 @@ module.exports = {
 			});
 			return;
 		}
-		for (const permission of ['BAN_MEMBERS', 'CREATE_INSTANT_INVITE'])
-			if (!message.guild.me.hasPermission(permission)) {
-				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-					'<permission>': permission
-				});
-				return;
-			}
+		if (!message.guild.me.hasPermission('BAN_MEMBERS')) {
+			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
+				'<permission>': 'BAN_MEMBERS'
+			});
+			return;
+		}
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
 				'<format>': `${object.prefix}ban <userId>`
 			});
 			return;
 		}
-		const path = `members/${object.args[0]}.json`;
+		const user = await message.client.users.fetch(object.args[0], false).catch(() => { });
+		if (!user) {
+			utils.sendMessage(message.channel, object.dictionary, 'error_ban_user_not_found', {
+				'<user>': object.args[0]
+			});
+			return;
+		}
+		const path = `members/${user.id}.json`;
 		const loadedMember = utils.readFile(path);
 		if (!loadedMember.punishments)
 			loadedMember.punishments = {};
 		if (!loadedMember.punishments[message.guild.id])
 			loadedMember.punishments[message.guild.id] = {};
 		const bans = await message.guild.fetchBans();
-		if (bans.get(object.args[0])) {
-			const user = bans.get(object.args[0]).user;
+		if (bans.get(user.id)) {
 			message.guild.members.unban(user, 'Ban command executed.');
 			delete loadedMember.punishments[message.guild.id].ban;
 			utils.savFile(path, loadedMember);
@@ -136,20 +141,18 @@ module.exports = {
 				reason += ' ';
 			reason += object.args[index];
 		}
-		let user = await message.client.users.fetch(object.args[0]).catch(() => { });
-		if (user)
-			await utils.sendMessage(await user.createDM(), object.dictionary, 'ban_private', {
-				'<number>': number,
-				'<unit>': unit,
-				'<reason>': reason,
-				'<guild>': message.guild.name
-			}).catch(() => { });
-		user = await message.guild.members.ban(object.args[0], {
-			reason
+		await utils.sendMessage(await user.createDM(), object.dictionary, 'ban_private', {
+			'<number>': number,
+			'<unit>': unit,
+			'<reason>': reason,
+			'<guild>': message.guild.name
 		}).catch(() => { });
-		if (!user) {
+		if (!(await message.guild.members.ban(user, {
+			days: 1,
+			reason
+		}).catch(() => { }))) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_ban_api', {
-				'<user>': object.args[0]
+				'<tag>': user.tag
 			});
 			return;
 		}

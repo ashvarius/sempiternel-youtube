@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 19:46:24 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/09 01:55:17 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -254,10 +254,12 @@ module.exports = {
 	inviteCreate: invite => {
 		if (!codes[invite.guild.id])
 			codes[invite.guild.id] = {};
-		codes[invite.guild.id][invite.code] = {
-			inviter: invite.inviter.id,
-			uses: invite.uses
-		};
+		try {
+			codes[invite.guild.id][invite.code] = {
+				inviter: invite.inviter.id,
+				uses: invite.uses
+			};
+		} catch { }
 	},
 	inviteDelete: invite => {
 		if (!codes[invite.guild.id])
@@ -351,7 +353,7 @@ module.exports = {
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	messageDelete: async message => {
-		if (message.channel.type == 'dm')
+		if (message.channel.type != 'dm' && message.member)
 			return;
 		let deleter;
 		const timestamp = new Date().getTime() - 1000;

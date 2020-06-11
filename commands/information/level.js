@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/28 23:20:11 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 19:48:12 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 19:44:37 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ const getDictionary = (guild) => {
 module.exports = {
 	name: 'level',
 	aliases: ['rank'],
-	description: 'Get information about the level.',
+	description: 'Get information or manage levels.',
 	privateMessage: false,
 	message: (message, object) => {
 		if (!object.args.length) {
@@ -409,7 +409,7 @@ module.exports = {
 		if (!up)
 			return;
 		const dictionary = getDictionary(message.guild);
-		utils.sendMessage(channel, utils.getEmbed(dictionary, 'level_up', {
+		utils.sendEmbed(channel, dictionary, utils.getEmbed(dictionary, 'level_up', {
 			'<name>': message.member.displayName,
 			'<up>': up,
 			'<level>': level[message.author.id].level

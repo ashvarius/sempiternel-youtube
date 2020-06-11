@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:34 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/25 13:36:07 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/10 18:43:22 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,9 +82,7 @@ const message_event = message => {
 			if (!(command.name == object.command
 				|| command.aliases.includes(object.command)))
 				continue;
-			if (message.channel.type == 'dm'
-				&& typeof command.privateMessage == 'boolean'
-				&& !command.privateMessage) {
+			if (message.channel.type == 'dm' && !command.privateMessage) {
 				utils.sendMessage(message.channel, dictionary, 'error_private_message_disable');
 				return;
 			}

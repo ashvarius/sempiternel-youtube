@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/01 23:37:45 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/09 02:19:05 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ module.exports = {
 		if (!loadedObject.joinrole)
 			return;
 		if (loadedObject.joinrole.restore) {
-			path = `members/${member.guild.id}.json`;
+			path = `members/${member.id}.json`;
 			const loadedMember = utils.readFile(path);
 			if (!loadedMember.guilds)
 				loadedMember.guilds = {};
@@ -194,7 +194,7 @@ module.exports = {
 		if (!(loadedObject.joinrole && loadedObject.joinrole.restore))
 			return;
 		const roles = Array.from(member.roles.cache.keys()).filter(id => id != member.guild.roles.everyone.id);
-		path = `members/${member.guild.id}.json`;
+		path = `members/${member.id}.json`;
 		const loadedMember = utils.readFile(path);
 		if (!loadedMember.guilds)
 			loadedMember.guilds = {};

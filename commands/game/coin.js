@@ -1,29 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   stop.js                                            :+:      :+:    :+:   */
+/*   coin.js                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/04/21 05:37:01 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:30:01 by ahallain         ###   ########.fr       */
+/*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
+/*   Updated: 2020/06/08 23:50:28 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const utils = require('../../utils.js');
-const config = require('../../config.json');
 
 module.exports = {
-	name: 'stop',
-	aliases: ['exit', 'end'],
-	description: 'Stop the bot.',
+	name: 'coin',
+	aliases: [],
+	description: 'Coin flipping.',
 	privateMessage: true,
-	message: async (message, object) => {
-		if (!config.owners.includes(message.author.id)) {
-			utils.sendMessage(message.channel, object.dictionary, 'error_not_owner');
-			return;
-		}
-		await utils.sendMessage(message.channel, object.dictionary, 'stop_success');
-		message.client.emit('exit');
+	message: (message, object) => {
+		if (Math.floor(Math.random() * 2))
+			utils.sendMessage(message.channel, object.dictionary, 'coin_head');
+		else
+			utils.sendMessage(message.channel, object.dictionary, 'coin_tail');
 	}
 };
