@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:04 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/01 23:29:10 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:15:08 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,19 +20,19 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'prefix_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'prefix_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'get') {
 			utils.sendMessage(message.channel, object.dictionary, 'prefix_display', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (!['set', 'reset'].includes(option)) {
@@ -43,8 +43,8 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
@@ -54,7 +54,7 @@ module.exports = {
 		else {
 			if (!message.member.hasPermission('ADMINISTRATOR')) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-					'<permission>': 'ADMINISTRATOR'
+					permission: 'ADMINISTRATOR'
 				});
 				return;
 			}
@@ -64,7 +64,7 @@ module.exports = {
 		if (option == 'set') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}prefix set <prefix...>`
+					format: `${object.prefix}prefix set <prefix...>`
 				});
 				return;
 			}
@@ -78,7 +78,7 @@ module.exports = {
 			loadedObject.prefix = prefix;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'prefix_changed', {
-				'<prefix>': loadedObject.prefix
+				prefix: loadedObject.prefix
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.prefix) {

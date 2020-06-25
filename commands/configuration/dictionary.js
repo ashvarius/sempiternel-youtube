@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/21 05:36:52 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/21 23:13:12 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:03:41 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,19 +21,19 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'dictionary_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'dictionary_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'display') {
 			utils.sendMessage(message.channel, object.dictionary, 'dictionary_display', {
-				'<dictionary>': object.language
+				dictionary: object.language
 			});
 			return;
 		} else if (option == 'list') {
@@ -44,7 +44,7 @@ module.exports = {
 				dictionaries += `\`${dictionary}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'dictionary_list', {
-				'<dictionaries>': dictionaries
+				dictionaries
 			});
 			return;
 		} else if (option == 'get') {
@@ -67,8 +67,8 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
@@ -78,7 +78,7 @@ module.exports = {
 		else {
 			if (!message.member.hasPermission('ADMINISTRATOR')) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-					'<permission>': 'ADMINISTRATOR'
+					permission: 'ADMINISTRATOR'
 				});
 				return;
 			}
@@ -88,7 +88,7 @@ module.exports = {
 		if (option == 'set') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}dictionary set <language>`
+					format: `${object.prefix}dictionary set <language>`
 				});
 				return;
 			}
@@ -100,17 +100,17 @@ module.exports = {
 					loadedObject.dictionary.language = language;
 					utils.savFile(path, loadedObject);
 					utils.sendMessage(message.channel, object.dictionary, 'dictionary_change', {
-						'<dictionary>': loadedObject.dictionary.language
+						dictionary: loadedObject.dictionary.language
 					});
 					return;
 				}
 			utils.sendMessage(message.channel, object.dictionary, 'error_dictionary_language_unavailable', {
-				'<language>': object.args[1]
+				language: object.args[1]
 			});
 		} else if (option == 'edit') {
 			if (object.args.length < 3) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}dictionary edit ${option} ${object.args.length == 1 ? '<key>' : object.args[1]} <value>`
+					format: `${object.prefix}dictionary edit ${option} ${object.args.length == 1 ? '<key>' : object.args[1]} <value>`
 				});
 				return;
 			}
@@ -130,13 +130,13 @@ module.exports = {
 					loadedObject.dictionary.custom[key1] = value;
 					utils.savFile(path, loadedObject);
 					utils.sendMessage(message.channel, object.dictionary, 'dictionary_edit', {
-						'<key>': key1,
-						'<value>': value
+						key: key1,
+						value
 					});
 					return;
 				}
 			utils.sendMessage(message.channel, object.dictionary, 'error_dictionary_key_unavailable', {
-				'<key>': object.args[1]
+				key: object.args[1]
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.dictionary) {

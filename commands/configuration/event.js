@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/09 01:55:17 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/14 19:55:37 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,14 +55,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'event_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'event_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (!['add', 'remove', 'list', 'reset'].includes(option)) {
@@ -73,14 +73,14 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('ADMINISTRATOR')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'ADMINISTRATOR'
+				permission: 'ADMINISTRATOR'
 			});
 			return;
 		}
@@ -89,7 +89,7 @@ module.exports = {
 		if (option == 'add') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}event add <event> [channelId] [message...]`
+					format: `${object.prefix}event add <event> [channelId] [message...]`
 				});
 				return;
 			}
@@ -102,8 +102,8 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[1],
-					'<options>': options
+					option: object.args[1],
+					options
 				});
 				return;
 			}
@@ -114,7 +114,7 @@ module.exports = {
 				channel = message.guild.channels.cache.get(object.args[2]);
 				if (!channel) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_event_channel_not_found', {
-						'<id>': object.args[2]
+						id: object.args[2]
 					});
 					return;
 				}
@@ -143,8 +143,8 @@ module.exports = {
 						args += `\`<${arg}>\``;
 					}
 					utils.sendMessage(message.channel, object.dictionary, 'error_event_no_args', {
-						'<message>': eventMessage,
-						'<args>': args
+						message: eventMessage,
+						args
 					});
 					return;
 				}
@@ -157,13 +157,13 @@ module.exports = {
 			};
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'event_add', {
-				'<event>': event,
-				'<channel>': channel
+				event,
+				channel
 			});
 		} else if (option == 'remove') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}event remove <event>`
+					format: `${object.prefix}event remove <event>`
 				});
 				return;
 			}
@@ -176,21 +176,21 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[1],
-					'<options>': options
+					option: object.args[1],
+					options
 				});
 				return;
 			}
 			if (!loadedObject.events[event]) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_event_event_not_found', {
-					'<event>': event
+					event
 				});
 				return;
 			}
 			delete loadedObject.events[event];
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'event_remove', {
-				'<event>': event
+				event
 			});
 		} else if (option == 'list') {
 			if (!(object.events && Object.keys(object.events).length)) {
@@ -288,15 +288,15 @@ module.exports = {
 		embed.setColor('0F9D58');
 		let description = object.events.guildmemberadd.message;
 		const settings = {
-			'<displayName>': member.displayName,
-			'<tag>': member.user.tag,
-			'<member>': member,
-			'<inviter>': inviter ? inviter : utils.getMessage(object.dictionary, 'event_message_unknown'),
-			'<uses>': invite.uses ? invite.uses : utils.getMessage(object.dictionary, 'event_message_unknown'),
-			'<member_count>': member.guild.memberCount
+			displayName: member.displayName,
+			tag: member.user.tag,
+			member,
+			inviter: inviter ? inviter : utils.getMessage(object.dictionary, 'event_message_unknown'),
+			uses: invite.uses ? invite.uses : utils.getMessage(object.dictionary, 'event_message_unknown'),
+			member_count: member.guild.memberCount
 		};
 		for (const key of Object.keys(settings))
-			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+			description = `${description}`.replace(new RegExp(`<${key}>`, 'g'), settings[key]);
 		embed.setDescription(description);
 		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
@@ -312,13 +312,13 @@ module.exports = {
 		embed.setColor('DB4437');
 		let description = object.events.guildmemberremove.message;
 		const settings = {
-			'<displayName>': member.displayName,
-			'<tag>': member.user.tag,
-			'<member>': member,
-			'<member_count>': member.guild.memberCount
+			displayName: member.displayName,
+			tag: member.user.tag,
+			member,
+			member_count: member.guild.memberCount
 		};
 		for (const key of Object.keys(settings))
-			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+			description = `${description}`.replace(new RegExp(`<${key}>`, 'g'), settings[key]);
 		embed.setDescription(description);
 		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
@@ -338,22 +338,22 @@ module.exports = {
 		embed.setColor('F4B400');
 		let description = object.events.messageupdate.message;
 		const settings = {
-			'<displayName>': newMessage.member.displayName,
-			'<tag>': newMessage.author.tag,
-			'<member>': newMessage.member,
-			'<channel>': newMessage.channel,
-			'<oldcontent>': oldMessage.content,
-			'<newcontent>': newMessage.content,
-			'<link>': newMessage.url
+			displayName: newMessage.member.displayName,
+			tag: newMessage.author.tag,
+			member: newMessage.member,
+			channel: newMessage.channel,
+			oldcontent: oldMessage.content,
+			newcontent: newMessage.content,
+			link: newMessage.url
 		};
 		for (const key of Object.keys(settings))
-			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+			description = `${description}`.replace(new RegExp(`<${key}>`, 'g'), settings[key]);
 		embed.setDescription(description);
 		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	messageDelete: async message => {
-		if (message.channel.type != 'dm' && message.member)
+		if (!(message.channel.type != 'dm' && message.member))
 			return;
 		let deleter;
 		const timestamp = new Date().getTime() - 1000;
@@ -389,15 +389,15 @@ module.exports = {
 		embed.setColor('DB4437');
 		let description = object.events.messagedelete.message;
 		const settings = {
-			'<displayName>': message.member.displayName,
-			'<tag>': message.author.tag,
-			'<member>': message.member,
-			'<channel>': message.channel,
-			'<content>': message.content.length ? message.content : (message.embeds.length ? message.embeds[0].description : utils.getMessage(object.dictionary, 'event_message_unknown')),
-			'<deleter>': deleter ? deleter : utils.getMessage(object.dictionary, 'event_message_unknown')
+			displayName: message.member.displayName,
+			tag: message.author.tag,
+			member: message.member,
+			channel: message.channel,
+			content: message.content.length ? message.content : (message.embeds.length ? message.embeds[0].description : utils.getMessage(object.dictionary, 'event_message_unknown')),
+			deleter: deleter ? deleter : utils.getMessage(object.dictionary, 'event_message_unknown')
 		};
 		for (const key of Object.keys(settings))
-			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+			description = `${description}`.replace(new RegExp(`<${key}>`, 'g'), settings[key]);
 		embed.setDescription(description);
 		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);
@@ -411,9 +411,9 @@ module.exports = {
 		let channel;
 		let description;
 		const settings = {
-			'<displayName>': newState.member.displayName,
-			'<tag>': newState.member.user.tag,
-			'<member>': newState.member
+			displayName: newState.member.displayName,
+			tag: newState.member.user.tag,
+			member: newState.member
 		};
 		const embed = new MessageEmbed();
 		if (!newState.channelID) {
@@ -422,7 +422,7 @@ module.exports = {
 			channel = newState.guild.channels.cache.get(object.events.voiceremove.channel);
 			description = object.events.voiceremove.message;
 			Object.assign(settings, {
-				'<channel>': oldState.channel
+				channel: oldState.channel
 			});
 			embed.setColor('DB4437');
 		} else if (!oldState.channelID) {
@@ -431,7 +431,7 @@ module.exports = {
 			channel = newState.guild.channels.cache.get(object.events.voiceadd.channel);
 			description = object.events.voiceadd.message;
 			Object.assign(settings, {
-				'<channel>': newState.channel
+				channel: newState.channel
 			});
 			embed.setColor('0F9D58');
 		} else {
@@ -440,15 +440,15 @@ module.exports = {
 			channel = newState.guild.channels.cache.get(object.events.voiceupdate.channel);
 			description = object.events.voiceupdate.message;
 			Object.assign(settings, {
-				'<oldchannel>': oldState.channel,
-				'<newchannel>': newState.channel
+				oldchannel: oldState.channel,
+				newchannel: newState.channel
 			});
 			embed.setColor('F4B400');
 		}
 		if (!channel)
 			return;
 		for (const key of Object.keys(settings))
-			description = `${description}`.replace(new RegExp(key, 'g'), settings[key]);
+			description = `${description}`.replace(new RegExp(`<${key}>`, 'g'), settings[key]);
 		embed.setDescription(description);
 		embed.setTimestamp();
 		utils.sendEmbed(channel, object.dictionary, embed);

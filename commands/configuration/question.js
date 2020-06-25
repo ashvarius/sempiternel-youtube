@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 02:07:46 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:16:13 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,14 +42,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'question_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'question_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'settings') {
@@ -78,21 +78,21 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('ADMINISTRATOR')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'ADMINISTRATOR'
+				permission: 'ADMINISTRATOR'
 			});
 			return;
 		}
 		for (const permission of ['MANAGE_CHANNELS', 'SEND_MESSAGES', 'EMBED_LINKS', 'READ_MESSAGE_HISTORY'])
 			if (!message.guild.me.hasPermission(permission)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-					'<permission>': permission
+					permission
 				});
 				return;
 			}
@@ -102,7 +102,7 @@ module.exports = {
 			if (object.args.length < 2
 				|| !['true', 'false'].includes(object.args[1].toLowerCase())) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}question activate <true/false>`
+					format: `${object.prefix}question activate <true/false>`
 				});
 				return;
 			}
@@ -112,12 +112,12 @@ module.exports = {
 			loadedObject.question.activate = bool;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'question_activate', {
-				'<bool>': bool
+				bool
 			});
 		} else if (option == 'add') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}question add <question...>`
+					format: `${object.prefix}question add <question...>`
 				});
 				return;
 			}
@@ -134,18 +134,18 @@ module.exports = {
 			loadedObject.question.list.push(input);
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'question_add', {
-				'<question>': input
+				question: input
 			});
 		} else if (option == 'remove') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}question remove <number>`
+					format: `${object.prefix}question remove <number>`
 				});
 				return;
 			}
 			if (isNaN(object.args[1])) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-					'<arg>': object.args[1]
+					arg: object.args[1]
 				});
 				return;
 			}
@@ -156,14 +156,14 @@ module.exports = {
 			const number = parseInt(object.args[1]);
 			if (number <= 0 || number > loadedObject.question.list.length) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_question_index_not_found', {
-					'<index>': number
+					index: number
 				});
 				return;
 			}
 			const question = loadedObject.question.list.splice(number - 1, 1)[0];
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'question_remove', {
-				'<question>': question
+				question
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.question) {

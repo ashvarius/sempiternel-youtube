@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:38:14 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:36:08 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ module.exports = {
 		const users = Array.from(message.mentions.users.values());
 		if (!users.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}love <user1> [user2]`
+				format: `${object.prefix}love <user1> [user2]`
 			});
 			return;
 		}
@@ -30,7 +30,7 @@ module.exports = {
 			users.push(message.author);
 		if (users.length != 2) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}love <user> <user>`
+				format: `${object.prefix}love <user> <user>`
 			});
 			return;
 		}
@@ -44,10 +44,10 @@ module.exports = {
 			else
 				bar += '▢';
 		utils.sendMessage(message.channel, object.dictionary, 'love_success', {
-			'<user1>': users[0],
-			'<user2>': users[1],
-			'<percent>': percent,
-			'<bar>': bar
+			user1: users[0],
+			user2: users[1],
+			percent,
+			bar
 		});
 	}
 };

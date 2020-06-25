@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:00 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:28:23 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/17 00:14:00 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ module.exports = {
 		embed.addField('ReadyAt', message.client.readyAt.toUTCString());
 		embed.addField('TotalShards', message.client.ws.totalShards);
 		embed.addField('Guilds', Array.from(message.client.guilds.cache).length);
+		embed.addField('VoiceConnections', Array.from(message.client.voice.connections).length);
 		embed.addField('Channels', Array.from(message.client.channels.cache).length);
 		embed.addField('Emojis', Array.from(message.client.emojis.cache).length);
 		embed.addField('Users', Array.from(message.client.users.cache.filter(user => !user.bot)).length);

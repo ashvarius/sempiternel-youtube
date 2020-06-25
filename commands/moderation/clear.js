@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/22 12:16:56 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:39:14 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:43:34 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,26 +25,26 @@ module.exports = {
 		}
 		if (!message.channel.permissionsFor(message.member).has('MANAGE_MESSAGES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_MESSAGES'
+				permission: 'MANAGE_MESSAGES'
 			});
 			return;
 		}
 		for (const permission of ['MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 			if (!message.guild.me.hasPermission(permission)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-					'<permission>': permission
+					permission
 				});
 				return;
 			}
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}clear <number>`
+				format: `${object.prefix}clear <number>`
 			});
 			return;
 		}
 		if (isNaN(object.args[0])) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-				'<arg>': object.args[0]
+				arg: object.args[0]
 			});
 			return;
 		}
@@ -70,7 +70,7 @@ module.exports = {
 		while (bulkLength && number);
 		pending.splice(index, 1);
 		utils.sendMessage(message.channel, object.dictionary, 'clear_success', {
-			'<count>': deleted
+			count: deleted
 		});
 	}
 };

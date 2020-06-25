@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/03 17:30:14 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:14:31 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'poll_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'poll_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (!['set', 'reset'].includes(option)) {
@@ -38,20 +38,20 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('MANAGE_CHANNELS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_CHANNELS'
+				permission: 'MANAGE_CHANNELS'
 			});
 			return;
 		}
 		if (!message.guild.me.hasPermission('ADD_REACTIONS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'ADD_REACTIONS'
+				permission: 'ADD_REACTIONS'
 			});
 			return;
 		}
@@ -68,7 +68,7 @@ module.exports = {
 			loadedObject.poll = channel.id;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'poll_set', {
-				'<channel>': channel
+				channel
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.poll) {

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 21:10:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/26 22:50:01 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:35:00 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'temporary_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'temporary_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'list') {
@@ -50,7 +50,7 @@ module.exports = {
 				return;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'temporary_list', {
-				'<list>': list
+				list
 			});
 			return;
 		} else if (!['add', 'remove', 'reset'].includes(option)) {
@@ -61,14 +61,14 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('MANAGE_CHANNELS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_CHANNELS'
+				permission: 'MANAGE_CHANNELS'
 			});
 			return;
 		}
@@ -77,21 +77,21 @@ module.exports = {
 		if (option == 'add') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}temporary add <channelId>`
+					format: `${object.prefix}temporary add <channelId>`
 				});
 				return;
 			}
 			for (const permission of ['CONNECT', 'MANAGE_ROLES', 'MANAGE_CHANNELS', 'MUTE_MEMBERS', 'MOVE_MEMBERS'])
 				if (!message.guild.me.hasPermission(permission)) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-						'<permission>': permission
+						permission
 					});
 					return;
 				}
 			const channel = message.guild.channels.cache.get(object.args[1]);
 			if (!channel) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_temporary_channel_not_found', {
-					'<id>': object.args[1]
+					id: object.args[1]
 				});
 				return;
 			}
@@ -99,26 +99,26 @@ module.exports = {
 				loadedObject.temporary = [];
 			if (loadedObject.temporary.includes(channel.id)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_temporary_include', {
-					'<channel>': channel
+					channel
 				});
 				return;
 			}
 			loadedObject.temporary.push(channel.id);
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'temporary_add', {
-				'<channel>': channel
+				channel
 			});
 		} else if (option == 'remove') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}temporary remove <channelId>`
+					format: `${object.prefix}temporary remove <channelId>`
 				});
 				return;
 			}
 			const channel = message.guild.channels.cache.get(object.args[1]);
 			if (!channel) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_temporary_channel_not_found', {
-					'<id>': object.args[1]
+					id: object.args[1]
 				});
 				return;
 			}
@@ -126,14 +126,14 @@ module.exports = {
 				loadedObject.temporary = [];
 			if (!loadedObject.temporary.includes(channel.id)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_temporary_channel_not_listed', {
-					'<channel>': channel
+					channel
 				});
 				return;
 			}
 			loadedObject.temporary.splice(loadedObject.temporary.indexOf(5), 1);
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'temporary_remove', {
-				'<channel>': channel
+				channel
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.temporary) {

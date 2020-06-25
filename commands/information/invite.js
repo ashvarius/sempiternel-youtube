@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:29:08 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:38:20 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ module.exports = {
 			link = url.format(parsed);
 		}
 		utils.sendMessage(message.channel, object.dictionary, 'invite_success', {
-			'<invite>': link
+			invite: link
 		});
 	}
 };

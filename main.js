@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:34 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:43:22 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/16 22:21:18 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ const message_event = message => {
 		return;
 	if (command.length > 50) {
 		utils.sendMessage(message.channel, dictionary, 'error_command_too_big', {
-			'<size>': 50
+			size: 50
 		});
 		return;
 	}
@@ -118,8 +118,8 @@ const message_event = message => {
 			return;
 	}
 	utils.sendMessage(message.channel, dictionary, 'error_command_not_found', {
-		'<command>': command,
-		'<prefix>': object.prefix
+		command,
+		prefix: object.prefix
 	});
 };
 
@@ -168,6 +168,8 @@ client.on('message', message => {
 });
 
 client.on('messageUpdate', (oldMessage, newMessage) => {
+	if (oldMessage.content == newMessage.content)
+		return;
 	for (const category of Object.keys(commands))
 		for (const command of commands[category])
 			if (typeof command.messageUpdate == 'function')

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/09 00:55:34 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/09 06:09:55 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:37:04 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ module.exports = {
 			for (const permission of ['ADD_REACTIONS', 'READ_MESSAGE_HISTORY'])
 				if (!message.guild.me.hasPermission(permission)) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-						'<permission>': permission
+						permission
 					});
 					return;
 				}

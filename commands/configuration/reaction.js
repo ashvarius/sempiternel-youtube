@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 21:10:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/26 22:51:27 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:18:19 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@ module.exports = {
 	message: async (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'reaction_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'reaction_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (!['add', 'force', 'reset'].includes(option)) {
@@ -39,21 +39,21 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('MANAGE_ROLES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_ROLES'
+				permission: 'MANAGE_ROLES'
 			});
 			return;
 		}
 		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS'])
 			if (!message.guild.me.hasPermission(permission)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-					'<permission>': permission
+					permission
 				});
 				return;
 			}
@@ -62,7 +62,7 @@ module.exports = {
 		if (option == 'add') {
 			if (object.args.length < 3) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}reaction add <role> <emoji> [...] [messageId]`
+					format: `${object.prefix}reaction add <role> <emoji> [...] [messageId]`
 				});
 				return;
 			}
@@ -73,7 +73,7 @@ module.exports = {
 				const role = message.guild.roles.cache.find(role => object.args[index].includes(role.id));
 				if (!role) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_reaction_role_not_found', {
-						'<role>': object.args[index]
+						role: object.args[index]
 					});
 					return;
 				}
@@ -87,13 +87,13 @@ module.exports = {
 				roleMessage = message.channel.messages.cache.get(object.args[index]);
 				if (!roleMessage) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_reaction_message_not_found', {
-						'<message>': object.args[index]
+						message: object.args[index]
 					});
 					return;
 				}
 			} else
 				roleMessage = await utils.sendMessage(message.channel, object.dictionary, 'reaction_message', {
-					'<roles>': roles
+					roles
 				});
 			for (const key of Object.keys(reactions)) {
 				let emoji = key;
@@ -103,7 +103,7 @@ module.exports = {
 					emoji = (await roleMessage.react(emoji)).emoji;
 				} catch {
 					utils.replaceMessage(roleMessage, object.dictionary, 'error_reaction_emoji_not_found', {
-						'<emoji>': key
+						emoji: key
 					});
 					return;
 				}
@@ -121,7 +121,7 @@ module.exports = {
 			const roles = Array.from(message.mentions.roles.values());
 			if (roles.length != 1) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}reaction force <role>`
+					format: `${object.prefix}reaction force <role>`
 				});
 				return;
 			}
@@ -133,8 +133,8 @@ module.exports = {
 			loadedObject.reactions.channels[message.channel.id] = role.id;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'reaction_force', {
-				'<role>': role,
-				'<channel>': message.channel
+				role,
+				channel: message.channel
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.reactions) {

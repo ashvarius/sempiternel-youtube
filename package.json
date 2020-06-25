@@ -1,6 +1,6 @@
 {
   "name": "sempiternel",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "discord bot",
   "main": "main.js",
   "scripts": {
@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/Alexandre94H/Sempiternel#readme",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "ffmpeg-static": "^4.2.4",
+    "opusscript": "0.0.7",
+    "prism-media": "^1.2.2"
   }
 }

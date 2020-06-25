@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 16:10:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 15:08:39 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:33:51 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,14 @@ module.exports = {
 	message: async (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'stats_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'stats_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (!['set', 'reset'].includes(option)) {
@@ -38,20 +38,20 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('MANAGE_CHANNELS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_CHANNELS'
+				permission: 'MANAGE_CHANNELS'
 			});
 			return;
 		}
 		if (!message.guild.me.hasPermission('MANAGE_CHANNELS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'MANAGE_CHANNELS'
+				permission: 'MANAGE_CHANNELS'
 			});
 			return;
 		}
@@ -60,14 +60,14 @@ module.exports = {
 		if (option == 'set') {
 			if (object.args.length < 3) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}stats set ${object.args.length == 2 ? object.args[1] : '<channelId>'} <name...>`
+					format: `${object.prefix}stats set ${object.args.length == 2 ? object.args[1] : '<channelId>'} <name...>`
 				});
 				return;
 			}
 			const channel = message.guild.channels.cache.get(object.args[1]);
 			if (!(channel && channel.permissionsFor(message.guild.me).has('VIEW_CHANNEL'))) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_stats_channel_not_found', {
-					'<channel>': object.args[1]
+					channel: object.args[1]
 				})
 				return;
 			}
@@ -96,8 +96,8 @@ module.exports = {
 					args += `\`<${count}>\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_stats_no_count', {
-					'<name>': name,
-					'<args>': args
+					name,
+					args
 				});
 				return;
 			}
@@ -107,8 +107,8 @@ module.exports = {
 			loadedObject.stats[channel.id] = name;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'stats_add', {
-				'<channel>': channel,
-				'<name>': name
+				channel,
+				name
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.stats) {

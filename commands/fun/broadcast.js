@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 15:31:57 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/24 15:38:07 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:35:46 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@ module.exports = {
 	message: async (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'broadcast_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'broadcast_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (!['dm', 'channel'].includes(option)) {
@@ -39,14 +39,14 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (object.args.length < 3) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}prefix ${option} ${object.args.length == 1 ? '<token>' : object.args[1]} <message...>`
+				format: `${object.prefix}prefix ${option} ${object.args.length == 1 ? '<token>' : object.args[1]} <message...>`
 			});
 			return;
 		}
@@ -62,7 +62,7 @@ module.exports = {
 		});
 		client.on('ready', async () => {
 			await utils.replaceMessage(sendedMessage, object.dictionary, 'broadcast_sending', {
-				'<message>': broadcastMessage
+				message: broadcastMessage
 			});
 			const guilds = {};
 			const done = [];
@@ -90,15 +90,15 @@ module.exports = {
 				servers += `${guild} **(${guilds[guild]} messages sended)**`;
 			}
 			utils.replaceMessage(sendedMessage, object.dictionary, 'broadcast_success', {
-				'<servers>': servers,
+				servers,
 			});
 			client.destroy();
 		});
 		const sendedMessage = await utils.sendMessage(message.channel, object.dictionary, 'broadcast_login', {
-			'<token>': token
+			token
 		});
 		client.login(token).catch(err => utils.replaceMessage(sendedMessage, object.dictionary, 'error_broadcast_cannot_login', {
-			'<message>': err.message
+			message: err.message
 		}));
 	}
 };

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/29 03:15:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/09 20:06:14 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:45:14 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ module.exports = {
 	message: async (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}punishment <userId>`
+				format: `${object.prefix}punishment <userId>`
 			});
 			return;
 		}
@@ -38,7 +38,7 @@ module.exports = {
 		const messages = utils.remakeList(lines, 2048 - object.dictionary.punishment_success.length);
 		for (const logs of messages)
 			utils.sendMessage(message.channel, object.dictionary, 'punishment_success', {
-				'<logs>': logs
+				logs
 			});
 	}
 }

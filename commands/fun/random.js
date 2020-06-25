@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 23:32:07 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:36:30 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,13 +20,13 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}random <number>`
+				format: `${object.prefix}random <number>`
 			});
 			return;
 		}
 		if (isNaN(object.args[0])) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-				'<arg>': object.args[0]
+				arg: object.args[0]
 			});
 			return;
 		}
@@ -36,7 +36,7 @@ module.exports = {
 			return;
 		}
 		utils.sendMessage(message.channel, object.dictionary, 'random_success', {
-			'<number>': Math.floor(Math.random() * (number + 1))
+			number: Math.floor(Math.random() * (number + 1))
 		});
 	}
 };

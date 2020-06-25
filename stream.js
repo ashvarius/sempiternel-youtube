@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/10 18:03:02 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:03:06 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/15 01:26:50 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,13 @@ const stream = (options, callback) => {
 		options.headers = {};
 	if (!options.headers['User-Agent'])
 		options.headers['User-Agent'] = 'Mozilla/5.0';
+	if (!options.protocol)
+		options.protocol = Object.keys(httpLibs)[0];
 	return new Promise(resolve => {
 		const doDownload = () => {
 			const httpLib = httpLibs[options.protocol];
 			if (!httpLib)
 				throw 'Invalid URL';
-			console.log(options);
 			httpLib.get(options, res => {
 				if (redirectCode.includes(res.statusCode)) {
 					Object.assign(options, url.parse(res.headers.location));

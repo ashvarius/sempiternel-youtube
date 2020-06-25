@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/09 01:07:25 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/09 01:14:30 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:36:19 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,13 @@ module.exports = {
 	message: (message, object) => {
 		if (!message.guild.me.hasPermission('MANAGE_MESSAGES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'MANAGE_MESSAGES'
+				permission: 'MANAGE_MESSAGES'
 			});
 			return;
 		}
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}message <message...>`
+				format: `${object.prefix}message <message...>`
 			});
 			return;
 		}

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 10:53:54 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 22:54:09 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:42:59 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,26 +36,26 @@ module.exports = {
 	message: async (message, object) => {
 		if (!message.member.hasPermission('BAN_MEMBERS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'BAN_MEMBERS'
+				permission: 'BAN_MEMBERS'
 			});
 			return;
 		}
 		if (!message.guild.me.hasPermission('BAN_MEMBERS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'BAN_MEMBERS'
+				permission: 'BAN_MEMBERS'
 			});
 			return;
 		}
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}ban <userId>`
+				format: `${object.prefix}ban <userId>`
 			});
 			return;
 		}
 		const user = await message.client.users.fetch(object.args[0], false).catch(() => { });
 		if (!user) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_ban_user_not_found', {
-				'<user>': object.args[0]
+				user: object.args[0]
 			});
 			return;
 		}
@@ -71,11 +71,11 @@ module.exports = {
 			delete loadedMember.punishments[message.guild.id].ban;
 			utils.savFile(path, loadedMember);
 			utils.sendMessage(message.channel, object.dictionary, 'ban_remove', {
-				'<tag>': user.tag
+				tag: user.tag
 			});
 			const dm = await user.createDM();
 			utils.sendMessage(dm, object.dictionary, 'ban_remove_dm', {
-				'<guild>': message.guild.name
+				guild: message.guild.name
 			}).then(async () => {
 				for (const channel of message.guild.channels.cache.values())
 					if (channel.type == 'text'
@@ -95,13 +95,13 @@ module.exports = {
 		}
 		if (object.args.length < 4) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}ban <userId> <number> <unit> <reason...>`
+				format: `${object.prefix}ban <userId> <number> <unit> <reason...>`
 			});
 			return;
 		}
 		if (isNaN(object.args[1])) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-				'<arg>': object.args[1]
+				arg: object.args[1]
 			});
 			return;
 		}
@@ -119,8 +119,8 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[2],
-				'<options>': options
+				option: object.args[2],
+				options
 			});
 			return;
 		}
@@ -142,17 +142,17 @@ module.exports = {
 			reason += object.args[index];
 		}
 		await utils.sendMessage(await user.createDM(), object.dictionary, 'ban_private', {
-			'<number>': number,
-			'<unit>': unit,
-			'<reason>': reason,
-			'<guild>': message.guild.name
+			number,
+			unit,
+			reason,
+			guild: message.guild.name
 		}).catch(() => { });
 		if (!(await message.guild.members.ban(user, {
 			days: 1,
 			reason
 		}).catch(() => { }))) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_ban_api', {
-				'<tag>': user.tag
+				tag: user.tag
 			});
 			return;
 		}
@@ -163,10 +163,10 @@ module.exports = {
 		loadedMember.punishments[message.guild.id].ban = timestamp + addition;
 		utils.savFile(path, loadedMember);
 		utils.sendMessage(message.channel, object.dictionary, 'ban_success', {
-			'<tag>': user.tag,
-			'<number>': number,
-			'<unit>': unit,
-			'<reason>': reason
+			tag: user.tag,
+			number,
+			unit,
+			reason
 		});
 	},
 	timer: async client => {
@@ -189,7 +189,7 @@ module.exports = {
 							dictionary = getDictionary(guild);
 						const dm = await ban.user.createDM();
 						utils.sendMessage(dm, dictionary, 'ban_remove_dm', {
-							'<guild>': guild.name
+							guild: guild.name
 						}).then(async () => {
 							for (const channel of guild.channels.cache.values())
 								if (channel.type == 'text'

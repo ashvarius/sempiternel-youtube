@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/03 02:59:34 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/14 19:51:12 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'slowmode_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'slowmode_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'list') {
@@ -59,7 +59,6 @@ module.exports = {
 				const channel = message.guild.channels.cache.get(id);
 				if (channel)
 					embed.addField(channel.name, `**Cooldown (milliseconds)**: ${object.slowmode[id].cooldown}\n**Message**: ${object.slowmode[id].message}`);
-				console.log(object.slowmode[id]);
 			}
 			utils.sendEmbed(message.channel, object.dictionary, embed);
 		} else if (!['add', 'remove', 'reset'].includes(option)) {
@@ -70,20 +69,20 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('MANAGE_CHANNELS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_CHANNELS'
+				permission: 'MANAGE_CHANNELS'
 			});
 			return;
 		}
 		if (!message.guild.me.hasPermission('MANAGE_MESSAGES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'MANAGE_MESSAGES'
+				permission: 'MANAGE_MESSAGES'
 			});
 			return;
 		}
@@ -92,20 +91,20 @@ module.exports = {
 		if (option == 'add') {
 			if (object.args.length < 5) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}slowmode set <channelId> <number> <unit> <message...>`
+					format: `${object.prefix}slowmode set <channelId> <number> <unit> <message...>`
 				});
 				return;
 			}
 			const channel = message.guild.channels.cache.get(object.args[1]);
 			if (!channel) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_slowmode_channel_not_found', {
-					'<channelId>': object.args[1]
+					channelId: object.args[1]
 				});
 				return;
 			}
 			if (isNaN(object.args[2])) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-					'<arg>': object.args[2]
+					arg: object.args[2]
 				});
 			}
 			const number = parseInt(object.args[2]);
@@ -122,8 +121,8 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[3],
-					'<options>': options
+					option: object.args[3],
+					options
 				});
 				return;
 			}
@@ -152,28 +151,28 @@ module.exports = {
 			};
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'slowmode_set', {
-				'<channel>': channel,
-				'<number>': number,
-				'<unit>': unit,
-				'<message>': message1
+				channel,
+				number,
+				unit,
+				message: message1
 			});
 		} else if (option == 'remove') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}slowmode remove <channelId>`
+					format: `${object.prefix}slowmode remove <channelId>`
 				});
 				return;
 			}
 			if (!loadedObject.slowmode[object.args[1]]) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_slowmode_channel_not_found', {
-					'<channelId>': object.args[1]
+					channelId: object.args[1]
 				});
 				return;
 			}
 			delete loadedObject.slowmode[object.args[1]];
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'slowmode_remove', {
-				'<channel>': message.guild.channels.cache.get(object.args[1])
+				channel: message.guild.channels.cache.get(object.args[1])
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.slowmode) {

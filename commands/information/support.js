@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/09 18:14:19 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:29:22 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:40:44 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ module.exports = {
 					reason: 'Unban'
 				});
 				utils.sendMessage(message.channel, object.dictionary, 'support_success', {
-					'<invite>': invite.url
+					invite: invite.url
 				});
 				return;
 			}

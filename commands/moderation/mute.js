@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 10:53:54 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 22:52:11 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:45:03 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,39 +37,39 @@ module.exports = {
 	message: async (message, object) => {
 		if (!message.member.hasPermission('MUTE_MEMBERS')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MUTE_MEMBERS'
+				permission: 'MUTE_MEMBERS'
 			});
 			return;
 		}
 		for (const permission of ['MANAGE_ROLES', 'MANAGE_CHANNELS', 'SEND_MESSAGES', 'SEND_MESSAGES', 'SPEAK', 'ADD_REACTIONS', 'MANAGE_MESSAGES', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS', 'MOVE_MEMBERS'])
 			if (!message.guild.me.hasPermission(permission)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-					'<permission>': permission
+					permission: permission
 				});
 				return;
 			}
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}mute <userId>`
+				format: `${object.prefix}mute <userId>`
 			});
 			return;
 		}
 		const member = message.guild.members.cache.get(object.args[0]);
 		if (!member) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_mute_member_not_found', {
-				'<member>': object.args[0]
+				member: object.args[0]
 			});
 			return;
 		}
 		if (!member.manageable) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_mute_not_manageable', {
-				'<member>': member
+				member
 			});
 			return;
 		}
 		if (member.roles.highest.position >= message.member.roles.highest.position) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_mute_highest', {
-				'<member>': member
+				member
 			});
 			return;
 		}
@@ -113,22 +113,22 @@ module.exports = {
 			delete loadedMember.punishments[message.guild.id].mute;
 			utils.savFile(path, loadedMember);
 			utils.sendMessage(message.channel, object.dictionary, 'mute_remove', {
-				'<member>': member
+				member
 			});
 			utils.sendMessage(await member.createDM(), object.dictionary, 'mute_remove_dm', {
-				'<guild>': member.guild.name
+				guild: member.guild.name
 			}).catch(() => { });
 			return;
 		}
 		if (object.args.length < 4) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}mute <userId> <number> <unit> <reason...>`
+				format: `${object.prefix}mute <userId> <number> <unit> <reason...>`
 			});
 			return;
 		}
 		if (isNaN(object.args[1])) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-				'<arg>': object.args[1]
+				arg: object.args[1]
 			});
 			return;
 		}
@@ -146,8 +146,8 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[2],
-				'<options>': options
+				option: object.args[2],
+				options
 			});
 			return;
 		}
@@ -176,16 +176,16 @@ module.exports = {
 		loadedMember.punishments[message.guild.id].mute = timestamp + addition;
 		utils.savFile(path, loadedMember);
 		utils.sendMessage(message.channel, object.dictionary, 'mute_success', {
-			'<member>': member,
-			'<number>': number,
-			'<unit>': unit,
-			'<reason>': reason
+			member,
+			number,
+			unit,
+			reason
 		});
 		utils.sendMessage(await member.createDM(), object.dictionary, 'mute_private', {
-			'<number>': number,
-			'<unit>': unit,
-			'<reason>': reason,
-			'<guild>': member.guild.name
+			number,
+			unit,
+			reason,
+			guild: member.guild.name
 		}).catch(() => { });
 	},
 	channelCreate: channel => {
@@ -252,7 +252,7 @@ module.exports = {
 					if (!dictionary)
 						dictionary = getDictionary(guild);
 					utils.sendMessage(await member.createDM(), dictionary, 'mute_remove_dm', {
-						'<guild>': guild.name
+						guild: guild.name
 					}).catch(() => { });
 				}
 			}

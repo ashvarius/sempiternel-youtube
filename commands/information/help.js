@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:57 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:34:13 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/16 17:48:08 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ module.exports = {
 	message: (message, object) => {
 		let embed;
 		if (object.args.length) {
-			let category;
 			let command = object.args[0].toLowerCase();
 			for (const category of Object.keys(message.client._commands)) {
 				for (const commandFile of message.client._commands[category])
@@ -35,8 +34,8 @@ module.exports = {
 			}
 			if (typeof command == 'string') {
 				utils.sendMessage(message.channel, object.dictionary, 'error_command_not_found', {
-					'<command>': command,
-					'<prefix>': object.prefix
+					command,
+					prefix: object.prefix
 				});
 				return;
 			}
@@ -60,7 +59,7 @@ module.exports = {
 			}
 		} else {
 			embed = utils.getEmbed(object.dictionary, 'help_desciption', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			const dm = message.channel.type == 'dm';
 			for (const category of Object.keys(message.client._commands)) {

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:19 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/09 05:49:40 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/15 18:41:52 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,10 @@ module.exports = {
 		let message = dictionary[key];
 		if (!message) {
 			message = dictionary.error_dictionary_not_found;
-			object = {
-				'<key>': key
-			};
+			object = { key };
 		}
 		for (const objectKey of Object.keys(object))
-			message = `${message}`.replace(new RegExp(objectKey, 'g'), object[objectKey]);
+			message = `${message}`.replace(new RegExp(`<${objectKey}>`, 'g'), object[objectKey]);
 		return message;
 	},
 	getCustomEmbed: (description) => {

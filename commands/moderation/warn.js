@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 10:53:54 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 20:01:11 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:45:43 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,20 +20,20 @@ module.exports = {
 	message: async (message, object) => {
 		if (object.args.length < 2) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}warn <userId> <reason>`
+				format: `${object.prefix}warn <userId> <reason>`
 			});
 			return;
 		}
 		const member = message.guild.members.cache.get(object.args[0]);
 		if (!member) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_warn_member_not_found', {
-				'<member>': object.args[0]
+				member: object.args[0]
 			});
 			return;
 		}
 		if (member.roles.highest.position >= message.member.roles.highest.position) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_warn_highest', {
-				'<member>': member
+				member
 			});
 			return;
 		}
@@ -55,15 +55,15 @@ module.exports = {
 		loadedMember.punishments[message.guild.id].logs[timestamp] = reason;
 		utils.savFile(path, loadedMember);
 		utils.sendMessage(message.channel, object.dictionary, 'warn_success', {
-			'<member>': member,
-			'<reason>': reason
+			member,
+			reason
 		});
 		utils.sendMessage(await member.createDM(), object.dictionary, 'warn_private', {
-			'<reason>': reason,
-			'<guild>': member.guild.name
+			reason,
+			guild: member.guild.name
 		}).catch(error => utils.sendMessage(message.channel, object.dictionary, 'error_warn_not_send', {
-			'<member>': member,
-			'<error>': error.message
+			member,
+			error: error.message
 		}));
 	}
 };

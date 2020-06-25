@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/21 05:36:52 by ahallain          #+#    #+#             */
-/*   Updated: 2020/05/29 16:26:59 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:02:20 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'authorize_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'authorize_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'list') {
@@ -61,14 +61,14 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('ADMINISTRATOR')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'ADMINISTRATOR'
+				permission: 'ADMINISTRATOR'
 			});
 			return;
 		}
@@ -77,7 +77,7 @@ module.exports = {
 		if (option == 'add') {
 			if (object.args.length < 3) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}authorize add ${option} ${object.args.length == 1 ? '<command/categorie/all>' : object.args[1]} <enable/disable> [channelId]`
+					format: `${object.prefix}authorize add ${option} ${object.args.length == 1 ? '<command/categorie/all>' : object.args[1]} <enable/disable> [channelId]`
 				});
 				return;
 			}
@@ -95,7 +95,7 @@ module.exports = {
 			const rule = rules[object.args[1].toLowerCase()];
 			if (!rule) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_authorize_command_cannot_set', {
-					'<command>': object.args[1]
+					command: object.args[1]
 				});
 				return;
 			}
@@ -108,8 +108,8 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[2],
-					'<options>': options
+					option: object.args[2],
+					options
 				});
 				return;
 			}
@@ -120,7 +120,7 @@ module.exports = {
 				channel = message.guild.channels.cache.get(object.args[3]);
 				if (!channel) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_authorize_channel_not_found', {
-						'<id>': object.args[3]
+						id: object.args[3]
 					});
 					return;
 				}
@@ -145,28 +145,28 @@ module.exports = {
 			}
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'authorize_add', {
-				'<setting>': setting,
-				'<command>': rule,
-				'<channel>': channel
+				setting,
+				command: rule,
+				channel
 			});
 		} else if (option == 'remove') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}authorize remove <command/categorie/all>`
+					format: `${object.prefix}authorize remove <command/categorie/all>`
 				});
 				return;
 			}
 			const rule = object.args[1].toLowerCase();
 			if (!(loadedObject.authorize && loadedObject.authorize[rule])) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_authorize_rule_not_found', {
-					'<rule>': object.args[1]
+					rule: object.args[1]
 				});
 				return;
 			}
 			delete loadedObject.authorize[rule];
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'authorize_remove', {
-				'<rule>': rule
+				rule
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.authorize) {

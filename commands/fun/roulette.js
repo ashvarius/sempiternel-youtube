@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 18:45:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:28:05 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:36:41 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}roulette <message...>`
+				format: `${object.prefix}roulette <message...>`
 			});
 			return;
 		}

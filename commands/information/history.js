@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/09 18:25:43 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:38:46 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:38:16 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,14 @@ module.exports = {
 	message: async (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'history_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'history_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
@@ -39,14 +39,14 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (object.args.length < 2) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-				'<format>': `${object.prefix}history ${option} <userId>`
+				format: `${object.prefix}history ${option} <userId>`
 			});
 			return;
 		}
@@ -55,7 +55,7 @@ module.exports = {
 		const user = await message.client.users.fetch(object.args[1], false).catch(() => { });
 		if (!user) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_history_user_not_found', {
-				'<user>': object.args[1]
+				user: object.args[1]
 			});
 			return;
 		}
@@ -71,8 +71,8 @@ module.exports = {
 		const messages = utils.remakeList(lines, 2048 - object.dictionary.history_success.length);
 		for (const logs of messages) {
 			const embed = utils.getEmbed(object.dictionary, 'history_success', {
-				'<type>': option,
-				'<logs>': logs
+				type: option,
+				logs
 			});
 			embed.setAuthor(user.username, user.displayAvatarURL({
 				dynamic: true,

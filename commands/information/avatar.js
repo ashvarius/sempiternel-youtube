@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/22 07:25:53 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 18:45:15 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:37:29 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ module.exports = {
 			const user = await message.client.users.fetch(arg, false).catch(() => { });
 			if (!user) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_avatar_user_not_found', {
-					'<user>': arg
+					user: arg
 				});
 				continue;
 			}
@@ -40,7 +40,7 @@ module.exports = {
 				size: 4096
 			});
 			utils.sendEmbed(message.channel, object.dictionary, utils.getEmbed(object.dictionary, 'avatar_success', {
-				'<link>': link
+				link
 			}).setImage(link));
 		}
 	}

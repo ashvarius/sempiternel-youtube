@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/08 10:03:49 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/08 19:48:55 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:12:45 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,13 @@ module.exports = {
 	message: (message, object) => {
 		if (!message.member.hasPermission('MANAGE_ROLES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_ROLES'
+				permission: 'MANAGE_ROLES'
 			});
 			return;
 		}
 		if (!message.guild.me.hasPermission('MANAGE_ROLES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'MANAGE_ROLES'
+				permission: 'MANAGE_ROLES'
 			});
 			return;
 		}
@@ -40,8 +40,8 @@ module.exports = {
 		const max = 30;
 		if (name.length > max) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_invrole_too_long', {
-				'<name>': name,
-				'<minimum>': max
+				name,
+				maximum: max
 			});
 			return;
 		}
@@ -60,7 +60,7 @@ module.exports = {
 			reason: 'InvRole Command'
 		});
 		utils.sendMessage(message.channel, object.dictionary, 'invrole_success', {
-			'<name>': name
+			name
 		});
 	}
 };

@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/28 23:20:11 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 19:44:37 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:40:28 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'level_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'level_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
@@ -57,8 +57,8 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
@@ -71,7 +71,7 @@ module.exports = {
 			for (const user of users) {
 				if (!level[user.id]) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_level_user_not_found', {
-						'<user>': user
+						user
 					});
 					return;
 				}
@@ -86,11 +86,11 @@ module.exports = {
 					else
 						bar += '▢';
 				utils.sendMessage(message.channel, object.dictionary, 'level_me', {
-					'<user>': user,
-					'<level>': level[user.id].level,
-					'<experience>': level[user.id].experience,
-					'<maxExperience>': maxExperience,
-					'<bar>': bar
+					user,
+					level: level[user.id].level,
+					experience: level[user.id].experience,
+					maxExperience,
+					bar
 				});
 			}
 			return;
@@ -120,9 +120,9 @@ module.exports = {
 				const member = message.guild.members.cache.get(id);
 				if (member)
 					messages.push(utils.getMessage(object.dictionary, 'level_top_user', {
-						'<position>': position++,
-						'<user>': member.user,
-						'<level>': orderLevel[id].level
+						position: position++,
+						user: member.user,
+						level: orderLevel[id].level
 					}));
 			}
 			if (messages.length == 1) {
@@ -135,7 +135,7 @@ module.exports = {
 		}
 		if (!message.member.hasPermission('ADMINISTRATOR')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'ADMINISTRATOR'
+				permission: 'ADMINISTRATOR'
 			});
 			return;
 		}
@@ -168,7 +168,7 @@ module.exports = {
 		} else if (option == 'activate') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level set <true/false>`
+					format: `${object.prefix}level set <true/false>`
 				});
 				return;
 			}
@@ -180,8 +180,8 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[1],
-					'<options>': options
+					option: object.args[1],
+					options
 				});
 				return;
 			}
@@ -191,12 +191,12 @@ module.exports = {
 			loadedObject.level.activate = bool;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'level_activate', {
-				'<bool>': bool
+				bool
 			});
 		} else if (option == 'set') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level set <channelId/every>`
+					format: `${object.prefix}level set <channelId/every>`
 				});
 				return;
 			}
@@ -205,7 +205,7 @@ module.exports = {
 				channel = message.guild.channels.cache.get(object.args[1]);
 				if (!channel) {
 					utils.sendMessage(message.channel, object.dictionary, 'error_level_channel_not_found', {
-						'<channel>': object.args[1]
+						channel: object.args[1]
 					});
 					return;
 				}
@@ -218,12 +218,12 @@ module.exports = {
 				delete loadedObject.level.channel;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'level_set', {
-				'<channel>': channel ? channel : '**every**'
+				channel: channel ? channel : '**every**'
 			});
 		} else if (option == 'calc') {
 			if (object.args.length < 3) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level calc ${object.args.length == 2 ? object.args[1] : '<type>'} <number>`
+					format: `${object.prefix}level calc ${object.args.length == 2 ? object.args[1] : '<type>'} <number>`
 				});
 				return;
 			}
@@ -236,14 +236,14 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[1],
-					'<options>': options
+					option: object.args[1],
+					options
 				});
 				return;
 			}
 			if (isNaN(object.args[2])) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_isnana', {
-					'<arg>': object.args[2]
+					arg: object.args[2]
 				});
 				return;
 			}
@@ -257,14 +257,14 @@ module.exports = {
 			loadedObject.level[type] = number;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'level_calc', {
-				'<type>': type,
-				'<number>': number
+				type,
+				number
 			});
 		} else if (option == 'leader') {
 			const roles = Array.from(message.mentions.roles.values());
 			if (roles.length != 1) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level leader <role>`
+					format: `${object.prefix}level leader <role>`
 				});
 				return;
 			}
@@ -274,19 +274,19 @@ module.exports = {
 			loadedObject.level.leader = role.id;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'level_leader', {
-				'<role>': role
+				role
 			});
 		} else if (option == 'add') {
 			const roles = Array.from(message.mentions.roles.values());
 			if (roles.length != 1) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level add <role> <level>`
+					format: `${object.prefix}level add <role> <level>`
 				});
 				return;
 			}
 			if (object.args.length < 3) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level add ${object.args.length == 2 ? object.args[1] : '<role>'} <level>`
+					format: `${object.prefix}level add ${object.args.length == 2 ? object.args[1] : '<role>'} <level>`
 				});
 				return;
 			}
@@ -303,14 +303,14 @@ module.exports = {
 			loadedObject.level.roles[role.id] = number;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'level_add', {
-				'<role>': role,
-				'<level>': number
+				role,
+				level: number
 			});
 		} else if (option == 'remove') {
 			const roles = Array.from(message.mentions.roles.values());
 			if (roles.length != 1) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}level remove <role>`
+					format: `${object.prefix}level remove <role>`
 				});
 				return;
 			}
@@ -321,14 +321,14 @@ module.exports = {
 				loadedObject.level.roles = {};
 			if (!loadedObject.level.roles[role.id]) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_level_role_not_found', {
-					'<role>': role
+					role
 				});
 				return;
 			}
 			delete loadedObject.level.roles[role.id];
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'level_remove', {
-				'<role>': role
+				role
 			});
 		} else if (option == 'settings') {
 			const settings = JSON.parse(JSON.stringify(message.client._config.level));
@@ -410,9 +410,9 @@ module.exports = {
 			return;
 		const dictionary = getDictionary(message.guild);
 		utils.sendEmbed(channel, dictionary, utils.getEmbed(dictionary, 'level_up', {
-			'<name>': message.member.displayName,
-			'<up>': up,
-			'<level>': level[message.author.id].level
+			name: message.member.displayName,
+			up,
+			level: level[message.author.id].level
 		}).setTimestamp());
 		if (!message.guild.me.hasPermission('MANAGE_ROLES'))
 			return;

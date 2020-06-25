@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/09 02:19:05 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/11 20:13:42 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@ module.exports = {
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'joinrole_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		}
 		const option = object.args[0].toLowerCase();
 		if (option == 'help') {
 			utils.sendMessage(message.channel, object.dictionary, 'joinrole_help', {
-				'<prefix>': object.prefix
+				prefix: object.prefix
 			});
 			return;
 		} else if (option == 'settings') {
@@ -57,20 +57,20 @@ module.exports = {
 				options += `\`${option}\``;
 			}
 			utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-				'<option>': object.args[0],
-				'<options>': options
+				option: object.args[0],
+				options
 			});
 			return;
 		}
 		if (!message.member.hasPermission('MANAGE_ROLES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_no_permission', {
-				'<permission>': 'MANAGE_ROLES'
+				permission: 'MANAGE_ROLES'
 			});
 			return;
 		}
 		if (!message.guild.me.hasPermission('MANAGE_ROLES')) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_bot_no_permission', {
-				'<permission>': 'MANAGE_ROLES'
+				permission: 'MANAGE_ROLES'
 			});
 			return;
 		}
@@ -80,7 +80,7 @@ module.exports = {
 			const roles = Array.from(message.mentions.roles.values());
 			if (roles.length != 1) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}stats add <role>`
+					format: `${object.prefix}stats add <role>`
 				});
 				return;
 			}
@@ -92,13 +92,13 @@ module.exports = {
 			loadedObject.joinrole.roles.push(role.id);
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'joinrole_add', {
-				'<role>': role
+				role
 			});
 		} else if (option == 'remove') {
 			const roles = Array.from(message.mentions.roles.values());
 			if (roles.length != 1) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}stats remove <role>`
+					format: `${object.prefix}stats remove <role>`
 				});
 				return;
 			}
@@ -109,19 +109,19 @@ module.exports = {
 				loadedObject.joinrole.roles = [];
 			if (!loadedObject.joinrole.roles.includes(role.id)) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_joinrole_role_not_found', {
-					'<role>': role
+					role
 				});
 				return;
 			}
 			loadedObject.joinrole.roles.splice(loadedObject.joinrole.roles.indexOf(5), 1);
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'joinrole_remove', {
-				'<role>': role
+				role
 			});
 		} else if (option == 'restore') {
 			if (object.args.length < 2) {
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_format', {
-					'<format>': `${object.prefix}stats restore <true/false>`
+					format: `${object.prefix}stats restore <true/false>`
 				});
 				return;
 			}
@@ -133,8 +133,8 @@ module.exports = {
 					options += `\`${option}\``;
 				}
 				utils.sendMessage(message.channel, object.dictionary, 'error_invalid_option', {
-					'<option>': object.args[1],
-					'<options>': options
+					option: object.args[1],
+					options
 				});
 				return;
 			}
@@ -144,7 +144,7 @@ module.exports = {
 			loadedObject.joinrole.restore = bool;
 			utils.savFile(path, loadedObject);
 			utils.sendMessage(message.channel, object.dictionary, 'joinrole_restore', {
-				'<bool>': bool
+				bool
 			});
 		} else if (option == 'reset') {
 			if (!loadedObject.joinrole) {
