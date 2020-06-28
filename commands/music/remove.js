@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/15 19:50:18 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/15 22:59:11 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/27 23:03:00 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,8 @@ module.exports = {
 			});
 			return;
 		}
-		const number = parseInt(object.args[0]);
-		if (number < 1 || number >= message.client.music[message.guild.id].playlist.length) {
+		const number = parseInt(object.args[0]) - 1;
+		if (number < 0 || number >= message.client.music[message.guild.id].playlist.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_remove_no_music_found');
 			return;
 		}

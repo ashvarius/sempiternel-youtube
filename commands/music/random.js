@@ -1,43 +1,37 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   skip.js                                            :+:      :+:    :+:   */
+/*   random.js                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/06/15 18:43:58 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/27 21:10:52 by ahallain         ###   ########.fr       */
+/*   Created: 2020/06/27 00:15:06 by ahallain          #+#    #+#             */
+/*   Updated: 2020/06/27 04:30:52 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const utils = require('../../utils.js');
 
 module.exports = {
-	name: 'skip',
+	name: 'random',
 	aliases: [],
-	description: 'Skip music.',
+	description: 'Play music at random.',
 	privateMessage: false,
 	message: (message, object) => {
 		if (!(message.client.music && message.client.music[message.guild.id])) {
-			utils.sendMessage(message.channel, object.dictionary, 'error_skip_no_data');
+			utils.sendMessage(message.channel, object.dictionary, 'error_random_no_data');
 			return;
 		}
 		if (!(message.guild.me.voice.channelID
 			&& message.member.voice.channelID == message.guild.me.voice.channelID)) {
-			utils.sendMessage(message.channel, object.dictionary, 'error_skip_not_same_voice');
+			utils.sendMessage(message.channel, object.dictionary, 'error_random_not_same_voice');
 			return;
 		}
-		const current = message.client.music[message.guild.id].current;
-		if (!current) {
-			utils.sendMessage(message.channel, object.dictionary, 'error_skip_no_music');
-			return;
-		}
-		message.client.music[message.guild.id].connection.dispatcher.emit('finish');
-		utils.sendMessage(message.channel, object.dictionary, 'skip_success', {
-			title: current.title,
-			url: current.url,
-			channel: current.ownerChannelName,
-			channelUrl: current.ownerProfileUrl
-		});
+		const bool = !message.client.music[message.guild.id].random;
+		message.client.music[message.guild.id].random = bool;
+		if (bool)
+			utils.sendMessage(message.channel, object.dictionary, 'random_activate');
+		else
+			utils.sendMessage(message.channel, object.dictionary, 'random_desactivate');
 	}
 };

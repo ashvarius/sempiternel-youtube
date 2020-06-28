@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/15 23:00:00 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/16 16:25:22 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/27 21:24:56 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,22 +40,22 @@ module.exports = {
 				});
 				return;
 			}
-		const from = parseInt(object.args[0]);
-		if (from < 1 || from >= message.client.music[message.guild.id].playlist.length) {
+		const from = parseInt(object.args[0]) - 1;
+		if (from < 0 || from >= message.client.music[message.guild.id].playlist.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_move_no_music_found');
 			return;
 		}
-		const to = parseInt(object.args[1]);
-		if (to < 1 || to >= message.client.music[message.guild.id].playlist.length) {
+		const to = parseInt(object.args[1]) - 1;
+		if (to < 0 || to >= message.client.music[message.guild.id].playlist.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'error_move_not_in_playlist', {
-				index: to
+				index: to + 1
 			});
 			return;
 		}
 		const music = message.client.music[message.guild.id].playlist.splice(from, 1)[0];
 		message.client.music[message.guild.id].playlist.splice(to, 0, music);
 		utils.sendMessage(message.channel, object.dictionary, 'move_success', {
-			index: to,
+			index: to + 1,
 			title: music.title,
 			url: music.url,
 			channel: music.ownerChannelName,

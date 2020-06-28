@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:34 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/16 22:21:18 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/28 10:09:55 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@ const config = require('./config.json');
 const utils = require('./utils.js');
 
 const client = new Client({
+	shards: 'auto',
 	fetchAllMembers: true,
 	presence: config.presence
 });
@@ -123,7 +124,7 @@ const message_event = message => {
 	});
 };
 
-client.on('ready', () => {
+client.on('ready', async () => {
 	if (fs.existsSync('commands'))
 		for (const category of fs.readdirSync('commands'))
 			for (const filename of fs.readdirSync(`commands/${category}`)) {

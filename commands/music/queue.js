@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/15 18:03:46 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/15 19:22:10 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/27 21:21:31 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,28 @@ module.exports = {
 			utils.sendMessage(message.channel, object.dictionary, 'error_queue_no_data');
 			return;
 		}
+		const current = message.client.music[message.guild.id].current;
+		let request = current.request;
+		if (typeof request == 'object') {
+			const member = message.guild.members.cache.get(current.request.id);
+			if (member)
+				request = member.displayName;
+			else
+				request = user.username;
+		}
+		const lines = [
+			utils.getMessage(object.dictionary, 'queue_header'),
+			utils.getMessage(object.dictionary, 'queue_item', {
+				index: 'Current',
+				title: current.title,
+				url: current.url,
+				user: request
+			})
+		];
+		index = 'Current';
 		let count = 0;
-		let queue = '';
 		for (const music of message.client.music[message.guild.id].playlist) {
-			if (queue.length)
-				queue += '\n';
-			let request = music.request;
+			request = music.request;
 			if (typeof request == 'object') {
 				const member = message.guild.members.cache.get(music.request.id);
 				if (member)
@@ -35,18 +51,16 @@ module.exports = {
 				else
 					request = user.username;
 			}
-			let index = count++;
-			if (!index)
-				index = 'Current';
-			queue += utils.getMessage(object.dictionary, 'queue_item', {
+			let index = ++count;
+			lines.push(utils.getMessage(object.dictionary, 'queue_item', {
 				index,
 				title: music.title,
 				url: music.url,
 				user: request
-			});
+			}));
 		}
-		utils.sendMessage(message.channel, object.dictionary, 'queue_success', {
-			queue
-		});
+		const messages = utils.remakeList(lines);
+		for (const item of messages)
+			utils.sendEmbed(message.channel, object.dictionary, utils.getCustomEmbed(item));
 	}
 };

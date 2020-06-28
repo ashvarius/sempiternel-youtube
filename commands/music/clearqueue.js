@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/15 19:22:56 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/15 19:32:24 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/27 21:13:25 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ module.exports = {
 			utils.sendMessage(message.channel, object.dictionary, 'error_clearqueue_not_same_voice');
 			return;
 		}
-		message.client.music[message.guild.id].playlist.splice(1, message.client.music[message.guild.id].playlist.length - 1);
+		message.client.music[message.guild.id].playlist = [];
 		utils.sendMessage(message.channel, object.dictionary, 'clearqueue_success');
 	}
 };

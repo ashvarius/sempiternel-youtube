@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:19 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/15 18:41:52 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/28 00:06:30 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,8 @@ module.exports = {
 	},
 	getCustomEmbed: (description) => {
 		const embed = new MessageEmbed();
-		embed.setDescription(description);
+		if (description)
+			embed.setDescription(description);
 		embed.setColor(config.embed.color);
 		embed.setFooter(config.embed.footer);
 		return embed;
