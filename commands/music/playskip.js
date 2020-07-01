@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/27 23:31:36 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/27 23:33:16 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/06/29 21:57:36 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,9 @@ module.exports = {
 			utils.sendMessage(message.channel, object.dictionary, 'error_playskip_no_play');
 			return;
 		}
-		play(message.member, message.client, message.channel, message.guild, object.dictionary, object.args[0], -1);
+		const skip = message.client.music && message.client.music[message.guild.id];
+		await play(message.member, message.client, message.channel, message.guild, object.dictionary, object.args[0], 0);
+		if (skip)
+			message.client.music[message.guild.id].connection.dispatcher.emit('finish');
 	}
 };

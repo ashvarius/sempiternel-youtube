@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/28 13:28:47 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/01 15:54:33 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@ const utils = require('../../utils.js');
 const YoutubeVideo = require('../../youtube-wrapper/index.js').Video;
 const prism = require('prism-media');
 
-const generateTranscoder = (url, { start = 0, duration = 0 } = {}) => {
+const generateTranscoder = (url, { start = 0, duration = 0 } = {}, { bass = 0, treble = 0, speed = 1 } = {}) => {
 	let args = [
 		'-reconnect', '1',
 		'-reconnect_streamed', '1',
@@ -23,11 +23,13 @@ const generateTranscoder = (url, { start = 0, duration = 0 } = {}) => {
 	];
 	if (duration)
 		args = args.concat(['-to', duration]);
+	//		'-af', `bass=g=${bass}, treble=g=${treble}, atempo=${speed}`,
 	args = args.concat([
 		'-i', url,
 		'-f', 's16le',
 		'-ar', '48000',
 		'-ac', '2',
+		'-af', `bass=g=${bass}, treble=g=${treble}`,
 		'-c:v', 'libx264',
 		'-preset', 'veryslow',
 		'-crf', '0',
@@ -38,8 +40,10 @@ const generateTranscoder = (url, { start = 0, duration = 0 } = {}) => {
 	transcoder._readableState.needReadable = true;
 	return transcoder;
 }
-const trancodertoOpus = trancoder => {
-	return trancoder.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
+const trancodertoOpus = (trancoder, volume) => {
+	const opus = new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 });
+	const volumeTransformer = new prism.VolumeTransformer({ type: 's16le', volume });
+	return trancoder.pipe(volumeTransformer).pipe(opus);
 }
 const start = async (client, guildId, music) => {
 	client.music[guildId].current = music;
@@ -51,17 +55,12 @@ const start = async (client, guildId, music) => {
 			return;
 		}
 	}
-	let transcoder = music.transcoder;
-	if (transcoder)
-		delete music.transcoder;
-	else {
-		const format = music.formats.find(format => !format.qualityLabel && format.audioChannels);
-		transcoder = generateTranscoder(format.url, {
-			start: music.time ? `${music.time}ms` : 0,
-			duration: format.approxDurationMs ? `${format.approxDurationMs}ms` : 0
-		});
-	}
-	const opus = trancodertoOpus(transcoder);
+	const format = music.formats.find(format => !format.qualityLabel && format.audioChannels);
+	const transcoder = generateTranscoder(format.url, {
+		start: music.time ? `${music.time}ms` : 0,
+		duration: format.approxDurationMs ? `${format.approxDurationMs}ms` : 0
+	}, client.music[guildId].boost);
+	const opus = trancodertoOpus(transcoder, client.music[guildId].volume);
 	const dispatcher = client.music[guildId].connection.player.createDispatcher({
 		type: 'opus',
 		fec: true,
@@ -71,6 +70,8 @@ const start = async (client, guildId, music) => {
 	opus.pipe(dispatcher);
 	dispatcher.on('finish', async (reason) => {
 		dispatcher.destroy();
+		if (music.time)
+			delete music.time;
 		if (!Array.from(client.music[guildId].connection.channel.members.values()).filter(member => !member.user.bot).length) {
 			client.music[guildId].connection.disconnect();
 			return;
@@ -79,16 +80,12 @@ const start = async (client, guildId, music) => {
 			start(client, guildId, music);
 			return;
 		} else {
-			if (client.music[guildId].loopqueue) {
-				const format = music.formats.find(format => !format.qualityLabel && format.audioChannels);
-				music.transcoder = generateTranscoder(format.url, {
-					duration: format.approxDurationMs ? `${format.approxDurationMs}ms` : 0
-				});
+			if (client.music[guildId].loopqueue)
 				client.music[guildId].playlist.push(music);
-			} else if (client.music[guildId].autoplay && !client.music[guildId].playlist.length && music.next) {
+			else if (client.music[guildId].autoplay && !client.music[guildId].playlist.length && music.next) {
 				const next = await new YoutubeVideo(music.next).fetch();
 				if (!next.status
-					&& !next.liveBroadcastDetails
+					&& !(music.liveBroadcastDetails && music.liveBroadcastDetails.isLiveNow)
 					&& next.formats && next.formats.length) {
 					next.request = 'AutoPlay';
 					client.music[guildId].playlist.push(next);
@@ -126,7 +123,7 @@ const play = async (member, client, channel, guild, dictionary, link, index = -2
 		});
 		return;
 	}
-	if (music.liveBroadcastDetails) {
+	if (music.liveBroadcastDetails && music.liveBroadcastDetails.isLiveNow) {
 		utils.replaceMessage(sendedMessage, dictionary, 'error_play_live_not_supported');
 		return;
 	}
@@ -169,11 +166,6 @@ const play = async (member, client, channel, guild, dictionary, link, index = -2
 		await start(client, guild.id, music);
 		key = 'play_success';
 	} else {
-		const format = music.formats.find(format => !format.qualityLabel && format.audioChannels);
-		music.transcoder = generateTranscoder(format.url, {
-			start: music.time ? `${music.time}ms` : 0,
-			duration: format.approxDurationMs ? `${format.approxDurationMs}ms` : 0
-		});
 		if (index == -2)
 			index = client.music[guild.id].playlist.length;
 		client.music[guild.id].playlist.splice(index, 0, music);

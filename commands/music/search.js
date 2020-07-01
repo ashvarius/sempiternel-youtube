@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/16 00:26:37 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/25 15:10:54 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/01 14:49:55 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ const getDictionary = (guild) => {
 
 module.exports = {
 	name: 'search',
-	aliases: [],
+	aliases: ['s'],
 	description: 'Search a music.',
 	privateMessage: false,
 	message: async (message, object) => {
