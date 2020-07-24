@@ -6,12 +6,11 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 21:10:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:18:19 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:33:04 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const utils = require('../../utils.js');
-const MessageEmbed = require('discord.js').MessageEmbed;
 
 module.exports = {
 	name: 'reaction',

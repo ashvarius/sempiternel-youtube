@@ -6,7 +6,7 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/07/01 15:54:33 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:31:23 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@ const utils = require('../../utils.js');
 const YoutubeVideo = require('../../youtube-wrapper/index.js').Video;
 const prism = require('prism-media');
 
-const generateTranscoder = (url, { start = 0, duration = 0 } = {}, { bass = 0, treble = 0, speed = 1 } = {}) => {
+const generateTranscoder = (url, { start = 0, duration = 0 } = {}) => {
 	let args = [
 		'-reconnect', '1',
 		'-reconnect_streamed', '1',
@@ -23,13 +23,11 @@ const generateTranscoder = (url, { start = 0, duration = 0 } = {}, { bass = 0, t
 	];
 	if (duration)
 		args = args.concat(['-to', duration]);
-	//		'-af', `bass=g=${bass}, treble=g=${treble}, atempo=${speed}`,
 	args = args.concat([
 		'-i', url,
 		'-f', 's16le',
 		'-ar', '48000',
 		'-ac', '2',
-		'-af', `bass=g=${bass}, treble=g=${treble}`,
 		'-c:v', 'libx264',
 		'-preset', 'veryslow',
 		'-crf', '0',

@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/09 00:55:34 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:37:04 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:35:30 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 const emojis = ['👊', '✋', '✌️'];
@@ -42,7 +41,7 @@ module.exports = {
 		let score = select - bot;
 		if (score < 0)
 			score += emojis.length;
-		const embed = new MessageEmbed();
+		const embed = utils.getCustomEmbed();
 		let description;
 		if (!score)
 			description = utils.getMessage(object.dictionary, 'rps_draw');

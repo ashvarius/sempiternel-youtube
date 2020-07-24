@@ -6,12 +6,11 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 18:45:35 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:36:41 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:34:46 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const utils = require('../../utils.js');
-const MessageEmbed = require('discord.js').MessageEmbed;
 
 module.exports = {
 	name: 'roulette',
@@ -33,6 +32,6 @@ module.exports = {
 		}
 		const members = Array.from(message.guild.members.cache.keys());
 		const score = utils.getUserScore(message.author) % members.length + utils.getStringScore(inputMessage);
-		utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed().setDescription(message.guild.members.cache.get(members[score % members.length])));
+		utils.sendEmbed(message.channel, object.dictionary, utils.getCustomEmbed(message.guild.members.cache.get(members[score % members.length])));
 	}
 };

@@ -6,16 +6,15 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/09 01:07:25 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:36:19 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:34:15 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
 	name: 'message',
-	aliases: [],
+	aliases: ['msg'],
 	description: 'Send a message with the bot.',
 	privateMessage: false,
 	message: (message, object) => {
@@ -40,8 +39,7 @@ module.exports = {
 				input += ' ';
 			input += word;
 		}
-		const embed = new MessageEmbed();
-		embed.setDescription(input);
+		const embed =  utils.getCustomEmbed(input);
 		utils.sendEmbed(message.channel, object.dictionary, embed);
 	}
 };

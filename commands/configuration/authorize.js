@@ -6,18 +6,17 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/21 05:36:52 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:02:20 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/07 23:38:28 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
 	name: 'authorize',
 	aliases: ['permit', 'allow', 'rule'],
 	description: 'Activate or deactivate one or more commands in a specific channel.',
-	privateMessage: false,
+	type: 'server',
 	message: (message, object) => {
 		if (!object.args.length) {
 			utils.sendMessage(message.channel, object.dictionary, 'authorize_help', {
@@ -48,7 +47,7 @@ module.exports = {
 			}
 			const messages = utils.remakeList(lines);
 			for (const description of messages) {
-				const embed = new MessageEmbed();
+				const embed = utils.getCustomEmbed();
 				embed.setDescription(description);
 				utils.sendEmbed(message.channel, object.dictionary, embed);
 			}

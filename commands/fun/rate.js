@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:36:36 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:34:39 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
@@ -32,6 +31,6 @@ module.exports = {
 			question += word;
 		}
 		const score = utils.getUserScore(message.author) % 100 + utils.getStringScore(question);
-		utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed().setDescription(`${score % 10}/10`));
+		utils.sendEmbed(message.channel, object.dictionary, utils.getCustomEmbed(`${score % 10}/10`));
 	}
 };

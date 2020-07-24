@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 17:32:55 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/14 19:51:12 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:33:28 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 const cooldown = {};
@@ -53,7 +52,7 @@ module.exports = {
 				utils.sendMessage(message.channel, object.dictionary, 'error_slowmode_no_settings');
 				return;
 			}
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			embed.setTitle('SlowMode List');
 			for (const id of Object.keys(object.slowmode)) {
 				const channel = message.guild.channels.cache.get(id);
@@ -198,8 +197,7 @@ module.exports = {
 		const cooldownTimestamp = cooldown[message.channel.id][message.author.id];
 		const currentTimestamp = new Date().getTime();
 		if (cooldownTimestamp && cooldownTimestamp > currentTimestamp) {
-			const embed = new MessageEmbed();
-			embed.setDescription(loadedObject.slowmode[message.channel.id].message);
+			const embed = utils.getCustomEmbed(loadedObject.slowmode[message.channel.id].message);
 			utils.sendEmbed(message.channel, getDictionary(message.guild), embed);
 			message.delete({ reason: 'SlowMode' });
 			return;

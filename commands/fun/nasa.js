@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/08 10:03:49 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/14 23:55:18 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:34:27 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 const stream = require('../../stream.js');
 
@@ -30,7 +29,7 @@ module.exports = {
 			nasa.object = JSON.parse(await stream.promise(`${NasaUrl}${message.client._config.nasa}`));
 			nasa.hour = hour;
 		}
-		let embed = new MessageEmbed();
+		let embed = utils.getCustomEmbed();
 		if (nasa.object.msg) {
 			embed.setTitle(nasa.object.code);
 			embed.setDescription(nasa.object.msg);

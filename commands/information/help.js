@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:09:57 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/16 17:48:08 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:35:43 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require(`../../utils.js`);
 
 module.exports = {
@@ -39,7 +38,7 @@ module.exports = {
 				});
 				return;
 			}
-			embed = new MessageEmbed();
+			embed = utils.getCustomEmbed();
 			for (const key of Object.keys(command)) {
 				const name = key.charAt(0).toUpperCase() + key.slice(1);
 				let message = '';

@@ -6,12 +6,11 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/24 04:40:11 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:36:49 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:35:18 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const utils = require('../../utils.js');
-const MessageEmbed = require('discord.js').MessageEmbed;
 const deleted = {};
 
 module.exports = {
@@ -25,9 +24,8 @@ module.exports = {
 			utils.sendMessage(message.channel, object.dictionary, 'error_snipe_nothing');
 			return;
 		}
-		utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed()
-			.setAuthor(deletedObject.author.name, deletedObject.author.avatar)
-			.setDescription(deletedObject.content));
+		utils.sendEmbed(message.channel, object.dictionary, utils.getCustomEmbed(deletedObject.content)
+			.setAuthor(deletedObject.author.name, deletedObject.author.avatar));
 	},
 	messageDelete: async message => {
 		if (message.author.bot

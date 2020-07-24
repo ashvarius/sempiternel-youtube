@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:13:42 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:32:44 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
@@ -32,7 +31,7 @@ module.exports = {
 			});
 			return;
 		} else if (option == 'settings') {
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			embed.setTitle('JoinRole Settings');
 			let roles = '';
 			if (object.joinrole && object.joinrole.roles) {

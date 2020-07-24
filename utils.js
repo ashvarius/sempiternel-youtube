@@ -6,13 +6,13 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/20 11:10:19 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/28 00:06:30 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/05 18:33:29 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const fs = require('fs');
 const MessageEmbed = require('discord.js').MessageEmbed;
-const config = require('./config.json');
+const config = require('./main_config.json');
 
 const loadedFiles = {};
 
@@ -62,7 +62,6 @@ module.exports = {
 		if (description)
 			embed.setDescription(description);
 		embed.setColor(config.embed.color);
-		embed.setFooter(config.embed.footer);
 		return embed;
 	},
 	getEmbed: (dictionary, key, object) => {
@@ -80,7 +79,6 @@ module.exports = {
 		}
 		if (!embed.color)
 			embed.setColor(config.embed.color);
-		embed.setFooter(config.embed.footer);
 		return channel.send(embed);
 	},
 	sendMessage: (channel, dictionary, key, object) => {
@@ -94,10 +92,10 @@ module.exports = {
 			return channel.send(module.exports.getMessage(dictionary, 'error_no_embed_permission'));
 		if (!embed.color)
 			embed.setColor(config.embed.color);
-		embed.setFooter(config.embed.footer);
 		try {
 			if (message.channel.type != 'dm'
-				&& message.channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES'))
+				&& message.channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES')
+				&& message.channel.permissionsFor(message.guild.me).has('READ_MESSAGE_HISTORY'))
 				await message.reactions.removeAll();
 			return await message.edit(embed);
 		} catch (err) {

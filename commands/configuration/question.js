@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:16:13 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:33:00 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 const getObject = (guild) => {
@@ -57,7 +56,7 @@ module.exports = {
 				utils.sendMessage(message.channel, object.dictionary, 'error_question_no_data');
 				return;
 			}
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			embed.addField('Activate', object.question.activate ? object.question.activate : true);
 			if (object.question.list && object.question.list.length) {
 				let list = '';

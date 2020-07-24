@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/22 08:52:41 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:41:29 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:36:29 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
@@ -33,7 +32,7 @@ module.exports = {
 		if (!users.length)
 			users.push(message.author);
 		for (const user of users) {
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			embed.setTitle(user.tag);
 			embed.setThumbnail(user.displayAvatarURL({
 				dynamic: true,

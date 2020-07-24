@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/28 23:20:11 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:40:28 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:36:03 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 const cache = [];
@@ -130,7 +129,7 @@ module.exports = {
 				return;
 			}
 			for (const ouputMessage of utils.remakeList(messages))
-				utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed().setDescription(ouputMessage));
+				utils.sendEmbed(message.channel, object.dictionary, utils.getCustomEmbed(ouputMessage));
 			return;
 		}
 		if (!message.member.hasPermission('ADMINISTRATOR')) {
@@ -334,7 +333,7 @@ module.exports = {
 			const settings = JSON.parse(JSON.stringify(message.client._config.level));
 			if (loadedObject.level)
 				Object.assign(settings, loadedObject.level);
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			embed.setTitle('Level settings');
 			embed.addField('Activation', typeof settings.activate == 'boolean' ? settings.activate : true);
 			embed.addField('Calculation', `minimum: **${settings.minimum}**, multiply: **${settings.multiply}**`);

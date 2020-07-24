@@ -6,11 +6,11 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/27 18:51:27 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/14 19:55:37 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/02 23:08:24 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const { MessageEmbed, GuildAuditLogs } = require('discord.js');
+const { GuildAuditLogs } = require('discord.js');
 const utils = require('../../utils.js');
 
 const events = {
@@ -20,7 +20,9 @@ const events = {
 	messagedelete: ['displayName', 'tag', 'member', 'channel', 'content', 'deleter'],
 	voiceadd: ['displayName', 'tag', 'member', 'channel'],
 	voiceremove: ['displayName', 'tag', 'member', 'channel'],
-	voiceupdate: ['displayName', 'tag', 'member', 'oldchannel', 'newchannel']
+	voiceupdate: ['displayName', 'tag', 'member', 'oldchannel', 'newchannel'],
+	guildmemberroleadd: ['displayName', 'tag', 'member', 'role', 'roleName', 'roleColor'],
+	guildmemberroleremove: ['displayName', 'tag', 'member', 'role', 'roleName', 'roleColor']
 };
 
 const codes = {};
@@ -197,7 +199,7 @@ module.exports = {
 				utils.sendMessage(message.channel, object.dictionary, 'error_event_no_data');
 				return;
 			}
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			embed.setTitle('Event list');
 			const eventObject = {};
 			for (const event of Object.keys(object.events)) {
@@ -267,7 +269,7 @@ module.exports = {
 		delete codes[invite.guild.id][invite.code];
 	},
 	guildMemberAdd: async member => {
-		object = getObject(member.guild);
+		const object = getObject(member.guild);
 		if (!(object.events && object.events.guildmemberadd))
 			return;
 		let invite = {};
@@ -284,7 +286,7 @@ module.exports = {
 		const channel = member.guild.channels.cache.get(object.events.guildmemberadd.channel);
 		if (!channel)
 			return;
-		const embed = new MessageEmbed();
+		const embed = utils.getCustomEmbed();
 		embed.setColor('0F9D58');
 		let description = object.events.guildmemberadd.message;
 		const settings = {
@@ -302,13 +304,13 @@ module.exports = {
 		utils.sendEmbed(channel, object.dictionary, embed);
 	},
 	guildMemberRemove: member => {
-		object = getObject(member.guild);
+		const object = getObject(member.guild);
 		if (!(object.events && object.events.guildmemberremove))
 			return;
 		const channel = member.guild.channels.cache.get(object.events.guildmemberremove.channel);
 		if (!channel)
 			return;
-		const embed = new MessageEmbed();
+		const embed = utils.getCustomEmbed();
 		embed.setColor('DB4437');
 		let description = object.events.guildmemberremove.message;
 		const settings = {
@@ -328,13 +330,13 @@ module.exports = {
 			|| oldMessage.content == newMessage.content
 			|| newMessage.channel.type == 'dm')
 			return;
-		object = getObject(newMessage.guild);
+		const object = getObject(newMessage.guild);
 		if (!(object.events && object.events.messageupdate))
 			return;
 		const channel = newMessage.guild.channels.cache.get(object.events.messageupdate.channel);
 		if (!channel)
 			return;
-		const embed = new MessageEmbed();
+		const embed = utils.getCustomEmbed();
 		embed.setColor('F4B400');
 		let description = object.events.messageupdate.message;
 		const settings = {
@@ -379,13 +381,13 @@ module.exports = {
 				deleter = message.author.id;
 			deleter = message.guild.members.cache.get(deleter);
 		}
-		object = getObject(message.guild);
+		const object = getObject(message.guild);
 		if (!(object.events && object.events.messagedelete))
 			return;
 		const channel = message.guild.channels.cache.get(object.events.messagedelete.channel);
 		if (!channel)
 			return;
-		const embed = new MessageEmbed();
+		const embed = utils.getCustomEmbed();
 		embed.setColor('DB4437');
 		let description = object.events.messagedelete.message;
 		const settings = {
@@ -405,7 +407,7 @@ module.exports = {
 	voiceStateUpdate: (oldState, newState) => {
 		if (oldState.channelID == newState.channelID)
 			return;
-		object = getObject(newState.guild);
+		const object = getObject(newState.guild);
 		if (!object.events)
 			return;
 		let channel;
@@ -415,7 +417,7 @@ module.exports = {
 			tag: newState.member.user.tag,
 			member: newState.member
 		};
-		const embed = new MessageEmbed();
+		const embed = utils.getCustomEmbed();
 		if (!newState.channelID) {
 			if (!object.events.voiceremove)
 				return;
@@ -444,6 +446,56 @@ module.exports = {
 				newchannel: newState.channel
 			});
 			embed.setColor('F4B400');
+		}
+		if (!channel)
+			return;
+		for (const key of Object.keys(settings))
+			description = `${description}`.replace(new RegExp(`<${key}>`, 'g'), settings[key]);
+		embed.setDescription(description);
+		embed.setTimestamp();
+		utils.sendEmbed(channel, object.dictionary, embed);
+	},
+	guildMemberUpdate: (oldMember, newMember) => {
+		if (oldMember.roles.cache == newMember.roles.cache)
+			return;
+		const object = getObject(newMember.guild);
+		if (!object.events)
+			return;
+		const oldRoles = Array.from(oldMember.roles.cache.keys());
+		const newRoles = Array.from(newMember.roles.cache.keys());
+		let role;
+		for (const roleId of oldRoles)
+			if (newRoles.includes(roleId))
+				newRoles.splice(newRoles.indexOf(roleId), 1);
+			else {
+				role = oldMember.roles.cache.get(roleId);
+				break;
+			}
+		if (!role)
+			role = newMember.roles.cache.get(newRoles[0]);
+		let channel;
+		let description;
+		const settings = {
+			displayName: newMember.displayName,
+			tag: newMember.user.tag,
+			member: newMember,
+			role,
+			roleName: role.name,
+			roleColor: role.color
+		};
+		const embed = utils.getCustomEmbed();
+		if (oldRoles.length < Array.from(newMember.roles.cache.keys()).length) {
+			if (!object.events.guildmemberroleadd)
+				return;
+			channel = newMember.guild.channels.cache.get(object.events.guildmemberroleadd.channel);
+			description = object.events.guildmemberroleadd.message;
+			embed.setColor('0F9D58');
+		} else {
+			if (!object.events.guildmemberroleremove)
+				return;
+			channel = newMember.guild.channels.cache.get(object.events.guildmemberroleremove.channel);
+			description = object.events.guildmemberroleremove.message;
+			embed.setColor('DB4437');
 		}
 		if (!channel)
 			return;

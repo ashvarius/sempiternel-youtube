@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/21 05:36:52 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/11 20:03:41 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/07 23:01:30 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
@@ -53,7 +52,7 @@ module.exports = {
 				lines.push(`**${key}**:\n\`${object.dictionary[key].replace(new RegExp('`', 'g'), '\'')}\`\n`);
 			const messages = utils.remakeList(lines);
 			for (const description of messages) {
-				const embed = new MessageEmbed();
+				const embed = utils.getCustomEmbed();
 				embed.setTitle(object.language);
 				embed.setDescription(description);
 				utils.sendEmbed(message.channel, object.dictionary, embed);

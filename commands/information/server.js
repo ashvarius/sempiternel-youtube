@@ -6,11 +6,10 @@
 /*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/04/23 08:11:44 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/10 21:02:43 by ahallain         ###   ########.fr       */
+/*   Updated: 2020/07/04 13:36:15 by ahallain         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const MessageEmbed = require('discord.js').MessageEmbed;
 const utils = require('../../utils.js');
 
 module.exports = {
@@ -28,7 +27,7 @@ module.exports = {
 		if (!guilds.length)
 			guilds.push(message.guild);
 		for (const cacheGuild of guilds) {
-			const embed = new MessageEmbed();
+			const embed = utils.getCustomEmbed();
 			const guild = await cacheGuild.fetch();
 			embed.setTitle('Server');
 			embed.setThumbnail(guild.iconURL({
@@ -78,7 +77,7 @@ module.exports = {
 				size: 4096
 			});
 			if (banner)
-				utils.sendEmbed(message.channel, object.dictionary, new MessageEmbed()
+				utils.sendEmbed(message.channel, object.dictionary, utils.getCustomEmbed()
 					.setTitle('BannerURL')
 					.setImage(banner));
 		}
