@@ -1,0 +1,19 @@
+{
+  "name": "sempiternel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "events": "^3.1.0",
+    "ffmpeg-static": "^4.2.6",
+    "fs": "0.0.1-security",
+    "opusscript": "0.0.7",
+    "prism-media": "^1.2.2"
+  }
+}

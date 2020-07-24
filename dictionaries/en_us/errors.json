@@ -1,0 +1,17 @@
+{
+    "error_no_message": "No message found for the key `<key>`.",
+    "error_no_command": "No command found for `<command>`.",
+    "error_not_owner": "You are not the owner of the bot.",
+    "error_api": "We had an error with another application (`<error>`).",
+    "error_no_access": "You do not have access to it.",
+    "error_max_bot": "You can no longer add bots.",
+    "error_token_already_registered": "This token is already registered.",
+    "error_nan": "`<arg>` is not a number.",
+    "error_index_not_found": "Cannot find index `<index>`.",
+    "error_type_not_found": "Cannot find type `<type>`.",
+    "error_invalid_color": "The color is not valid.",
+    "error_no_dm": "Private messages are disabled for this action.",
+    "error_no_permission": "Tu n'as pas l'autorisation (`<permission>`).",
+    "error_no_voice": "You are not connected to any voice channel.",
+    "error_not_joinable": "The bot cannot join your voice channel."
+}
