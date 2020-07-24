@@ -1,80 +1,38 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   help.js                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/04/20 11:09:57 by ahallain          #+#    #+#             */
-/*   Updated: 2020/07/04 13:35:43 by ahallain         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-const utils = require(`../../utils.js`);
-
 module.exports = {
-	name: 'help',
-	aliases: ['h'],
-	description: 'Get a list of commands or information about a particular command.',
-	privateMessage: true,
-	message: (message, object) => {
-		let embed;
-		if (object.args.length) {
-			let command = object.args[0].toLowerCase();
-			for (const category of Object.keys(message.client._commands)) {
-				for (const commandFile of message.client._commands[category])
-					if (commandFile.name == command
-						|| commandFile.aliases.includes(command)) {
-						command = commandFile;
-						break;
-					}
-				if (typeof command == 'object')
-					break;
-			}
-			if (typeof command == 'string') {
-				utils.sendMessage(message.channel, object.dictionary, 'error_command_not_found', {
-					command,
-					prefix: object.prefix
-				});
-				return;
-			}
-			embed = utils.getCustomEmbed();
-			for (const key of Object.keys(command)) {
-				const name = key.charAt(0).toUpperCase() + key.slice(1);
-				let message = '';
-				if (typeof command[key] == 'string'
-					|| typeof command[key] == 'boolean')
-					message = `${command[key]}`;
-				else if (typeof command[key] == 'object')
-					for (const value of Object.values(command[key])) {
-						if (message.length)
-							message += ', ';
-						message += `\`${value}\``;
-					}
-				else
-					continue;
-				if (message != '')
-					embed.addField(name, message);
-			}
-		} else {
-			embed = utils.getEmbed(object.dictionary, 'help_desciption', {
-				prefix: object.prefix
-			});
-			const dm = message.channel.type == 'dm';
-			for (const category of Object.keys(message.client._commands)) {
-				let commands = '';
-				for (const command of message.client._commands[category]) {
-					if (dm && !command.privateMessage)
-						continue;
-					if (commands.length)
-						commands += '\n';
-					commands += `\`${command.name}\` - ${command.description}`;
-				}
-				if (commands.length)
-					embed.addField(category.charAt(0).toUpperCase() + category.slice(1), commands);
-			}
-		}
-		embed.setTitle('Help');
-		utils.sendEmbed(message.channel, object.dictionary, embed);
-	}
+    name: 'help',
+    aliases: [],
+    command: command => {
+        if (!command.args.length) {
+            const commands = {};
+            for (const category of Object.keys(command.message.client.commands))
+                for (const instance of Object.values(command.message.client.commands[category]))
+                    if (!command.message.client.config.disable.includes(instance.name)) {
+                        if (!commands[category])
+                            commands[category] = {
+                                count: 0,
+                                list: []
+                            };
+                        commands[category].count++;
+                        commands[category].list.push(`\`${instance.name}\``);
+                    }
+            const embed = command.message.client.utils.createEmbed();
+            for (const category of Object.keys(commands))
+                embed.addField(`**${command.message.client.utils.getMessage(command.message.channel, category)}** (\`${commands[category].count}\`)`, commands[category].list.join(', '));
+            command.message.client.utils.sendEmbed(command.message.channel, embed);
+        } else {
+            const cmd = command.args[0].toLowerCase();
+            for (const category of Object.keys(command.message.client.commands))
+                for (const instance of Object.values(command.message.client.commands[category]))
+                    if (!command.message.client.config.disable.includes(instance.name))
+                        if (instance.name == cmd || instance.aliases.includes(cmd)) {
+                            const embed = command.message.client.utils.createEmbed();
+                            embed.addField(command.message.client.utils.getMessage(command.message.channel, 'name'), `\`${instance.name}\``);
+                            embed.addField(command.message.client.utils.getMessage(command.message.channel, 'aliases'), instance.aliases.length ? `\`${instance.aliases.join('`, `')}\`` : command.message.client.utils.getMessage(command.message.channel, 'nothing'));
+                            embed.addField(command.message.client.utils.getMessage(command.message.channel, 'description'), command.message.client.utils.getMessage(command.message.channel, instance.name));
+                            command.message.client.utils.sendEmbed(command.message.channel, embed);
+                            return;
+                        }
+            command.message.client.utils.sendMessage(command.message.channel, 'error_no_command', { command: cmd });
+        }
+    }
 };

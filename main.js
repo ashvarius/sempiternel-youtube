@@ -1,24 +1,41 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.js                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/04/20 11:09:34 by ahallain          #+#    #+#             */
-/*   Updated: 2020/07/05 18:33:14 by ahallain         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+const BotClass = require('./instance.js');
+const { exit } = require('process');
+const fs = require('fs');
 
-const Instance = require('./instance.js');
+const bot = new BotClass();
+bot.client.main = true;
+bot.client.BotClass = BotClass;
+bot.client.bots = [];
 
-const instances = {};
-
-process.on('uncaughtException', err => console.error(err));
-
-process.on('SIGINT', () => {
-	instances.main.client.emit('exit');
+bot.exit = true;
+bot.on('exit', (code = 0) => {
+    for (const instance of bot.client.bots)
+        if (instance != bot)
+            instance.client.emit('exit');
+    bot.destroy();
+    exit(code);
 });
 
-instances.main = new Instance(require('./main_config.json'));
-instances.main._instances = instances;
+process.on('SIGINT', () => {
+    bot.emit('exit');
+});
+
+
+process.on('uncaughtException', error => {
+    console.error(error);
+    bot.emit('exit', 1);
+});
+
+bot.login().then(() => {
+    const botsData = bot.client.utils.readFile('../bots.json');
+    for (const id of Object.keys(botsData))
+        for (const token of botsData[id]) {
+            const pending = new BotClass({
+                owners: [
+                    id
+                ],
+                token
+            });
+            pending.login().then(() => bot.client.bots.push(pending)).catch(() => { });
+        }
+});

@@ -1,46 +1,8 @@
 {
-	"presence": {
-		"status": "idle",
-		"activity": {
-			"name": "the passion",
-			"type": "WATCHING"
-		}
-	},
-	"token": "token",
-	"dictionary": "en_US",
-	"prefix": ",",
-	"embed": {
-		"color": "0b0b0b",
-		"footer": "(◕‿◕✿) Made by 𝓐𝓵𝓮𝔁𝓪𝓷𝓭𝓻𝓮 | Designed by 𝓣𝓮𝓪𝓼𝓹𝓪𝓴"
-	},
-	"permissions": [
-		"CREATE_INSTANT_INVITE",
-		"SEND_MESSAGES",
-		"EMBED_LINKS",
-		"READ_MESSAGE_HISTORY",
-		"MANAGE_MESSAGES",
-		"MANAGE_ROLES",
-		"MANAGE_CHANNELS",
-		"MANAGE_GUILD",
-		"MUTE_MEMBERS",
-		"MOVE_MEMBERS",
-		"ADD_REACTIONS",
-		"VIEW_AUDIT_LOG",
-		"CONNECT",
-		"SPEAK",
-		"USE_EXTERNAL_EMOJIS",
-		"DEAFEN_MEMBERS",
-		"BAN_MEMBERS"
-	],
-	"owners": [
-		"360795716500848660"
-	],
-	"debug": false,
-	"level": {
-		"multiply": 450,
-		"minimum": 400
-	},
-	"nasa": "token",
-	"support": "711919284363984928",
-	"youtube": "token"
+    "prefix": ",",
+    "language": "en_us",
+    "owners": [
+        "360795716500848660"
+    ],
+    "token": "NzA1Mzc2MTE0NTQwODA2MTc0.XwT5WQ.nBl8mt94lPxuFAda7PDp_PUD98A"
 }

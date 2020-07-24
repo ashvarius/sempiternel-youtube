@@ -1,0 +1,18 @@
+{
+    "help_id": "An identifier (more commonly known as an \"id\") is a unique code used to identify something. In case of Discord, the identifiers can be visible by activating the developer mode in the appearance section of the parameters. [Click here for more information](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-)",
+    "help_token": "A Discord Token is an alphanumeric code used to connect a bot. [Click here for more information](https://discord.com/developers/docs/intro)",
+    "help_hex_color": "A hexadecimal color code is a hexadecimal way of representing a color. [Click here to create your own color.](https://htmlcolorcodes.com/fr/)",
+    "bot_help_owner": "Give or remove a bot to someone.",
+    "bot_help_owner_add": "Allow someone to have one more bot.",
+    "bot_help_owner_remove": "Remove a bot from a user.",
+    "bot_help_addtoken": "Register a new bot by adding its token.",
+    "bot_help_list": "Get a list of all your robots and their status.",
+    "bot_help_removetoken": "Remove a bot.",
+    "bot_help_setpresence": "Change the Discord Presence of the bot.",
+    "bot_help_setpresence_flags": "Type: `playing`, `streaming`, `listening`, `watching`",
+    "bot_help_setcolor": "Change the embed color of the bot.",
+    "bot_help_command": "Activate or deactivate one command for the bot.",
+    "bot_help_command_enable": "Activate one command for the bot.",
+    "bot_help_command_disable": "Deactivate one command for the bot.",
+    "radio_help": "Bring the robot to listen to music from a radio."
+}
