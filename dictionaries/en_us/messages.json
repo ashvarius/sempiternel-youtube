@@ -12,5 +12,9 @@
     "reaction_await_reaction": "React to this message with an emoji corresponding to the role <role>.",
     "reaction_add": "React to any of these reactions to get the role:",
     "emoji_await_reaction": "React to this message to add new emojis.",
-    "reaction_reset": "The reactions have been reset."
+    "reaction_reset": "The reactions have been reset.",
+    "autorole_add": "The role <role> will be given when someone joins.",
+    "autorole_remove": "The role <role> will no longer be assigned when someone joins.",
+    "autorole_restore": "Restore roles has been set to `<option>`.",
+    "clear_success": "`<amount>` messages have been deleted."
 }

@@ -15,5 +15,9 @@
     "bot_help_command_enable": "Activate one command for the bot.",
     "bot_help_command_disable": "Deactivate one command for the bot.",
     "reaction_help_add": "Make a message that allows you to have roles by giving reactions.",
-    "reaction_help_reset": "Reset all reactions associated with a role."
+    "reaction_help_reset": "Reset all reactions associated with a role.",
+    "autorole_help_add": "Register a role to be assigned when someone arrives.",
+    "autorole_help_remove": "Unregister a role to be assigned when someone arrives.",
+    "autorole_help_restore": "Give back roles when someone leaves and returns.",
+    "clear_help": "Delete a number of messages in a channel.\nThe number must be greater than zero."
 }

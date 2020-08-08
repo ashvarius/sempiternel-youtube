@@ -1,5 +1,3 @@
-const { MessageManager, MessageReaction } = require("discord.js");
-
 module.exports = {
     name: 'reaction',
     aliases: [],
@@ -76,12 +74,12 @@ module.exports = {
     messageReactionAdd: (messageReaction, user) => {
         if (user.bot || messageReaction.message.channel.type == 'dm')
             return;
+        const guildData = messageReaction.client.utils.readFile(`guilds/${messageReaction.message.guild.id}.json`);
+        if (!(guildData.reaction && guildData.reaction[messageReaction.message.id]))
+            return;
         if (messageReaction.message.guild.me.hasPermission('MANAGE_ROLES')) {
             const member = messageReaction.message.guild.members.cache.get(user.id);
             if (member.manageable) {
-                const guildData = messageReaction.client.utils.readFile(`guilds/${messageReaction.message.guild.id}.json`);
-                if (!(guildData.reaction && guildData.reaction[messageReaction.message.id]))
-                    return;
                 let emoji = messageReaction.emoji;
                 emoji = emoji.id ? emoji.id : emoji.name;
                 for (const reaction of guildData.reaction[messageReaction.message.id])

@@ -1,22 +1,9 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   video.js                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ahallain <ahallain@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/06/16 01:16:46 by ahallain          #+#    #+#             */
-/*   Updated: 2020/06/25 15:50:21 by ahallain         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 const url = require('url');
 const querystring = require('querystring');
 const stream = require('../stream.js');
 const sig = require('./sig.js');
 
 const YoutubeVideoUrl = 'https://www.youtube.com/watch?v=';
-const YoutubeEmbedUrl = 'https://www.youtube.com/embed/';
 let YoutubeUrls;
 
 class YoutubeVideo {
@@ -53,16 +40,6 @@ class YoutubeVideo {
 			Object.assign(this, parsedBody.playerResponse.playabilityStatus);
 			return this;
 		}
-		/*if (parsedBody.playerResponse.playabilityStatus.status == 'LOGIN_REQUIRED') {
-			parsedUrl = url.parse(`${YoutubeEmbedUrl}${id}&pbj=1&hl=en`, true);
-			parsedUrl.headers = {
-				'x-youtube-client-name': '1',
-				'x-youtube-client-version': '2.20200609.04.01',
-			};
-			const body = await stream.promise(parsedUrl);
-			console.log(body);
-			return;
-		}*/
 		if (parsedBody.response.contents.twoColumnWatchNextResults.autoplay)
 			this.next = `${YoutubeVideoUrl}${parsedBody.response.contents.twoColumnWatchNextResults.autoplay.autoplay.sets[0].autoplayVideo.watchEndpoint.videoId}`;
 		delete parsedBody.playerResponse.microformat.playerMicroformatRenderer.embed;

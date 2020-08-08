@@ -4,5 +4,7 @@
     "help": "Get help with one or more orders.",
     "avatar": "See someone's avatar.",
     "reaction": "Give a role when a reaction is made.",
-    "emoji": "Add emojis by reacting with emojis from other servers."
+    "emoji": "Add emojis by reacting with emojis from other servers.",
+    "autorole": "Give the role when someone joins the server.",
+    "clear": "Delete messages in a channel."
 }
