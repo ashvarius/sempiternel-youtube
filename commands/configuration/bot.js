@@ -258,8 +258,6 @@ module.exports = {
             }
             return;
         }
-        command.message.client.utils.sendMessage(command.message.channel, 'error_no_command', {
-            command: `${command.prefix}${command.command} ${command.args[0]}`
-        });
+        command.message.client.utils.sendEmbed(command.message.channel, embed);
     }
 };

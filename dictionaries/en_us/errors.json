@@ -11,7 +11,8 @@
     "error_type_not_found": "Cannot find type `<type>`.",
     "error_invalid_color": "The color is not valid.",
     "error_no_dm": "Private messages are disabled for this action.",
-    "error_no_permission": "Tu n'as pas l'autorisation (`<permission>`).",
+    "error_no_permission": "You don't have permission (`<permission>`).",
+    "error_bot_no_permission": "The bot does not have the authorization (`<permission>`).",
     "error_no_voice": "You are not connected to any voice channel.",
     "error_not_joinable": "The bot cannot join your voice channel."
 }

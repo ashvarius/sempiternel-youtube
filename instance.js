@@ -35,7 +35,11 @@ class DiscordBot extends EventEmitter {
         });
         client.config = config;
         client.commands = commands;
-        client.on('ready', () => {
+        client.on('ready', async () => {
+            for (const guild of client.guilds.cache.values())
+                for (const channel of guild.channels.cache.values())
+                    if (channel.type == 'text' && channel.viewable)
+                        channel.messages.fetch();
             console.log(`${client.user.username} is ready`);
             this.emit('ready');
         });
@@ -49,7 +53,7 @@ class DiscordBot extends EventEmitter {
                 prefix = message.guild.prefix;
                 if (!prefix)
                     prefix = config.prefix;
-                if (command.includes(prefix))
+                if (!command.indexOf(prefix))
                     command = command.slice(prefix.length);
                 else
                     return;

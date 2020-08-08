@@ -94,17 +94,24 @@ class Utils {
         return channel.send(embed);
     }
     sendMessage(channel, key, object) {
-        const message = this.getMessage(channel, key, object);
-        const embed = this.createEmbed(message);
+        const description = this.getMessage(channel, key, object);
+        const embed = this.createEmbed(description);
         return this.sendEmbed(channel, embed);
     }
-    generateTranscoder = (url, { start = 0, duration = -1 } = {}) => {
-        let args = [
-            '-reconnect', '1',
-            '-reconnect_at_eof', '1',
-            '-reconnect_streamed', '1',
-            '-ss', start
-        ];
+    replaceEmbed(message, embed) {
+        if (embed.author && embed.author.iconURL && !embed.author.url)
+            embed.author.url = embed.author.iconURL;
+        return message.edit(embed);
+    }
+    replaceMessage(message, key, object) {
+        const description = this.getMessage(message.channel, key, object);
+        const embed = this.createEmbed(description);
+        return this.replaceEmbed(message, embed);
+    }
+    generateTranscoder = (url, { start = -1, duration = -1 } = {}) => {
+        let args = [];
+        if (start != -1)
+            args = args.concat(['-ss', start]);
         if (duration != -1)
             args = args.concat(['-to', duration]);
         args = args.concat([
@@ -113,13 +120,13 @@ class Utils {
             '-ar', '48000',
             '-ac', '2',
             '-c:v', 'libx264',
-            '-preset', 'veryslow',
+            '-preset', 'ultrafast',
             '-crf', '0',
             '-movflags', '+faststart'
         ]);
         return new prism.FFmpeg({ args });
     }
-    playeTranscoder = (player, trancoder) => {
+    playTranscoder = (player, trancoder) => {
         const opus = trancoder.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
         const dispatcher = player.createDispatcher({
             type: 'opus',
@@ -128,6 +135,7 @@ class Utils {
             highWaterMark: 16
         }, { opus });
         opus.pipe(dispatcher);
+        return dispatcher;
     }
 }
 

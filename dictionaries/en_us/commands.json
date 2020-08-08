@@ -2,5 +2,7 @@
     "restart": "Restart the bot.",
     "bot": "Create and manage your own bot.",
     "help": "Get help with one or more orders.",
-    "radio": "Bring the robot to listen to music from a radio."
+    "avatar": "See someone's avatar.",
+    "reaction": "Give a role when a reaction is made.",
+    "emoji": "Add emojis by reacting with emojis from other servers."
 }
