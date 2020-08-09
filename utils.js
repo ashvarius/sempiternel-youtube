@@ -26,9 +26,7 @@ class Utils {
             return object;
         path = `${this.path}/${path}`;
         if (!fs.existsSync(path))
-            fs.mkdirSync(path.slice(0, path.lastIndexOf('/')), {
-                recursive: true
-            });
+            fs.mkdirSync(path.slice(0, path.lastIndexOf('/')), { recursive: true });
         fs.writeFileSync(path, JSON.stringify(object));
         loadedFiles[path] = object;
         return object;

@@ -26,11 +26,10 @@ module.exports = {
                     else
                         await command.message.client.utils.replaceMessage(message, 'reaction_await_reaction', { role });
                     const reaction = Array.from((await message.awaitReactions((reaction, user) => {
-                        if (user.id != command.message.author) {
-                            if (command.message.channel.permissionsFor(command.message.guild.me).has('MANAGE_MESSAGES'))
-                                reaction.users.remove(user);
+                        if (command.message.channel.permissionsFor(command.message.guild.me).has('MANAGE_MESSAGES'))
+                            reaction.users.remove(user);
+                        if (user.id != command.message.author)
                             return false;
-                        }
                         return true;
                     }, { time: 60000, max: 1 })).values())[0];
                     if (!reaction) {
@@ -85,8 +84,15 @@ module.exports = {
                 for (const reaction of guildData.reaction[messageReaction.message.id])
                     if (reaction.emoji == emoji) {
                         const role = messageReaction.message.guild.roles.cache.get(reaction.role);
-                        member.roles.add(role);
-                        return;
+                        if (role) {
+                            member.roles.add(role);
+                            for (const reaction of messageReaction.message.reactions.cache.values())
+                                if (reaction != messageReaction)
+                                    if (reaction.users.cache.get(user.id))
+                                        reaction.users.remove(user);
+                            return;
+                        }
+                        break;
                     }
             }
         }

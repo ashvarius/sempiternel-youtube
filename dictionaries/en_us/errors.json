@@ -14,5 +14,6 @@
     "error_no_permission": "You don't have permission (`<permission>`).",
     "error_bot_no_permission": "The bot does not have the authorization (`<permission>`).",
     "error_no_voice": "You are not connected to any voice channel.",
-    "error_not_joinable": "The bot cannot join your voice channel."
+    "error_not_joinable": "The bot cannot join your voice channel.",
+    "error_channel_not_found": "Channel not found."
 }

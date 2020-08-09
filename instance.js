@@ -4,6 +4,8 @@ const fs = require('fs');
 const Utils = require('./utils.js');
 const default_config = require('./config.json');
 
+let dispatcher;
+
 class DiscordBot extends EventEmitter {
     constructor(config = {}) {
         super();
@@ -20,11 +22,11 @@ class DiscordBot extends EventEmitter {
                     commands[folder][command.name] = command;
                 }
             }
-        const dispatcher = (event, var1, var2) => {
+        dispatcher = async (event, var1, var2) => {
             for (const category of Object.keys(commands))
                 for (const command of Object.values(commands[category]))
                     if (typeof command[event] == 'function')
-                        command[event](var1, var2);
+                        await command[event](var1, var2);
         };
         const client = this.client = new Client({
             shards: 'auto',
@@ -75,12 +77,12 @@ class DiscordBot extends EventEmitter {
                 }
             client.utils.sendMessage(message.channel, 'error_no_command', { command });
         });
-        client.on('exit', (code = 0) => {
+        client.on('exit', async (code = 0) => {
             if (this.exit) {
                 this.emit('exit', code);
                 return;
             }
-            this.destroy();
+            await this.destroy();
             if (code)
                 this.login();
         });
@@ -114,7 +116,9 @@ class DiscordBot extends EventEmitter {
             }).catch(error => reject(error));
         });
     }
-    destroy() {
+    async destroy() {
+        if (dispatcher)
+            await dispatcher('destroy', this.client);
         this.client.destroy();
         if (this.client.user)
             console.log(`${this.client.user.username} is destroy`);

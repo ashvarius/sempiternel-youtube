@@ -19,5 +19,7 @@
     "autorole_help_add": "Register a role to be assigned when someone arrives.",
     "autorole_help_remove": "Unregister a role to be assigned when someone arrives.",
     "autorole_help_restore": "Give back roles when someone leaves and returns.",
-    "clear_help": "Delete a number of messages in a channel.\nThe number must be greater than zero."
+    "clear_help": "Delete a number of messages in a channel.\nThe number must be greater than zero.",
+    "temporary_help_add": "Add a channel that will create channels.",
+    "temporary_help_remove": "Unregister a channel."
 }

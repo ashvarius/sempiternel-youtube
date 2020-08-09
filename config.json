@@ -6,11 +6,13 @@
     ],
     "token": "token",
     "permissions": [
+        "MANAGE_CHANNELS",
         "ADD_REACTIONS",
         "SEND_MESSAGES",
         "MANAGE_MESSAGES",
         "EMBED_LINKS",
         "READ_MESSAGE_HISTORY",
+        "MOVE_MEMBERS",
         "MANAGE_ROLES",
         "MANAGE_EMOJIS"
     ]

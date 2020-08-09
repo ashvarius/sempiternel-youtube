@@ -8,11 +8,11 @@ bot.client.BotClass = BotClass;
 bot.client.bots = [];
 
 bot.exit = true;
-bot.on('exit', (code = 0) => {
+bot.on('exit', async (code = 0) => {
     for (const instance of bot.client.bots)
         if (instance != bot)
-            instance.client.emit('exit');
-    bot.destroy();
+            await instance.client.emit('exit');
+    await bot.destroy();
     exit(code);
 });
 
