@@ -1,5 +1,6 @@
 {
     "error_no_message": "No message found for the key `<key>`.",
+    "error_private_disable": "This command cannot be used in a private conversation.",
     "error_no_command": "No command found for `<command>`.",
     "error_not_owner": "You are not the owner of the bot.",
     "error_api": "We had an error with another application (`<error>`).",

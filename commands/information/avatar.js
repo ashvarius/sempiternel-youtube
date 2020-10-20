@@ -1,6 +1,7 @@
 module.exports = {
     name: 'avatar',
     aliases: ['pp'],
+	private: true,
     command: async command => {
         const users = Array.from(command.message.mentions.users.values());
         for (const id of command.args) {

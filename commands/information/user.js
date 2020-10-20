@@ -1,6 +1,7 @@
 module.exports = {
     name: 'user',
     aliases: [],
+	private: true,
     command: async command => {
         const users = Array.from(command.message.mentions.users.values());
         for (const id of command.args) {
@@ -20,8 +21,8 @@ module.exports = {
             embed.setTimestamp();
             embed.addField('createdAt', user.createdAt.toUTCString());
             embed.addField('id', user.id);
-            const flags = (await user.fetchFlags()).toArray();
-            if (flags)
+			const flags = (await user.fetchFlags()).toArray();
+            if (flags.length)
                 embed.addField('flags', `\`${flags.join('`, `')}\``);
             command.message.client.utils.sendEmbed(command.message.channel, embed);
         }
