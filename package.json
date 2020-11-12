@@ -9,11 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.2.0",
-    "events": "^3.1.0",
-    "ffmpeg-static": "^4.2.6",
-    "fs": "0.0.1-security",
-    "opusscript": "0.0.7",
+    "discord.js": "^12.4.1",
+    "events": "^3.2.0",
+    "ffmpeg-static": "^4.2.7",
+    "fs": "^0.0.1-security",
+    "opusscript": "^0.0.7",
     "prism-media": "^1.2.2"
   }
 }

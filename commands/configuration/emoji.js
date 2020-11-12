@@ -34,5 +34,10 @@ module.exports = {
 			else if (command.message.channel.permissionsFor(command.message.guild.me).has('MANAGE_MESSAGES'))
 				reaction.users.remove(command.message.author);
 		}
+	},
+	permission: (message) => {
+		if (!message.member.hasPermission('MANAGE_EMOJIS'))
+			return false;
+		return true;
 	}
 };

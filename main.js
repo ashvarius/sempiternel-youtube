@@ -1,6 +1,5 @@
 const BotClass = require('./instance.js');
 const { exit } = require('process');
-const fs = require('fs');
 
 const bot = new BotClass();
 bot.client.main = true;

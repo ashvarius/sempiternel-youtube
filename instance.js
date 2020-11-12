@@ -30,18 +30,24 @@ class DiscordBot extends EventEmitter {
 		};
 		const client = this.client = new Client({
 			shards: 'auto',
-			fetchAllMembers: true,
+			fetchAllMembers: false,
 			presence: {
-				status: 'idle'
+				status: 'idle',
+				activity: {
+					name: 'logging',
+					type: 'WATCHING'
+				}
 			}
 		});
 		client.config = config;
 		client.commands = commands;
-		client.on('ready', async () => {
-			for (const guild of client.guilds.cache.values())
-				for (const channel of guild.channels.cache.values())
-					if (channel.type == 'text' && channel.viewable)
-						channel.messages.fetch();
+		client.on('ready', () => {
+			if (!client.utils) {
+				setTimeout(() => client.emit('ready'), 100);
+				return;
+			}
+			dispatcher('ready', client);
+			this.client.user.setPresence(this.client.config.presence);
 			console.log(`${client.user.username} is ready`);
 			this.emit('ready');
 		});
@@ -64,19 +70,22 @@ class DiscordBot extends EventEmitter {
 			if (!command.length)
 				return;
 			const cmd = command.toLowerCase();
+			const command_object = {
+				command,
+				args,
+				prefix,
+				message
+			};
 			for (const category of Object.keys(commands))
 				for (const instance of Object.values(commands[category]))
 					if (!client.config.disable.includes(instance.name))
 						if (instance.name == cmd || instance.aliases.includes(cmd)) {
-							if (!instance.private && message.channel.type == 'dm')
-								client.utils.sendMessage(message.channel, 'error_private_disable', { command });
+							if (message.channel.type == 'dm' && !instance.private)
+								client.utils.sendMessage(message.channel, 'error_private_disable');
+							else if (instance.permission && !instance.permission(message))
+								client.utils.sendMessage(message.channel, 'error_no_access');
 							else
-								instance.command({
-									command,
-									args,
-									prefix,
-									message
-								});
+								instance.command(command_object);
 							return;
 						}
 			client.utils.sendMessage(message.channel, 'error_no_command', { command });
@@ -115,8 +124,16 @@ class DiscordBot extends EventEmitter {
 							type: "LISTENING"
 						}
 					};
-				this.client.user.setPresence(this.client.config.presence);
-				executor(token);
+				this.client.config.presence.status = 'online';
+				this.client.user.setPresence({
+					status: 'idle',
+					activity: {
+						name: 'loading',
+						type: 'WATCHING'
+					}
+				});
+				console.log(`${this.client.user.username} is logged`);
+				executor(token, this.client);
 			}).catch(error => reject(error));
 		});
 	}

@@ -180,7 +180,7 @@ module.exports = {
 					return;
 				}
 				const type = command.args[1].toLowerCase();
-				if (!['playing', 'streaming', 'listening', 'watching'].includes(type)) {
+				if (!['playing', 'streaming', 'listening', 'watching', 'competing'].includes(type)) {
 					command.message.client.utils.sendMessage(command.message.channel, 'error_type_not_found', { type });
 					return;
 				}
@@ -260,5 +260,19 @@ module.exports = {
 			return;
 		}
 		command.message.client.utils.sendEmbed(command.message.channel, embed);
+	},
+	permission: (message) => {
+		if (message.client.main) {
+			if (message.client.config.owners.includes(message.author.id))
+				return true;
+			const userData = message.client.utils.readFile(`users/${message.author.id}.json`);
+			if (!userData.bot)
+				userData.bot = 0;
+			if (userData.bot)
+				return true;
+		}
+		if (message.client.config.owners.includes(message.author.id))
+			return true;
+		return false;
 	}
 };

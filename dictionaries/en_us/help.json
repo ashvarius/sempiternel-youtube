@@ -9,7 +9,7 @@
     "bot_help_list": "Get a list of all your robots and their status.",
     "bot_help_removetoken": "Remove a bot.",
     "bot_help_setpresence": "Change the Discord Presence of the bot.",
-    "bot_help_setpresence_flags": "Type: `playing`, `streaming`, `listening`, `watching`",
+    "bot_help_setpresence_flags": "Type: `playing`, `streaming`, `listening`, `watching`, `competing`",
     "bot_help_setcolor": "Change the embed color of the bot.",
     "bot_help_command": "Activate or deactivate one command for the bot.",
     "bot_help_command_enable": "Activate one command for the bot.",

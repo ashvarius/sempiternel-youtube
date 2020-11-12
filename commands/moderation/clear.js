@@ -32,5 +32,10 @@ module.exports = {
 			number -= amount;
 		}
 		command.message.client.utils.sendMessage(command.message.channel, 'clear_success', { amount: deleted });
+	},
+	permission: (message) => {
+		if (!message.member.hasPermission('MANAGE_MESSAGES'))
+			return false;
+		return true;
 	}
 };

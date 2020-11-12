@@ -40,6 +40,11 @@ module.exports = {
 		else
 			command.message.client.utils.sendMessage(command.message.channel, 'temporary_remove', { channel });
 	},
+	permission: (message) => {
+		if (!message.member.hasPermission('ADMINISTRATOR'))
+			return false;
+		return true;
+	},
 	voiceStateUpdate: async (oldState, newState) => {
 		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
 			if (!newState.guild.me.hasPermission(permission))

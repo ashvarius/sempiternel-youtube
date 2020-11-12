@@ -8,5 +8,6 @@
     "autorole": "Give the role when someone joins the server.",
     "clear": "Delete messages in a channel.",
     "temporary": "Make temporary channels.",
-    "user": "Get information about someone."
+    "user": "Get information about someone.",
+    "music": "Create a channel to manage music on the bot."
 }

@@ -2,6 +2,19 @@ module.exports = {
 	name: 'reaction',
 	aliases: [],
 	command: async command => {
+		if (!command.message.member.hasPermission('ADMINISTRATOR')) {
+			command.message.client.utils.sendMessage(command.message.channel, 'error_no_permission', {
+				permission: 'ADMINISTRATOR'
+			});
+			return;
+		}
+		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS', 'MANAGE_EMOJIS'])
+			if (!command.message.guild.me.hasPermission(permission)) {
+				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
+					permission: permission
+				});
+				return;
+			}
 		if (!command.args.length || !['add', 'reset'].includes(command.args[0].toLowerCase())) {
 			const embed = command.message.client.utils.createEmbed();
 			embed.addField(`${command.prefix}${command.command} add <role...> [messageId]`, command.message.client.utils.getMessage(command.message.channel, 'reaction_help_add'));
@@ -39,6 +52,9 @@ module.exports = {
 					emoji = await message.react(reaction.emoji)
 						.then(reaction => reaction.emoji)
 						.catch(() => { });
+					for (const reaction of data)
+						if (reaction.emoji = emoji)
+							emoji = null;
 					if (!emoji && command.message.channel.permissionsFor(command.message.guild.me).has('MANAGE_MESSAGES'))
 						reaction.users.remove(command.message.author);
 				}
@@ -56,9 +72,11 @@ module.exports = {
 			const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
 			if (!guildData.reaction)
 				guildData.reaction = {};
-			guildData.reaction[message.id] = [];
+			if (!guildData.reaction[message.channel.id])
+				guildData.reaction[message.channel.id] = {};
+			guildData.reaction[message.channel.id][message.id] = [];
 			for (const reaction of data)
-				guildData.reaction[message.id].push({
+				guildData.reaction[message.channel.id][message.id].push({
 					emoji: reaction.emoji.id ? reaction.emoji.id : reaction.emoji.name,
 					role: reaction.role.id
 				});
@@ -70,26 +88,43 @@ module.exports = {
 			command.message.client.utils.sendMessage(command.message.channel, 'reaction_reset');
 		}
 	},
-	messageReactionAdd: (messageReaction, user) => {
+	ready: (client) => {
+		for (const guild of client.guilds.cache.values()) {
+			const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
+			if (guildData.reaction)
+				for (const channel of guild.channels.cache.values()) 
+					if (guildData.reaction[channel.id])
+						if (channel.type == 'text' && channel.viewable)
+							channel.messages.fetch({ cache: true, force: true});
+		}
+	},
+	permission: (message) => {
+		if (!message.member.hasPermission('ADMINISTRATOR'))
+			return false;
+		return true;
+	},
+	messageReactionAdd: async (messageReaction, user) => {
 		if (user.bot || messageReaction.message.channel.type == 'dm')
 			return;
 		const guildData = messageReaction.client.utils.readFile(`guilds/${messageReaction.message.guild.id}.json`);
-		if (!(guildData.reaction && guildData.reaction[messageReaction.message.id]))
+		if (!(guildData.reaction && guildData.reaction[messageReaction.message.channel.id]
+			&& guildData.reaction[messageReaction.message.channel.id][messageReaction.message.id]))
 			return;
 		if (messageReaction.message.guild.me.hasPermission('MANAGE_ROLES')) {
-			const member = messageReaction.message.guild.members.cache.get(user.id);
+			const member = await messageReaction.message.guild.members.fetch(user.id);
 			if (member.manageable) {
 				let emoji = messageReaction.emoji;
 				emoji = emoji.id ? emoji.id : emoji.name;
-				for (const reaction of guildData.reaction[messageReaction.message.id])
+				for (const reaction of guildData.reaction[messageReaction.message.channel.id][messageReaction.message.id])
 					if (reaction.emoji == emoji) {
 						const role = messageReaction.message.guild.roles.cache.get(reaction.role);
 						if (role) {
 							member.roles.add(role);
 							for (const reaction of messageReaction.message.reactions.cache.values())
 								if (reaction != messageReaction)
-									if (reaction.users.cache.get(user.id))
+									if ((await reaction.users.fetch()).get(user.id))
 										reaction.users.remove(user);
+							console.log(messageReaction.message.reactions.cache);
 							return;
 						}
 						break;
@@ -99,20 +134,21 @@ module.exports = {
 		if (messageReaction.message.guild.me.hasPermission('MANAGE_EMOJIS'))
 			messageReaction.users.remove(user);
 	},
-	messageReactionRemove: (messageReaction, user) => {
+	messageReactionRemove: async (messageReaction, user) => {
 		if (user.bot || messageReaction.message.channel.type == 'dm')
 			return;
 		if (!messageReaction.message.guild.me.hasPermission('MANAGE_ROLES'))
-			return
-		const member = messageReaction.message.guild.members.cache.get(user.id);
+			return;
+		const member = await messageReaction.message.guild.members.fetch(user.id);
 		if (!member.manageable)
 			return;
 		const guildData = messageReaction.client.utils.readFile(`guilds/${messageReaction.message.guild.id}.json`);
-		if (!(guildData.reaction && guildData.reaction[messageReaction.message.id]))
+		if (!(guildData.reaction && guildData.reaction[messageReaction.message.channel.id]
+			&& guildData.reaction[messageReaction.message.channel.id][messageReaction.message.id]))
 			return;
 		let emoji = messageReaction.emoji;
 		emoji = emoji.id ? emoji.id : emoji.name;
-		for (const reaction of guildData.reaction[messageReaction.message.id])
+		for (const reaction of guildData.reaction[messageReaction.message.channel.id][messageReaction.message.id])
 			if (reaction.emoji == emoji) {
 				const role = messageReaction.message.guild.roles.cache.get(reaction.role);
 				member.roles.remove(role);
