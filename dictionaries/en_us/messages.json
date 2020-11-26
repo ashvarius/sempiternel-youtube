@@ -18,5 +18,7 @@
     "autorole_restore": "Restore roles has been set to `<option>`.",
     "clear_success": "`<amount>` messages have been deleted.",
     "temporary_add": "The channel <channel> has been registered.",
-    "temporary_remove": "The channel <channel> has been unregistered."
+	"temporary_remove": "The channel <channel> has been unregistered.",
+	"music_success": "The music channel has been created.",
+	"music_watting": "Waiting for music."
 }

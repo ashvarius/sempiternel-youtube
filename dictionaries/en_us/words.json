@@ -2,5 +2,9 @@
     "name": "Name",
     "aliases": "Aliases",
     "description": "Description",
-    "nothing": "Nothing"
+	"nothing": "Nothing",
+	"now": "Now",
+	"activate": "Activate",
+	"random": "Random",
+	"repeat": "Repeat"
 }

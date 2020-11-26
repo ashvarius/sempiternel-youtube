@@ -124,7 +124,6 @@ module.exports = {
 								if (reaction != messageReaction)
 									if ((await reaction.users.fetch()).get(user.id))
 										reaction.users.remove(user);
-							console.log(messageReaction.message.reactions.cache);
 							return;
 						}
 						break;

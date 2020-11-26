@@ -59,14 +59,11 @@ module.exports = {
 		return true;
 	},
 	guildMemberAdd: member => {
-		console.log('guildMemberAdd');
 		if (!member.guild.me.hasPermission('MANAGE_ROLES'))
 			return
-		console.log('1');
 		const guildData = member.client.utils.readFile(`guilds/${member.guild.id}.json`);
 		if (!guildData.autorole)
 			return;
-		console.log('2');
 		if (guildData.autorole.restore) {
 			const userData = member.client.utils.readFile(`users/${member.id}.json`);
 			if (!userData.autorole)
@@ -80,10 +77,8 @@ module.exports = {
 				return;
 			}
 		}
-		console.log('3');
 		if (!guildData.autorole.roles)
 			return;
-		console.log('4');
 		for (const id of guildData.autorole.roles) {
 			const role = member.guild.roles.cache.get(id);
 			if (role)

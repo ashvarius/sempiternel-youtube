@@ -56,7 +56,6 @@ class Utils {
         const embed = new MessageEmbed();
         if (description)
             embed.setDescription(description);
-        embed.setColor(this.client.config.color);
         return embed;
     }
     getDictionary(object) {
@@ -89,6 +88,7 @@ class Utils {
     sendEmbed(channel, embed) {
         if (embed.author && embed.author.iconURL && !embed.author.url)
             embed.author.url = embed.author.iconURL;
+		embed.setColor(this.client.config.color);
         return channel.send(embed);
     }
     sendMessage(channel, key, object) {
@@ -99,41 +99,13 @@ class Utils {
     replaceEmbed(message, embed) {
         if (embed.author && embed.author.iconURL && !embed.author.url)
             embed.author.url = embed.author.iconURL;
+		embed.setColor(this.client.config.color);
         return message.edit(embed);
     }
     replaceMessage(message, key, object) {
         const description = this.getMessage(message.channel, key, object);
         const embed = this.createEmbed(description);
         return this.replaceEmbed(message, embed);
-    }
-    generateTranscoder = (url, { start = -1, duration = -1 } = {}) => {
-        let args = [];
-        if (start != -1)
-            args = args.concat(['-ss', start]);
-        if (duration != -1)
-            args = args.concat(['-to', duration]);
-        args = args.concat([
-            '-i', url,
-            '-f', 's16le',
-            '-ar', '48000',
-            '-ac', '2',
-            '-c:v', 'libx264',
-            '-preset', 'ultrafast',
-            '-crf', '0',
-            '-movflags', '+faststart'
-        ]);
-        return new prism.FFmpeg({ args });
-    }
-    playTranscoder = (player, trancoder) => {
-        const opus = trancoder.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
-        const dispatcher = player.createDispatcher({
-            type: 'opus',
-            fec: true,
-            bitrate: 48,
-            highWaterMark: 16
-        }, { opus });
-        opus.pipe(dispatcher);
-        return dispatcher;
     }
 }
 
