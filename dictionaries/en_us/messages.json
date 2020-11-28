@@ -20,5 +20,6 @@
     "temporary_add": "The channel <channel> has been registered.",
 	"temporary_remove": "The channel <channel> has been unregistered.",
 	"music_success": "The music channel has been created.",
-	"music_watting": "Waiting for music."
+	"music_watting": "Waiting for music.",
+	"music_playlist": "To put this playlist back in the queue, copy this: `<json>`"
 }
