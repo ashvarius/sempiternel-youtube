@@ -165,7 +165,7 @@ module.exports = {
 					const message1 = channel.messages.cache.get(guildData.music.message);
 					if (!message1)
 						return;
-					message1.edit('', { embed: message.client.utils.createEmbed(message.client.utils.getMessage(message1.channel, 'music_watting')) })
+					message1.edit('', { embed: message.client.utils.createEmbed(message.client.utils.getMessage(message1.channel, 'music_watting')) });
 				});
 				message.client.music[message.guild.id].connection = connection;
 			}
@@ -209,14 +209,26 @@ module.exports = {
 			updateMessage(messageReaction.client, messageReaction.message.guild.id);
 		}
 	},
+	messageDelete: async (message) => {
+		if (!message.channel.type == 'dm')
+			return;
+		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
+		if (!(guildData.music && message.id == guildData.music.message))
+			return;
+		message = await message.client.utils.sendMessage(message.channel, 'music_watting');
+		guildData.music.message = message.id;
+		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
+		for (const emoji of Object.values(emojis))
+			message.react(emoji);
+	},
 	ready: async (client) => {
 		for (const guild of client.guilds.cache.values()) {
 			const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
 			if (!guildData.music)
-				return;
+				continue;
 			const channel = guild.channels.cache.get(guildData.music.channel);
 			if (!channel)
-				return;
+				continue;
 			while (1) {
 				let removed = 0;
 				for (const message of (await channel.messages.fetch({ force: true })).values())
@@ -227,13 +239,34 @@ module.exports = {
 				if (!removed)
 					break;
 			}
-			const message = channel.messages.cache.get(guildData.music.message);
-			if (!message)
-				return;
-			for (const reaction of channel.messages.cache.get(guildData.music.message).reactions.cache.values())
+			let message = await channel.messages.cache.get(guildData.music.message);
+			if (!message) {
+				message = await client.utils.sendMessage(channel, 'music_watting');
+				guildData.music.message = message.id;
+				client.utils.savFile(`guilds/${guild.id}.json`, guildData);
+				for (const emoji of Object.values(emojis))
+					message.react(emoji);
+			}
+			for (const reaction of message.reactions.cache.values())
 				for (const user of (await reaction.users.fetch()).values())
 					if (user != client.user)
 						reaction.users.remove(user);
 		}
+	},
+	destroy: async client => {
+		if (!client.music)
+			return;
+		for (let guild of client.guilds.cache.values())
+			if (client.music[guild.id]) {
+				const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
+				const channel = guild.channels.cache.get(guildData.music.channel);
+				if (!channel)
+					return;
+				const message = channel.messages.cache.get(guildData.music.message);
+				if (!message)
+					return;
+				await message.edit('', { embed: client.utils.createEmbed(client.utils.getMessage(message.channel, 'music_watting')) });
+			}
+		delete client.music;
 	}
 };

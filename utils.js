@@ -56,6 +56,7 @@ class Utils {
         const embed = new MessageEmbed();
         if (description)
             embed.setDescription(description);
+		embed.setColor(this.client.config.color);
         return embed;
     }
     getDictionary(object) {
@@ -88,7 +89,6 @@ class Utils {
     sendEmbed(channel, embed) {
         if (embed.author && embed.author.iconURL && !embed.author.url)
             embed.author.url = embed.author.iconURL;
-		embed.setColor(this.client.config.color);
         return channel.send(embed);
     }
     sendMessage(channel, key, object) {
@@ -99,7 +99,6 @@ class Utils {
     replaceEmbed(message, embed) {
         if (embed.author && embed.author.iconURL && !embed.author.url)
             embed.author.url = embed.author.iconURL;
-		embed.setColor(this.client.config.color);
         return message.edit(embed);
     }
     replaceMessage(message, key, object) {
