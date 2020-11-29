@@ -134,6 +134,11 @@ module.exports = {
 			ids.push(message.content);
 		}
 		for (let id of ids) {
+			if (message.client.music && message.client.music[message.guild.id] && message.client.music[message.guild.id].playlist.length >= 15) {
+				const send = await message.client.utils.sendMessage(message.channel, 'error_full');
+				send.delete({ timeout: 10 * 1000 });
+				return;
+			}
 			let video;
 			try {
 				video = await ytdl.getInfo(id);
@@ -169,6 +174,8 @@ module.exports = {
 				});
 				message.client.music[message.guild.id].connection = connection;
 			}
+			if (video.videoDetails.title.length > 50)
+				video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
 			message.client.music[message.guild.id].playlist.push(video);
 			if (!message.client.music[message.guild.id].now)
 				play(message.client, message.guild.id);
@@ -201,7 +208,7 @@ module.exports = {
 			if (dispatcher.paused)
 				dispatcher.resume();
 			else
-				dispatcher.pause();
+				dispatcher.pause(true);
 		} else {
 			for (const key of Object.keys(emojis))
 				if (messageReaction.emoji.name == emojis[key])
@@ -220,6 +227,8 @@ module.exports = {
 		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
 		for (const emoji of Object.values(emojis))
 			message.react(emoji);
+		if (message.client.music[message.guild.id])
+			updateMessage(message.client, message.guild.id);
 	},
 	ready: async (client) => {
 		for (const guild of client.guilds.cache.values()) {
@@ -254,7 +263,7 @@ module.exports = {
 		}
 	},
 	destroy: async client => {
-		if (!client.music)
+		/*if (!client.music)
 			return;
 		for (let guild of client.guilds.cache.values())
 			if (client.music[guild.id]) {
@@ -267,6 +276,6 @@ module.exports = {
 					return;
 				await message.edit('', { embed: client.utils.createEmbed(client.utils.getMessage(message.channel, 'music_watting')) });
 			}
-		delete client.music;
+		delete client.music;*/
 	}
 };
