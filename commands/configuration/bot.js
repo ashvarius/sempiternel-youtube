@@ -266,8 +266,6 @@ module.exports = {
 			if (message.client.config.owners.includes(message.author.id))
 				return true;
 			const userData = message.client.utils.readFile(`users/${message.author.id}.json`);
-			if (!userData.bot)
-				userData.bot = 0;
 			if (userData.bot)
 				return true;
 		}

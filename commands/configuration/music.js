@@ -4,8 +4,14 @@ const emojis = {
 	previous: '⏮️',
 	pause: '⏯️',
 	next: '⏭️',
-	repeat: '🔁'
+	repeat: '🔁',
+	pageup: '⤴️',
+	pagedown: '⤵️',
+	own: '📃',
+	save: '📥',
+	free: '📤'
 };
+const max = 16;
 
 const updateMessage = (client, guildId) => {
 	const guildData = client.utils.readFile(`guilds/${guildId}.json`);
@@ -26,10 +32,12 @@ const updateMessage = (client, guildId) => {
 	const array = [client.music[guildId].now.videoDetails.videoId];
 	if (client.music[guildId].playlist.length) {
 		content += '\n';
+		const min = client.music[guildId].page * max;
 		let index = 0;
 		let video;
 		while ((video = client.music[guildId].playlist[index++])) {
-			content += `\n${index} - [${video.videoDetails.title}](${video.videoDetails.video_url})`;
+			if (index > min && index <= min + max)
+				content += `\n${index} - [${video.videoDetails.title}](${video.videoDetails.video_url})`;
 			array.push(video.videoDetails.videoId);
 		}
 	}
@@ -70,10 +78,61 @@ const play = async (client, guildId) => {
 	updateMessage(client, guildId);
 }
 
+const add = async (ids, channel, member) => {
+	const guild = channel.guild;
+	for (let id of ids) {
+		let video;
+		try {
+			video = await ytdl.getInfo(id);
+		} catch (error) {
+			const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
+			send.delete({ timeout: 10 * 1000 });
+			break;
+		}
+		if (!guild.me.voice.channelID) {
+			const channel = await guild.channels.cache.get(member.voice.channelID);
+			if (!(channel && channel.joinable))
+				return;
+			await channel.join();
+		}
+		if (!channel.client.music)
+			channel.client.music = {};
+		if (!channel.client.music[guild.id]) {
+			channel.client.music[guild.id] = {};
+			channel.client.music[guild.id].playlist = [];
+			channel.client.music[guild.id].page = 0;
+		}
+		if (!channel.client.music[guild.id].connection) {
+			const connection = guild.me.voice.connection;
+			connection.on('disconnect', () => {
+				delete guild.client.music[guild.id];
+				const guildData = channel.client.utils.readFile(`guilds/${guild.id}.json`);
+				const channel = guild.channels.cache.get(guildData.music.channel);
+				if (!channel)
+					return;
+				const message = channel.messages.cache.get(guildData.music.message);
+				if (!message)
+					return;
+				message.edit('', { embed: channel.client.utils.createEmbed(channel.client.utils.getMessage(channel, 'music_watting')) });
+			});
+			channel.client.music[guild.id].connection = connection;
+		}
+		if (video.videoDetails.title.length > 50)
+			video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
+		video.videoDetails.title = video.videoDetails.title.replace(/\[|\]/g, '|');
+		channel.client.music[guild.id].playlist.push(video);
+		while (channel.client.music[guild.id].playlist.length > (channel.client.music[guild.id].page + 1) * max)
+			channel.client.music[guild.id].page++;
+		if (!channel.client.music[guild.id].now)
+			play(channel.client, guild.id);
+		else
+			updateMessage(guild.client, guild.id);
+	}
+}
+
 module.exports = {
 	name: 'music',
 	aliases: [],
-	private: false,
 	command: async command => {
 		for (const permission of ['MANAGE_CHANNELS', 'CONNECT', 'SPEAK'])
 			if (!command.message.guild.me.hasPermission(permission)) {
@@ -114,7 +173,7 @@ module.exports = {
 			return false;
 		return true;
 	},
-	message: async (message) => {
+	message: (message) => {
 		if (message.channel.type == 'dm' || message.author.id == message.client.user.id)
 			return;
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
@@ -133,65 +192,23 @@ module.exports = {
 		} catch {
 			ids.push(message.content);
 		}
-		for (let id of ids) {
-			if (message.client.music && message.client.music[message.guild.id] && message.client.music[message.guild.id].playlist.length >= 15) {
-				const send = await message.client.utils.sendMessage(message.channel, 'error_full');
-				send.delete({ timeout: 10 * 1000 });
-				return;
-			}
-			let video;
-			try {
-				video = await ytdl.getInfo(id);
-			} catch (error) {
-				const send = await message.client.utils.sendMessage(message.channel, 'error_api', { error: error.message });
-				send.delete({ timeout: 10 * 1000 });
-				break;
-			}
-			if (!message.guild.me.voice.channelID) {
-				const channel = await message.guild.channels.cache.get(message.member.voice.channelID);
-				if (!(channel && channel.joinable))
-					return;
-				await channel.join();
-			}
-			if (!message.client.music)
-				message.client.music = {};
-			if (!message.client.music[message.guild.id])
-				message.client.music[message.guild.id] = {};
-			if (!message.client.music[message.guild.id].playlist)
-				message.client.music[message.guild.id].playlist = [];
-			if (!message.client.music[message.guild.id].connection) {
-				const connection = message.guild.me.voice.connection;
-				connection.on('disconnect', () => {
-					delete message.client.music[message.guild.id];
-					const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
-					const channel = message.guild.channels.cache.get(guildData.music.channel);
-					if (!channel)
-						return;
-					const message1 = channel.messages.cache.get(guildData.music.message);
-					if (!message1)
-						return;
-					message1.edit('', { embed: message.client.utils.createEmbed(message.client.utils.getMessage(message1.channel, 'music_watting')) });
-				});
-				message.client.music[message.guild.id].connection = connection;
-			}
-			if (video.videoDetails.title.length > 50)
-				video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
-			message.client.music[message.guild.id].playlist.push(video);
-			if (!message.client.music[message.guild.id].now)
-				play(message.client, message.guild.id);
-			else
-				updateMessage(message.client, message.guild.id);
-		}
+		add(ids, message.channel, message.member);
 	},
-	messageReactionAdd: (messageReaction, user) => {
+	messageReactionAdd: async (messageReaction, user) => {
 		if (user.id == messageReaction.client.user.id)
 			return;
 		const guildData = messageReaction.client.utils.readFile(`guilds/${messageReaction.message.guild.id}.json`);
 		if (!(guildData.music && messageReaction.message.id == guildData.music.message))
 			return;
 		messageReaction.users.remove(user);
-		if (!(messageReaction.client.music && messageReaction.client.music[messageReaction.message.guild.id]))
+		if (!(messageReaction.client.music && messageReaction.client.music[messageReaction.message.guild.id])) {
+			if (messageReaction.emoji.name == emojis.own) {
+				const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
+				if (userData.music)
+					add(userData.music, messageReaction.message.channel, messageReaction.message.guild.members.cache.get(user.id));
+			}
 			return;
+		}
 		if (messageReaction.emoji.name == emojis.previous) {
 			messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, messageReaction.client.music[messageReaction.message.guild.id].now);
 			if (messageReaction.client.music[messageReaction.message.guild.id].repeat
@@ -209,6 +226,31 @@ module.exports = {
 				dispatcher.resume();
 			else
 				dispatcher.pause(true);
+		} else if (messageReaction.emoji.name == emojis.pageup || messageReaction.emoji.name == emojis.pagedown) {
+			if (messageReaction.emoji.name == emojis.pageup && messageReaction.client.music[messageReaction.message.guild.id].page > 0)
+				messageReaction.client.music[messageReaction.message.guild.id].page--;
+			else if (messageReaction.emoji.name == emojis.pagedown && messageReaction.client.music[messageReaction.message.guild.id].playlist.length > (messageReaction.client.music[messageReaction.message.guild.id].page + 1) * max)
+				messageReaction.client.music[messageReaction.message.guild.id].page++;
+			else
+				return;
+			updateMessage(messageReaction.client, messageReaction.message.guild.id);
+		} else if (messageReaction.emoji.name == emojis.save || messageReaction.emoji.name == emojis.free) {
+			const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
+			if (!userData.music)
+				userData.music = [];
+			const id = messageReaction.client.music[messageReaction.message.guild.id].now.videoDetails.videoId;
+			let key;
+			if (messageReaction.emoji.name == emojis.save && !userData.music.includes(id)) {
+				userData.music.push(id);
+				key = 'music_add';
+			} else if (messageReaction.emoji.name == emojis.free && userData.music.includes(id)) {
+				userData.music.splice(userData.music.indexOf(id), 1);
+				key = 'music_remove';
+			} else
+				return;
+			messageReaction.client.utils.savFile(`users/${user.id}.json`, userData);
+			const send = await messageReaction.client.utils.sendMessage(messageReaction.message.channel, key);
+			send.delete({ timeout: 10 * 1000 });
 		} else {
 			for (const key of Object.keys(emojis))
 				if (messageReaction.emoji.name == emojis[key])
@@ -227,7 +269,7 @@ module.exports = {
 		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
 		for (const emoji of Object.values(emojis))
 			message.react(emoji);
-		if (message.client.music[message.guild.id])
+		if (message.client.music && message.client.music[message.guild.id])
 			updateMessage(message.client, message.guild.id);
 	},
 	ready: async (client) => {
@@ -263,7 +305,7 @@ module.exports = {
 		}
 	},
 	destroy: async client => {
-		/*if (!client.music)
+		if (!client.music)
 			return;
 		for (let guild of client.guilds.cache.values())
 			if (client.music[guild.id]) {
@@ -276,6 +318,6 @@ module.exports = {
 					return;
 				await message.edit('', { embed: client.utils.createEmbed(client.utils.getMessage(message.channel, 'music_watting')) });
 			}
-		delete client.music;*/
+		delete client.music;
 	}
 };

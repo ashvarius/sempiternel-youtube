@@ -6,5 +6,11 @@
 	"now": "Now",
 	"activate": "Activate",
 	"random": "Random",
-	"repeat": "Repeat"
+	"repeat": "Repeat",
+	"servers": "Servers",
+	"channels": "Channels",
+	"users": "Users",
+	"emojis": "Emojis",
+	"invitation": "Invitation",
+	"link": "Link"
 }
