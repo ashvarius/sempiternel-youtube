@@ -8,7 +8,7 @@ module.exports = {
 			});
 			return;
 		}
-		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS', 'MANAGE_EMOJIS'])
+		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS', 'MANAGE_MESSAGES'])
 			if (!command.message.guild.me.hasPermission(permission)) {
 				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
 					permission: permission
@@ -53,7 +53,7 @@ module.exports = {
 						.then(reaction => reaction.emoji)
 						.catch(() => { });
 					for (const reaction of data)
-						if (reaction.emoji = emoji)
+						if (reaction.emoji.name == emoji.name && reaction.emoji.id == emoji.id)
 							emoji = null;
 					if (!emoji && command.message.channel.permissionsFor(command.message.guild.me).has('MANAGE_MESSAGES'))
 						reaction.users.remove(command.message.author);
@@ -66,7 +66,7 @@ module.exports = {
 				list.push(`${reaction.emoji} - ${reaction.role}`);
 			message = await command.message.channel.messages.fetch(command.args[command.args.length - 1]).catch(() => { });
 			if (!message)
-				message = await command.message.client.utils.sendEmbed(command.message.channel, command.message.client.utils.createEmbed(`${command.message.client.utils.getMessage(command.message.channel, 'reaction_add')}\n${list.join('\n')}`));
+				message = await command.message.client.utils.sendEmbed(command.message.channel, command.message.client.utils.createEmbed(`${command.message.client.utils.getMessage(command.message.channel, '')}\n${list.join('\n')}`));
 			for (const reaction of data)
 				message.react(reaction.emoji);
 			const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
@@ -92,10 +92,10 @@ module.exports = {
 		for (const guild of client.guilds.cache.values()) {
 			const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
 			if (guildData.reaction)
-				for (const channel of guild.channels.cache.values()) 
+				for (const channel of guild.channels.cache.values())
 					if (guildData.reaction[channel.id])
 						if (channel.type == 'text' && channel.viewable)
-							channel.messages.fetch({ cache: true, force: true});
+							channel.messages.fetch({ cache: true, force: true });
 		}
 	},
 	permission: (message) => {
@@ -130,7 +130,7 @@ module.exports = {
 					}
 			}
 		}
-		if (messageReaction.message.guild.me.hasPermission('MANAGE_EMOJIS'))
+		if (messageReaction.message.guild.me.hasPermission('MANAGE_MESSAGES'))
 			messageReaction.users.remove(user);
 	},
 	messageReactionRemove: async (messageReaction, user) => {

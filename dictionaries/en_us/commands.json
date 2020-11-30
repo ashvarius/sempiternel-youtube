@@ -9,5 +9,7 @@
     "clear": "Delete messages in a channel.",
     "temporary": "Make temporary channels.",
     "user": "Get information about someone.",
-    "music": "Create a channel to manage music on the bot."
+	"music": "Create a channel to manage music on the bot.",
+	"info": "Display information about the bot.",
+	"embed": "Send an embed with the bot."
 }

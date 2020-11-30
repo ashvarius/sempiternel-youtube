@@ -46,27 +46,25 @@ module.exports = {
 		return true;
 	},
 	voiceStateUpdate: async (oldState, newState) => {
-		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
-			if (!newState.guild.me.hasPermission(permission))
-				return;
 		const guildData = newState.member.client.utils.readFile(`guilds/${newState.guild.id}.json`);
 		if (!guildData.temporary)
 			return;
 		if (cache[newState.guild.id]
 			&& cache[newState.guild.id].includes(oldState.channelID)
-			&& !Array.from(oldState.channel.members.filter(member => !member.user.bot)).length) {
-			cache[newState.guild.id].splice(cache[newState.guild.id].indexOf(oldState.channelID), 1);
-			oldState.channel.delete().catch(() => { });
-		}
+			&& !Array.from(oldState.channel.members.filter(member => !member.user.bot)).length)
+			oldState.channel.delete().then(() => cache[newState.guild.id].splice(cache[newState.guild.id].indexOf(oldState.channelID), 1)).catch(() => { });
 		if (!guildData.temporary.includes(newState.channelID))
 			return;
+		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
+			if (!newState.guild.me.hasPermission(permission))
+				return;
 		const channel = await newState.guild.channels.create(newState.member.displayName, {
 			type: 'voice',
 			parent: newState.channel.parent,
 			permissionOverwrites: [
 				{
 					id: newState.guild.me.id,
-					allow: ['VIEW_CHANNEL', 'MANAGE_CHANNELS'],
+					allow: ['VIEW_CHANNEL', 'MANAGE_CHANNELS', 'CONNECT'],
 				},
 				{
 					id: newState.member.id,
@@ -87,10 +85,8 @@ module.exports = {
 				continue;
 			for (let channel of cache[guild.id]) {
 				channel = guild.channels.cache.get(channel);
-				if (channel) {
-					console.log(channel.name);
+				if (channel)
 					await channel.delete();
-				}
 			}
 		}
 	}

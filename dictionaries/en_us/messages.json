@@ -21,7 +21,9 @@
 	"temporary_remove": "The channel <channel> has been unregistered.",
 	"music_success": "The music channel has been created.",
 	"music_watting": "Waiting for music.",
-	"music_playlist": "To put this playlist back in the queue, copy this: `<json>`",
-	"music_add": "Current song added to your playlist",
-	"music_remove": "Current song deleted from your playlist"
+	"music_playlist": "To put this playlist back in the queue, copy this:",
+	"music_add": "Current song added to your playlist.",
+	"music_remove": "Current song deleted from your playlist.",
+	"message_help": "Send an embed with the bot.",
+	"message_image": "Send the url of the image or click on the reaction to not put an image."
 }

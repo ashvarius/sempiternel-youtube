@@ -1,5 +1,5 @@
 module.exports = {
-    name: 'stats',
+    name: 'info',
     aliases: [],
 	private: true,
     command: async command => {

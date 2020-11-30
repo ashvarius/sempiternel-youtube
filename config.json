@@ -1,21 +1,21 @@
 {
-    "prefix": ",",
-    "language": "en_us",
-    "owners": [
-        "360795716500848660"
-    ],
-    "token": "NzA1Mzc2MTE0NTQwODA2MTc0.Xqqysg.RchDYnvb9kB6-fTkxjLzycUqG9Y",
-    "permissions": [
-        "MANAGE_CHANNELS",
-        "ADD_REACTIONS",
-        "SEND_MESSAGES",
-        "MANAGE_MESSAGES",
-        "EMBED_LINKS",
+	"prefix": ",",
+	"language": "en_us",
+	"owners": [
+		"360795716500848660"
+	],
+	"token": "NzA1Mzc2MTE0NTQwODA2MTc0.Xqqysg.RchDYnvb9kB6-fTkxjLzycUqG9Y",
+	"permissions": [
+		"MANAGE_CHANNELS",
+		"ADD_REACTIONS",
+		"SEND_MESSAGES",
+		"MANAGE_MESSAGES",
+		"EMBED_LINKS",
 		"READ_MESSAGE_HISTORY",
 		"CONNECT",
 		"SPEAK",
-        "MOVE_MEMBERS",
-        "MANAGE_ROLES",
-        "MANAGE_EMOJIS"
-    ]
+		"MOVE_MEMBERS",
+		"MANAGE_ROLES",
+		"MANAGE_EMOJIS"
+	]
 }

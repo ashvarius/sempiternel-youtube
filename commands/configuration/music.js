@@ -47,7 +47,7 @@ const updateMessage = (client, guildId) => {
 	}
 	const embed = client.utils.createEmbed(content);
 	embed.setThumbnail(client.music[guildId].now.thumbnail);
-	message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist', { json: JSON.stringify(array) })}||`, { embed })
+	message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed })
 };
 
 const play = async (client, guildId) => {
@@ -88,6 +88,8 @@ const play = async (client, guildId) => {
 }
 
 const add = async (ids, channel, member) => {
+	if (!channel)
+		return;
 	let last = Date.now();
 	let needupdate = false;
 	const guild = channel.guild;
@@ -132,6 +134,8 @@ const add = async (ids, channel, member) => {
 		if (!channel.client.music[guild.id].connection) {
 			const connection = guild.me.voice.connection;
 			connection.on('disconnect', () => {
+				if (!guild.client.music)
+					return;
 				delete guild.client.music[guild.id];
 				const guildData = guild.client.utils.readFile(`guilds/${guild.id}.json`);
 				const channel = guild.channels.cache.get(guildData.music.channel);
@@ -165,7 +169,7 @@ module.exports = {
 	name: 'music',
 	aliases: [],
 	command: async command => {
-		for (const permission of ['MANAGE_CHANNELS', 'CONNECT', 'SPEAK'])
+		for (const permission of ['MANAGE_CHANNELS', 'CONNECT'])
 			if (!command.message.guild.me.hasPermission(permission)) {
 				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
 					permission
@@ -177,7 +181,6 @@ module.exports = {
 			command.message.client.utils.sendMessage(command.message.channel, 'error_channel_exists');
 			return;
 		}
-		console.log('1');
 		const channel = await command.message.guild.channels.create('Music', {
 			type: 'text',
 			topic: 'This channel is designed to handle music.',
@@ -270,7 +273,7 @@ module.exports = {
 			const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
 			if (!userData.music)
 				userData.music = [];
-			const id = messageReaction.client.music[messageReaction.message.guild.id].now.videoDetails.videoId;
+			const id = messageReaction.client.music[messageReaction.message.guild.id].now.id;
 			let key;
 			if (messageReaction.emoji.name == emojis.save && !userData.music.includes(id)) {
 				if (userData.music.length >= max.video) {
