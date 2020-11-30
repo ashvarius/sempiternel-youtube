@@ -18,5 +18,6 @@
     "error_not_joinable": "The bot cannot join your voice channel.",
 	"error_channel_not_found": "Channel not found.",
 	"error_channel_exists": "The channel already exists.",
-	"error_full": "The bot is full, you can't add anything."
+	"error_full": "It's full, you can't add anything.",
+	"error_too_large_message": "The bot is trying to send a too large message."
 }

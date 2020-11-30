@@ -11,7 +11,9 @@
         "SEND_MESSAGES",
         "MANAGE_MESSAGES",
         "EMBED_LINKS",
-        "READ_MESSAGE_HISTORY",
+		"READ_MESSAGE_HISTORY",
+		"CONNECT",
+		"SPEAK",
         "MOVE_MEMBERS",
         "MANAGE_ROLES",
         "MANAGE_EMOJIS"
