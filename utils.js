@@ -88,7 +88,7 @@ class Utils {
 		return message;
 	}
 	sendEmbed(channel, embed) {
-		if (!channel.guild.me.hasPermission('EMBED_LINKS')) {
+		if (channel.type != 'dm' && !channel.guild.me.hasPermission('EMBED_LINKS')) {
 			const description = channel.client.utils.getMessage(channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' });
 			channel.send(description);
 			return;
@@ -103,7 +103,7 @@ class Utils {
 		return this.sendEmbed(channel, embed);
 	}
 	replaceEmbed(message, embed) {
-		if (!message.guild.me.hasPermission('EMBED_LINKS')) {
+		if (message.channel.type != 'dm' && !message.guild.me.hasPermission('EMBED_LINKS')) {
 			const description = message.client.utils.getMessage(message.channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' });
 			message.edit(description);
 			return;

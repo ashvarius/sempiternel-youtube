@@ -51,10 +51,10 @@ class DiscordBot extends EventEmitter {
 			console.log(`${client.user.username} is ready`);
 			this.emit('ready');
 		});
-		client.on('message', message => {
+		client.on('message', async message => {
 			if (message.channel.type == 'text' && !message.channel.permissionsFor(client.user).has('SEND_MESSAGES'))
 				return;
-			dispatcher('message', message);
+			await dispatcher('message', message);
 			let [command, ...args] = message.content.split(' ').filter(item => item.length);
 			if (!command)
 				return;

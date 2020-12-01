@@ -66,7 +66,7 @@ module.exports = {
 				list.push(`${reaction.emoji} - ${reaction.role}`);
 			message = await command.message.channel.messages.fetch(command.args[command.args.length - 1]).catch(() => { });
 			if (!message)
-				message = await command.message.client.utils.sendEmbed(command.message.channel, command.message.client.utils.createEmbed(`${command.message.client.utils.getMessage(command.message.channel, '')}\n${list.join('\n')}`));
+				message = await command.message.client.utils.sendEmbed(command.message.channel, command.message.client.utils.createEmbed(`${command.message.client.utils.getMessage(command.message.channel, 'reaction_add')}\n\n${list.join('\n')}`));
 			for (const reaction of data)
 				message.react(reaction.emoji);
 			const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);

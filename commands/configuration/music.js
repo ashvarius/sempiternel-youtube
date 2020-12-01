@@ -1,5 +1,5 @@
 const ytdl = require('discord-ytdl-core');
-const emojis = {
+const emojis = Object.freeze({
 	random: '🔀',
 	previous: '⏮️',
 	pause: '⏯️',
@@ -10,12 +10,19 @@ const emojis = {
 	own: '📃',
 	save: '📥',
 	free: '📤'
-};
-const max = {
+});
+const max = Object.freeze({
 	page: 16,
 	video: 50,
 	update: 2
-};
+});
+
+const waitingembed = (client, channel) => {
+	let description = `${client.utils.getMessage(channel, 'music_watting')}\n`;
+	for (const key of Object.keys(emojis))
+		description += `\n${emojis[key]} ${client.utils.getMessage(channel, `music_reaction_${key}`)}`;
+	return client.utils.createEmbed(description);
+}
 
 const updateMessage = (client, guildId) => {
 	const guildData = client.utils.readFile(`guilds/${guildId}.json`);
@@ -66,11 +73,16 @@ const play = async (client, guildId) => {
 	if (client.music[guildId].playlist.length <= client.music[guildId].page * max.page)
 		client.music[guildId].page--;
 	client.music[guildId].now = video;
-	const stream = ytdl.arbitraryStream(video.format, {
+	const opus = ytdl.arbitraryStream(video.format, {
 		opusEncoded: true,
 		encoderArgs: ['-af', 'bass=g=10,dynaudnorm=f=200']
 	});
-	dispatcher = connection.play(stream, { type: "opus", bitrate: 48 });
+	const dispatcher = client.music[guildId].connection.player.createDispatcher({
+		type: 'opus',
+		fec: true,
+		bitrate: 48
+	}, { opus });
+	opus.pipe(dispatcher);
 	dispatcher.on('finish', async () => {
 		if (!Array.from(client.music[guildId].connection.channel.members.values()).filter(member => !member.user.bot).length) {
 			client.music[guildId].connection.disconnect();
@@ -144,7 +156,7 @@ const add = async (ids, channel, member) => {
 				const message = channel.messages.cache.get(guildData.music.message);
 				if (!message)
 					return;
-				message.edit('', { embed: channel.client.utils.createEmbed(channel.client.utils.getMessage(channel, 'music_watting')) });
+				message.edit('', { embed: waitingembed(channel.client, channel) });
 			});
 			channel.client.music[guild.id].connection = connection;
 		}
@@ -193,7 +205,10 @@ module.exports = {
 			],
 			reason: 'Create a music channel'
 		});
-		const message = await command.message.client.utils.sendMessage(channel, 'music_watting');
+		let description = `${command.message.client.utils.sendEmbed(channel, waitingembed(command.message.client, channel))}\n`;
+		for (const key of Object.keys(emojis))
+			description += `\n${emojis[key]} ${command.message.client.utils.getMessage(channel, `music_reaction_${key}`)}`;
+		const message = await command.message.client.utils.sendEmbed(channel, command.message.client.utils.createEmbed(description));
 		guildData.music = {
 			channel: channel.id,
 			message: message.id
@@ -257,10 +272,11 @@ module.exports = {
 			messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.emit('finish');
 		else if (messageReaction.emoji.name == emojis.pause) {
 			const dispatcher = messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher;
-			if (dispatcher.paused)
+			if (dispatcher.paused) {
 				dispatcher.resume();
-			else
-				dispatcher.pause(true);
+				dispatcher.streams.opus.resume();
+			} else
+				dispatcher.pause();
 		} else if (messageReaction.emoji.name == emojis.pageup || messageReaction.emoji.name == emojis.pagedown) {
 			if (messageReaction.emoji.name == emojis.pageup && messageReaction.client.music[messageReaction.message.guild.id].page > 0)
 				messageReaction.client.music[messageReaction.message.guild.id].page--;
@@ -306,7 +322,7 @@ module.exports = {
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
 		if (!(guildData.music && message.id == guildData.music.message))
 			return;
-		message = await message.client.utils.sendMessage(message.channel, 'music_watting');
+		message = await message.client.utils.sendEmbed(message.channel, waitingembed(message.client, message.channel));
 		guildData.music.message = message.id;
 		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
 		for (const emoji of Object.values(emojis)) {
@@ -345,7 +361,7 @@ module.exports = {
 			if (!message) {
 				if (!channel.permissionsFor(client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))
 					continue;
-				message = await client.utils.sendMessage(channel, 'music_watting');
+				message = await client.utils.sendEmbed(channel, waitingembed(client, channel));
 				guildData.music.message = message.id;
 				client.utils.savFile(`guilds/${guild.id}.json`, guildData);
 				for (const emoji of Object.values(emojis)) {
@@ -372,7 +388,7 @@ module.exports = {
 				const message = channel.messages.cache.get(guildData.music.message);
 				if (!message)
 					return;
-				await message.edit('', { embed: client.utils.createEmbed(client.utils.getMessage(message.channel, 'music_watting')) });
+				await message.edit('', { embed: waitingembed(client, message.channel) });
 			}
 		delete client.music;
 	}
