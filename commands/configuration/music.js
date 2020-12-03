@@ -100,8 +100,6 @@ const play = async (client, guildId) => {
 }
 
 const add = async (ids, channel, member) => {
-	if (!channel)
-		return;
 	let last = Date.now();
 	let needupdate = false;
 	const guild = channel.guild;
@@ -136,12 +134,12 @@ const add = async (ids, channel, member) => {
 			channel.client.music[guild.id].page = 0;
 		}
 		if (!guild.me.voice.channelID) {
-			const channel = member && await guild.channels.cache.get(member.voice.channelID);
-			if (!(channel && channel.joinable)) {
+			const voice = member && await guild.channels.cache.get(member.voice.channelID);
+			if (!(voice && voice.joinable)) {
 				delete channel.client.music[guild.id];
 				return;
 			}
-			await channel.join();
+			await voice.join();
 		}
 		if (!channel.client.music[guild.id].connection) {
 			const connection = guild.me.voice.connection;
@@ -205,10 +203,7 @@ module.exports = {
 			],
 			reason: 'Create a music channel'
 		});
-		let description = `${command.message.client.utils.sendEmbed(channel, waitingembed(command.message.client, channel))}\n`;
-		for (const key of Object.keys(emojis))
-			description += `\n${emojis[key]} ${command.message.client.utils.getMessage(channel, `music_reaction_${key}`)}`;
-		const message = await command.message.client.utils.sendEmbed(channel, command.message.client.utils.createEmbed(description));
+		const message = await command.message.client.utils.sendEmbed(channel, waitingembed(command.message.client, channel));
 		guildData.music = {
 			channel: channel.id,
 			message: message.id
@@ -259,6 +254,8 @@ module.exports = {
 			}
 			return;
 		}
+		if (!(messageReaction.client.music[messageReaction.message.guild.id].connection && messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher))
+			return;
 		if (messageReaction.emoji.name == emojis.previous) {
 			messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, messageReaction.client.music[messageReaction.message.guild.id].now);
 			if (messageReaction.client.music[messageReaction.message.guild.id].repeat
