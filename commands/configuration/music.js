@@ -111,7 +111,13 @@ const add = async (ids, channel, member) => {
 		}
 		let video;
 		try {
-			video = await ytdl.getInfo(id);
+			video = await ytdl.getInfo(id, {
+				requestOptions: {
+					headers: {
+						cookie: channel.client.config['youtube-cookie']
+					}
+				}
+			});
 		} catch (error) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
 			send.delete({ timeout: 10 * 1000 });
