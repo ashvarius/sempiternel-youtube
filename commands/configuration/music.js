@@ -55,7 +55,7 @@ const updateMessage = (client, guildId) => {
 	}
 	const embed = client.utils.createEmbed(content);
 	embed.setThumbnail(client.music[guildId].now.thumbnail);
-	message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed })
+	return message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed });
 };
 
 const play = async (client, guildId) => {
@@ -97,7 +97,7 @@ const play = async (client, guildId) => {
 		}
 		play(client, guildId);
 	});
-	updateMessage(client, guildId);
+	await updateMessage(client, guildId);
 }
 
 const add = async (ids, channel, member) => {
@@ -134,6 +134,12 @@ const add = async (ids, channel, member) => {
 				};
 				cache[id] = video;
 			}
+			if (!guild.me.voice.channelID) {
+				const voice = member && await guild.channels.cache.get(member.voice.channelID);
+				if (!(voice && voice.joinable))
+					return;
+				await voice.join();
+			}
 		} catch (error) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
 			send.delete({ timeout: 10 * 1000 });
@@ -145,14 +151,6 @@ const add = async (ids, channel, member) => {
 			channel.client.music[guild.id] = {};
 			channel.client.music[guild.id].playlist = [];
 			channel.client.music[guild.id].page = 0;
-		}
-		if (!guild.me.voice.channelID) {
-			const voice = member && await guild.channels.cache.get(member.voice.channelID);
-			if (!(voice && voice.joinable)) {
-				delete channel.client.music[guild.id];
-				return;
-			}
-			await voice.join();
 		}
 		if (!channel.client.music[guild.id].connection) {
 			const connection = guild.me.voice.connection;
@@ -175,17 +173,17 @@ const add = async (ids, channel, member) => {
 		while (channel.client.music[guild.id].playlist.length > (channel.client.music[guild.id].page + 1) * max.page)
 			channel.client.music[guild.id].page++;
 		if (!channel.client.music[guild.id].now) {
-			play(channel.client, guild.id);
+			await play(channel.client, guild.id);
 			last = Date.now();
 		} else if (last + max.update * 1000 <= Date.now()) {
-			updateMessage(guild.client, guild.id);
+			await updateMessage(guild.client, guild.id);
 			needupdate = false;
 			last += max.update * 1000;
 		} else
 			needupdate = true;
 	}
 	if (needupdate)
-		updateMessage(guild.client, guild.id);
+		await updateMessage(guild.client, guild.id);
 }
 
 module.exports = {

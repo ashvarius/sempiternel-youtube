@@ -15,6 +15,6 @@
     "events": "^3.2.0",
     "ffmpeg-static": "^4.2.7",
     "fs": "^0.0.1-security",
-    "ytdl-core": "^4.1.2"
+    "ytdl-core": "^4.1.3"
   }
 }

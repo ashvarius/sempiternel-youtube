@@ -17,6 +17,10 @@ class Utils {
 	constructor(client) {
 		this.client = client;
 		this.path = `data/${this.client.user.id}`;
+		setInterval(() => {
+			for (const key of Object.keys(loadedFiles))
+				delete loadedFiles[key];
+		}, 1000 * 60 * 60);
 	}
 	savFile(path, object) {
 		if (!object)
@@ -37,9 +41,6 @@ class Utils {
 		if (fs.existsSync(path)) {
 			const parsed = JSON.parse(fs.readFileSync(path));
 			loadedFiles[path] = parsed;
-			setTimeout(() => {
-				delete loadedFiles[path];
-			}, 1000);
 			return parsed;
 		}
 		return {};
