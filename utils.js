@@ -33,11 +33,14 @@ class Utils {
 	readFile(path) {
 		path = `${this.path}/${path}`;
 		if (loadedFiles[path])
-			return JSON.parse(JSON.stringify(loadedFiles[path]));
+			return loadedFiles[path];
 		if (fs.existsSync(path)) {
 			const parsed = JSON.parse(fs.readFileSync(path));
 			loadedFiles[path] = parsed;
-			return JSON.parse(JSON.stringify(parsed));
+			setTimeout(() => {
+				delete loadedFiles[path];
+			}, 1000);
+			return parsed;
 		}
 		return {};
 	}

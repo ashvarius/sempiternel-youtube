@@ -16,6 +16,7 @@ const max = Object.freeze({
 	video: 50,
 	update: 2
 });
+const cache = {};
 
 const waitingembed = (client, channel) => {
 	let description = `${client.utils.getMessage(channel, 'music_watting')}\n`;
@@ -103,7 +104,7 @@ const add = async (ids, channel, member) => {
 	let last = Date.now();
 	let needupdate = false;
 	const guild = channel.guild;
-	for (const id of ids) {
+	for (let id of ids) {
 		if (channel.client.music && channel.client.music[guild.id] && channel.client.music[guild.id].playlist.length >= max.video) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_full');
 			send.delete({ timeout: 10 * 1000 });
@@ -111,27 +112,33 @@ const add = async (ids, channel, member) => {
 		}
 		let video;
 		try {
-			video = await ytdl.getInfo(id, {
-				requestOptions: {
-					headers: {
-						cookie: channel.client.config['youtube-cookie']
+			id = ytdl.getVideoID(id);
+			if (cache[id])
+				video = cache[id];
+			else {
+				video = await ytdl.getInfo(id, {
+					requestOptions: {
+						headers: {
+							cookie: channel.client.config['youtube-cookie']
+						}
 					}
-				}
-			});
+				});
+				if (video.videoDetails.title.length > 50)
+					video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
+				video = {
+					title: video.videoDetails.title.replace(/\[|\]/g, '|'),
+					url: video.videoDetails.video_url,
+					id: video.videoDetails.videoId,
+					thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
+					format: ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' }).url,
+				};
+				cache[id] = video;
+			}
 		} catch (error) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
 			send.delete({ timeout: 10 * 1000 });
 			break;
 		}
-		if (video.videoDetails.title.length > 50)
-			video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
-		video = {
-			title: video.videoDetails.title.replace(/\[|\]/g, '|'),
-			url: video.videoDetails.video_url,
-			id: video.videoDetails.videoId,
-			thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
-			format: ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' }).url,
-		};
 		if (!channel.client.music)
 			channel.client.music = {};
 		if (!channel.client.music[guild.id]) {
@@ -337,6 +344,10 @@ module.exports = {
 			updateMessage(message.client, message.guild.id);
 	},
 	ready: async (client) => {
+		setInterval(() => {
+			for (const key of Object.keys(cache))
+				delete cache[key];
+		}, 1000 * 60 * 60);
 		for (const guild of client.guilds.cache.values()) {
 			const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
 			if (!guildData.music)
