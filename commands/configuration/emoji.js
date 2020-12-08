@@ -23,9 +23,10 @@ module.exports = {
 					return false;
 				}
 				return true;
-			}, { time: 60000, max: 1 })).values())[0];
+			}, { time: 60000, max: 1, dispose: true })).values())[0];
 			if (!reaction) {
-				message.delete();
+				if (!message.deleted)
+					message.delete();
 				return;
 			}
 			const emoji = reaction.emoji;

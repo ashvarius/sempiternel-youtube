@@ -5,6 +5,7 @@ const emojis = Object.freeze({
 	pause: '⏯️',
 	next: '⏭️',
 	repeat: '🔁',
+	autoplay: '📻',
 	pageup: '⤴️',
 	pagedown: '⤵️',
 	own: '📃',
@@ -89,11 +90,15 @@ const play = async (client, guildId) => {
 			client.music[guildId].connection.disconnect();
 			return;
 		}
-		if (client.music[guildId].repeat && client.music[guildId].now) {
+		if (client.music[guildId].now
+			&& (client.music[guildId].repeat || client.music[guildId].autoplay)) {
 			const guildData = client.utils.readFile(`guilds/${guildId}.json`);
 			const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 			if (channel)
-				await add([client.music[guildId].now.id], channel);
+				if (client.music[guildId].repeat)
+					await add([client.music[guildId].now.id], channel);
+				else if (client.music[guildId].autoplay && client.music[guildId].now.next)
+					await add([client.music[guildId].now.next], channel);
 		}
 		play(client, guildId);
 	});
@@ -130,6 +135,7 @@ const add = async (ids, channel, member) => {
 					url: video.videoDetails.video_url,
 					id: video.videoDetails.videoId,
 					thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
+					next: video.related_videos.length && video.related_videos[0].id,
 					format: ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' }).url,
 				};
 				cache[id] = video;
