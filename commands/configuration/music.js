@@ -19,6 +19,30 @@ const max = Object.freeze({
 });
 const cache = {};
 
+const getvideo = async (client, id) => {
+	if (cache[id])
+		return cache[id];
+	video = await ytdl.getInfo(id, {
+		requestOptions: {
+			headers: {
+				cookie: client.config['youtube-cookie']
+			}
+		}
+	});
+	if (video.videoDetails.title.length > 50)
+		video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
+	video = {
+		title: video.videoDetails.title.replace(/\[|\]/g, '|'),
+		url: video.videoDetails.video_url,
+		id: video.videoDetails.videoId,
+		thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
+		next: video.related_videos.length && video.related_videos[Math.floor(Math.random() * video.related_videos.length)].id,
+		format: ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' }).url,
+	};
+	cache[id] = video;
+	return video;
+};
+
 const waitingembed = (client, channel) => {
 	let description = `${client.utils.getMessage(channel, 'music_watting')}\n`;
 	for (const key of Object.keys(emojis))
@@ -26,7 +50,7 @@ const waitingembed = (client, channel) => {
 	return client.utils.createEmbed(description);
 }
 
-const updateMessage = (client, guildId) => {
+const updateMessage = async (client, guildId) => {
 	const guildData = client.utils.readFile(`guilds/${guildId}.json`);
 	const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 	if (!channel)
@@ -41,22 +65,26 @@ const updateMessage = (client, guildId) => {
 	let content = '';
 	if (options.length)
 		content += `${client.utils.getMessage(message.channel, 'activate')}: ${options.join(', ')}\n\n`;
-	content += `${client.utils.getMessage(message.channel, 'now')} - [${client.music[guildId].now.title}](${client.music[guildId].now.url})`;
-	const array = [client.music[guildId].now.id];
+	const now = await getvideo(client, client.music[guildId].now);
+	content += `${client.utils.getMessage(message.channel, 'now')} - [${now.title}](${now.url})`;
+	const array = [video.id];
 	if (client.music[guildId].playlist.length) {
 		content += '\n';
 		const min = client.music[guildId].page * max.page;
 		let index = 0;
-		let video;
-		while ((video = client.music[guildId].playlist[index++])) {
-			if (index > min && index <= min + max.page)
+		let id;
+		while ((id = client.music[guildId].playlist[index++])) {
+			if (index > min && index <= min + max.page) {
+				const video = await getvideo(client, id);
 				content += `\n${index} - [${video.title}](${video.url})`;
-			array.push(video.id);
+			}
+			array.push(id);
 		}
 	}
 	const embed = client.utils.createEmbed(content);
-	embed.setThumbnail(client.music[guildId].now.thumbnail);
-	return message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed });
+	embed.setThumbnail(now.thumbnail);
+	const send = await message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed });
+	return send;
 };
 
 const play = async (client, guildId) => {
@@ -70,12 +98,12 @@ const play = async (client, guildId) => {
 		index = Math.floor(Math.random() * client.music[guildId].playlist.length);
 	else
 		index = 0;
-	const video = client.music[guildId].playlist[index];
+	const id = client.music[guildId].playlist[index];
 	client.music[guildId].playlist.splice(index, 1);
 	if (client.music[guildId].playlist.length <= client.music[guildId].page * max.page)
 		client.music[guildId].page--;
-	client.music[guildId].now = video;
-	const opus = ytdl.arbitraryStream(video.format, {
+	client.music[guildId].now = id;
+	const opus = ytdl.arbitraryStream((await getvideo(client, id)).format, {
 		opusEncoded: true,
 		encoderArgs: ['-af', 'bass=g=10,dynaudnorm=f=200']
 	});
@@ -97,7 +125,7 @@ const play = async (client, guildId) => {
 			if (channel)
 				if (client.music[guildId].repeat)
 					await add([client.music[guildId].now.id], channel);
-				else if (client.music[guildId].autoplay && client.music[guildId].now.next)
+				else if (client.music[guildId].autoplay && client.music[guildId].now.next && !client.music[guildId].playlist.length)
 					await add([client.music[guildId].now.next], channel);
 		}
 		play(client, guildId);
@@ -115,37 +143,15 @@ const add = async (ids, channel, member) => {
 			send.delete({ timeout: 10 * 1000 });
 			break;
 		}
-		let video;
 		try {
 			id = ytdl.getVideoID(id);
-			if (cache[id])
-				video = cache[id];
-			else {
-				video = await ytdl.getInfo(id, {
-					requestOptions: {
-						headers: {
-							cookie: channel.client.config['youtube-cookie']
-						}
-					}
-				});
-				if (video.videoDetails.title.length > 50)
-					video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
-				video = {
-					title: video.videoDetails.title.replace(/\[|\]/g, '|'),
-					url: video.videoDetails.video_url,
-					id: video.videoDetails.videoId,
-					thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
-					next: video.related_videos.length && video.related_videos[0].id,
-					format: ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' }).url,
-				};
-				cache[id] = video;
-			}
 			if (!guild.me.voice.channelID) {
 				const voice = member && await guild.channels.cache.get(member.voice.channelID);
 				if (!(voice && voice.joinable))
 					return;
 				await voice.join();
 			}
+			await getvideo(channel.client, id);
 		} catch (error) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
 			send.delete({ timeout: 10 * 1000 });
@@ -160,6 +166,8 @@ const add = async (ids, channel, member) => {
 		}
 		if (!channel.client.music[guild.id].connection) {
 			const connection = guild.me.voice.connection;
+			if (!connection)
+				return;
 			connection.on('disconnect', () => {
 				if (!guild.client.music)
 					return;
@@ -175,7 +183,7 @@ const add = async (ids, channel, member) => {
 			});
 			channel.client.music[guild.id].connection = connection;
 		}
-		channel.client.music[guild.id].playlist.push(video);
+		channel.client.music[guild.id].playlist.push(id);
 		while (channel.client.music[guild.id].playlist.length > (channel.client.music[guild.id].page + 1) * max.page)
 			channel.client.music[guild.id].page++;
 		if (!channel.client.music[guild.id].now) {
@@ -277,8 +285,8 @@ module.exports = {
 			messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, messageReaction.client.music[messageReaction.message.guild.id].now);
 			if (messageReaction.client.music[messageReaction.message.guild.id].repeat
 				&& messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.streamTime < 10 * 1000) {
-				const video = messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(messageReaction.client.music[messageReaction.message.guild.id].playlist.length - 1, 1)[0];
-				messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, video);
+				const id = messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(messageReaction.client.music[messageReaction.message.guild.id].playlist.length - 1, 1)[0];
+				messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, id);
 			}
 			messageReaction.client.music[messageReaction.message.guild.id].now = null;
 		}

@@ -14,10 +14,7 @@ module.exports = {
 		const cmd = command.args[0].toLowerCase();
 		if (command.args.length < 2) {
 			const embed = command.message.client.utils.createEmbed();
-			if (cmd == 'add')
-				embed.addField(`${command.prefix}${command.command} add <channelId>`, `${command.message.client.utils.getMessage(command.message.channel, 'temporary_help_add')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_id')}`);
-			else
-				embed.addField(`${command.prefix}${command.command} remove <channelId>`, `${command.message.client.utils.getMessage(command.message.channel, 'temporary_help_remove')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_id')}`);
+			embed.addField(`${command.prefix}${command.command} ${cmd} <channelId>`, `${command.message.client.utils.getMessage(command.message.channel, `temporary_help_${cmd}`)}\n${command.message.client.utils.getMessage(command.message.channel, 'help_id')}`);
 			command.message.client.utils.sendEmbed(command.message.channel, embed);
 			return;
 		}
@@ -35,10 +32,7 @@ module.exports = {
 		} else if (!guildData.temporary.indexOf(channel.id) != -1)
 			guildData.temporary.splice(guildData.temporary.indexOf(channel.id), 1);
 		command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
-		if (cmd == 'add')
-			command.message.client.utils.sendMessage(command.message.channel, 'temporary_add', { channel });
-		else
-			command.message.client.utils.sendMessage(command.message.channel, 'temporary_remove', { channel });
+		command.message.client.utils.sendMessage(command.message.channel, `temporary_${cmd}`, { channel });
 	},
 	permission: (message) => {
 		if (!message.member.hasPermission('ADMINISTRATOR'))
