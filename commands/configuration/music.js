@@ -124,9 +124,12 @@ const play = async (client, guildId) => {
 			const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 			if (channel)
 				if (client.music[guildId].repeat)
-					await add([client.music[guildId].now.id], channel);
-				else if (client.music[guildId].autoplay && client.music[guildId].now.next && !client.music[guildId].playlist.length)
-					await add([client.music[guildId].now.next], channel);
+					await add([client.music[guildId].now], channel);
+				else if (client.music[guildId].autoplay && client.music[guildId].now && !client.music[guildId].playlist.length) {
+					const video = await getvideo(client, id);
+					if (video.next)
+						await add([video.next], channel);
+				}
 		}
 		play(client, guildId);
 	});
