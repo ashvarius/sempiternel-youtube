@@ -1,4 +1,5 @@
 const fs = require('fs');
+const prism = require('prism-media');
 const { MessageEmbed } = require('discord.js');
 
 const loadedFiles = {};
@@ -120,6 +121,32 @@ class Utils {
 		const description = this.getMessage(message.channel, key, object);
 		const embed = this.createEmbed(description);
 		return this.replaceEmbed(message, embed);
+	}
+	generateTranscoder = (url, { start = 0, args } = {}) => {
+		let options = [
+			'-reconnect', '1',
+			'-reconnect_streamed', '1',
+			'-reconnect_delay_max', '5',
+			'-ss', start,
+			'-i', url,
+			'-analyzeduration', '0',
+			'-loglevel', '0',
+			'-f', 's16le',
+			'-ar', '48000',
+			'-ac', '2'
+		];
+		if (args)
+			options = options.concat(args);
+		return new prism.FFmpeg({ args: options });
+	}
+	playeTranscoder = (player, trancoder) => {
+		const opus = trancoder.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
+		const dispatcher = player.createDispatcher({
+			type: 'opus',
+			bitrate: 48
+		}, { opus });
+		opus.pipe(dispatcher);
+		return dispatcher;
 	}
 }
 

@@ -77,9 +77,9 @@ module.exports = {
 					if (!botsData[command.message.author.id])
 						botsData[command.message.author.id] = [];
 					if (cmd == 'list') {
-						if (!botsData[command.message.author.id].length) {
+						if (!botsData[command.message.author.id].length)
 							command.message.client.utils.sendMessage(command.message.channel, 'bot_list_empty');
-						} else {
+						else {
 							const embed = command.message.client.utils.createEmbed();
 							for (const bot of command.message.client.bots)
 								if (botsData[command.message.author.id].includes(bot.client.config.token))
