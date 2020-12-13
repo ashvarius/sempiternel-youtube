@@ -77,6 +77,12 @@ module.exports = {
 	name: 'event',
 	aliases: [],
 	command: async command => {
+		if (!command.message.guild.me.hasPermission('ATTACH_FILES')) {
+			command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
+				permission: 'ATTACH_FILES'
+			});
+			return;
+		}
 		if (!command.args.length || !['log', 'image'].concat(Object.keys(custom)).includes(command.args[0].toLowerCase())) {
 			const embed = command.message.client.utils.createEmbed();
 			embed.addField(`${command.prefix}${command.command} log <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_log'));
@@ -116,7 +122,7 @@ module.exports = {
 			guildData.event.background = command.args[1];
 			command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
 			command.message.client.utils.sendMessage(command.message.channel, `event_image`);
-			//} else if (option == 'message') {
+		//} else if (option == 'message') {
 		} else {
 			if (!['on', 'off'].includes(option)) {
 				const embed = command.message.client.utils.createEmbed();
@@ -138,6 +144,8 @@ module.exports = {
 		return true;
 	},
 	guildMemberAdd: async member => {
+		if (!member.guild.me.hasPermission('ATTACH_FILES'))
+			return;
 		const event = 'join';
 		const guildData = member.client.utils.readFile(`guilds/${member.guild.id}.json`);
 		if (!guildData.event)
@@ -153,6 +161,8 @@ module.exports = {
 		member.client.utils.sendEmbed(channel, embed);
 	},
 	guildMemberRemove: async member => {
+		if (!member.guild.me.hasPermission('ATTACH_FILES'))
+			return;
 		const event = 'leave';
 		const guildData = member.client.utils.readFile(`guilds/${member.guild.id}.json`);
 		if (!guildData.event)

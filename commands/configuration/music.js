@@ -1,4 +1,6 @@
 const ytdl = require('ytdl-core');
+const ytsr = require('ytsr');
+const ytpl = require('ytpl');
 const url = require('url');
 const emojis = Object.freeze({
 	random: '🔀',
@@ -20,7 +22,7 @@ const max = Object.freeze({
 	bitrate: 48
 });
 const FFMPEG_ARGUMENTS = [
-	'-af', 'bass=g=20dB, volume=-20dB'
+	'-af', 'bass=g=10,dynaudnorm=f=200'
 ];
 const cache = {};
 
@@ -34,6 +36,8 @@ const getvideo = async (client, id) => {
 			}
 		}
 	});
+	if (video.videoDetails.isLiveContent)
+		return;
 	if (video.videoDetails.title.length > 50)
 		video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
 	const format = ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' });
@@ -59,6 +63,8 @@ const waitingembed = (client, channel) => {
 }
 
 const updateMessage = async (client, guildId) => {
+	if (!client.music[guildId])
+		return;
 	const guildData = client.utils.readFile(`guilds/${guildId}.json`);
 	const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 	if (!channel)
@@ -90,6 +96,8 @@ const updateMessage = async (client, guildId) => {
 		}
 	}
 	const send = async () => {
+		if (!client.music[guildId])
+			return;
 		client.music[guildId].embed = { content, last: 0 };
 		const embed = client.utils.createEmbed(content);
 		embed.setThumbnail(now.thumbnail);
@@ -172,13 +180,15 @@ const add = async (ids, channel, member, silence = false) => {
 			time = 0;
 		try {
 			id = ytdl.getVideoID(id);
+			const video = await getvideo(channel.client, id, time);
+			if (!video)
+				continue;
 			if (!guild.me.voice.channelID) {
 				const voice = member && await guild.channels.cache.get(member.voice.channelID);
 				if (!(voice && voice.joinable))
 					return;
 				await voice.join();
 			}
-			await getvideo(channel.client, id, time);
 		} catch (error) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
 			send.delete({ timeout: 10 * 1000 });
@@ -246,6 +256,7 @@ module.exports = {
 					allow: ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY']
 				}
 			],
+			rateLimitPerUser: 5,
 			reason: 'Create a music channel'
 		});
 		const message = await command.message.client.utils.sendEmbed(channel, waitingembed(command.message.client, channel));
@@ -263,7 +274,7 @@ module.exports = {
 			return false;
 		return true;
 	},
-	message: (message) => {
+	message: async (message) => {
 		if (message.channel.type == 'dm' || message.author.id == message.client.user.id)
 			return;
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
@@ -280,7 +291,25 @@ module.exports = {
 			const temp = JSON.parse(message.content);
 			ids = ids.concat(temp);
 		} catch {
-			ids.push(message.content);
+			try {
+				const playlist = await ytpl(message.content);
+				for (const item of playlist.items)
+					ids.push(item.id);
+			} catch {
+				try {
+					new URL(message.content);
+					ids.push(message.content);
+				} catch {
+					const filters = await ytsr.getFilters(message.content);
+					const filter = filters.get('Type').get('Video');
+					if (!filter.url)
+						return;
+					const search = await ytsr(filter.url, { limit: 1 });
+					if (!search.items.length)
+						return;
+					ids.push(search.items[0].id);
+				}
+			}
 		}
 		add(ids, message.channel, message.member);
 	},

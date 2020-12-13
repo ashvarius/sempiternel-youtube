@@ -16,6 +16,8 @@
     "fs": "^0.0.1-security",
     "opusscript": "^0.0.7",
     "prism-media": "^1.2.3",
-    "ytdl-core": "^4.1.4"
+    "ytdl-core": "^4.1.4",
+    "ytpl": "^2.0.0",
+    "ytsr": "^2.0.0"
   }
 }
