@@ -21,5 +21,9 @@
     "autorole_help_restore": "Give back roles when someone leaves and returns.",
     "clear_help": "Delete a number of messages in a channel.\nThe number must be greater than zero.",
     "temporary_help_add": "Add a channel that will create channels.",
-    "temporary_help_remove": "Unregister a channel."
+	"temporary_help_remove": "Unregister a channel.",
+	"event_help_log": "Learn more about what's happening on the server.",
+	"event_help_image": "Change the background of the image generated when calling an event.",
+	"event_help_event": "Automatically generated an image when calling an event.",
+	"event_help_event_message": "Edit the message under the image generated when calling an event."
 }

@@ -19,6 +19,9 @@ const max = Object.freeze({
 	update: 2,
 	bitrate: 48
 });
+const FFMPEG_ARGUMENTS = [
+	'-af', 'bass=g=20dB, volume=-20dB'
+];
 const cache = {};
 
 const getvideo = async (client, id) => {
@@ -67,7 +70,7 @@ const updateMessage = async (client, guildId) => {
 	for (const key of Object.keys(emojis))
 		if (client.music[guildId][key])
 			options.push(client.utils.getMessage(message.channel, key));
-	let content = client.music[guildId].connection.dispatcher.paused ? '⏸️' : '▶️';
+	let content = client.music[guildId].connection.dispatcher && client.music[guildId].connection.dispatcher.paused ? '⏸️' : '▶️';
 	if (options.length)
 		content += `\n${client.utils.getMessage(message.channel, 'activate')}: ${options.join(', ')}\n`;
 	const now = await getvideo(client, client.music[guildId].now.id);
@@ -86,10 +89,29 @@ const updateMessage = async (client, guildId) => {
 			array.push(info.id);
 		}
 	}
-	const embed = client.utils.createEmbed(content);
-	embed.setThumbnail(now.thumbnail);
-	const send = await message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed });
-	return send;
+	const send = async () => {
+		client.music[guildId].embed = { content, last: 0 };
+		const embed = client.utils.createEmbed(content);
+		embed.setThumbnail(now.thumbnail);
+		const sent = await message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed });
+		if (!client.music[guildId])
+			return;
+		client.music[guildId].embed.last = Date.now();
+		if (client.music[guildId].embed.timeout)
+			delete client.music[guildId].embed.timeout;
+		return sent;
+	};
+	if (client.music[guildId].embed) {
+		if (client.music[guildId].embed.timeout)
+			clearTimeout(client.music[guildId].embed.timeout);
+		if (client.music[guildId].embed.content == content)
+			return message;
+		if (client.music[guildId].embed.last + max.update * 1000 > Date.now()) {
+			client.music[guildId].embed.timeout = setTimeout(send, client.music[guildId].embed.last + max.update * 1000 - Date.now());
+			return message;
+		}
+	}
+	return await send();
 };
 
 const play = async (client, guildId) => {
@@ -111,9 +133,7 @@ const play = async (client, guildId) => {
 	const video = await getvideo(client, info.id);
 	const transcoder = client.utils.generateTranscoder(video.format.url, {
 		start: info.time,
-		args: [
-			'-af', 'bass=g=10,dynaudnorm=f=200'
-		]
+		args: FFMPEG_ARGUMENTS
 	});
 	const dispatcher = client.utils.playeTranscoder(client.music[guildId].connection.player, transcoder);
 	dispatcher.on('finish', async () => {
@@ -121,27 +141,25 @@ const play = async (client, guildId) => {
 			client.music[guildId].connection.disconnect();
 			return;
 		}
-		if (client.music[guildId].now.id
+		if (client.music[guildId].now
 			&& (client.music[guildId].repeat || client.music[guildId].autoplay)) {
 			const guildData = client.utils.readFile(`guilds/${guildId}.json`);
 			const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 			if (channel)
 				if (client.music[guildId].repeat)
-					await add([client.music[guildId].now.id], channel);
+					await add([client.music[guildId].now.id], channel, null, true);
 				else if (client.music[guildId].autoplay && client.music[guildId].now.id && !client.music[guildId].playlist.length) {
 					const video = await getvideo(client, client.music[guildId].now.id);
 					if (video.next)
-						await add([video.next], channel);
+						await add([video.next], channel, null, true);
 				}
 		}
 		play(client, guildId);
 	});
-	await updateMessage(client, guildId);
+	updateMessage(client, guildId);
 }
 
-const add = async (ids, channel, member) => {
-	let last = Date.now();
-	let needupdate = false;
+const add = async (ids, channel, member, silence = false) => {
 	const guild = channel.guild;
 	for (let id of ids) {
 		if (channel.client.music && channel.client.music[guild.id] && channel.client.music[guild.id].playlist.length >= max.video) {
@@ -195,18 +213,11 @@ const add = async (ids, channel, member) => {
 		channel.client.music[guild.id].playlist.push({ id, time });
 		while (channel.client.music[guild.id].playlist.length > (channel.client.music[guild.id].page + 1) * max.page)
 			channel.client.music[guild.id].page++;
-		if (!channel.client.music[guild.id].now) {
+		if (!channel.client.music[guild.id].now)
 			await play(channel.client, guild.id);
-			last = Date.now();
-		} else if (last + max.update * 1000 <= Date.now()) {
+		else if (!silence)
 			await updateMessage(guild.client, guild.id);
-			needupdate = false;
-			last += max.update * 1000;
-		} else
-			needupdate = true;
 	}
-	if (needupdate)
-		await updateMessage(guild.client, guild.id);
 }
 
 module.exports = {
@@ -290,19 +301,19 @@ module.exports = {
 		}
 		if (!(messageReaction.client.music[messageReaction.message.guild.id].connection && messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher))
 			return;
-		if (messageReaction.emoji.name == emojis.previous
-			&& !messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.paused) {
-			messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, messageReaction.client.music[messageReaction.message.guild.id].now.id);
-			if (messageReaction.client.music[messageReaction.message.guild.id].repeat
-				&& messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.streamTime < 10 * 1000) {
-				const id = messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(messageReaction.client.music[messageReaction.message.guild.id].playlist.length - 1, 1)[0];
-				messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, id);
-			}
-			messageReaction.client.music[messageReaction.message.guild.id].now.id = null;
-		}
 		if (messageReaction.emoji.name == emojis.previous || messageReaction.emoji.name == emojis.next) {
-			if (!messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.paused)
+			if (!messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.paused) {
+				if (messageReaction.emoji.name == emojis.previous) {
+					messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, messageReaction.client.music[messageReaction.message.guild.id].now);
+					if (messageReaction.client.music[messageReaction.message.guild.id].repeat
+						&& messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.streamTime < 10 * 1000) {
+						const info = messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(messageReaction.client.music[messageReaction.message.guild.id].playlist.length - 1, 1)[0];
+						messageReaction.client.music[messageReaction.message.guild.id].playlist.splice(0, 0, info);
+					}
+					messageReaction.client.music[messageReaction.message.guild.id].now = null;
+				}
 				messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher.emit('finish');
+			}
 			return;
 		} else if (messageReaction.emoji.name == emojis.pause) {
 			const dispatcher = messageReaction.client.music[messageReaction.message.guild.id].connection.dispatcher;

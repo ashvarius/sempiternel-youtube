@@ -1,7 +1,7 @@
 {
-    "name": "Name",
-    "aliases": "Aliases",
-    "description": "Description",
+	"name": "Name",
+	"aliases": "Aliases",
+	"description": "Description",
 	"nothing": "Nothing",
 	"now": "Now",
 	"activate": "Activate",
@@ -13,5 +13,8 @@
 	"users": "Users",
 	"emojis": "Emojis",
 	"invitation": "Invitation",
-	"link": "Link"
+	"link": "Link",
+	"events": "Events",
+	"welcome": "Welcome",
+	"goodbye": "Goodbye"
 }
