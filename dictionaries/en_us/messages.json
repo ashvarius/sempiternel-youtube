@@ -40,7 +40,11 @@
 	"message_image": "Send the url of the image or click on the reaction to not put an image.",
 	"message_footer": "Send the footer or click on the reaction to not put a footer.",
 	"event_log": "The log was put on `<option>`.",
-	"event_join": "Join event was put on `<option>`.",
-	"event_leave": "Leave event was put on `<option>`.",
-	"event_image": "The image has been replaced."
+	"event_image": "The image has been replaced.",
+	"event_join_activation": "Join event was put on `<option>`.",
+	"event_leave_activation": "Leave event was put on `<option>`.",
+	"event_join_message": "Join event message has been sent to `<message>`.",
+	"event_leave_message": "Leave event message has been sent to `<message>`.",
+	"event_message_join": "Welcome <user> to the server.",
+	"event_message_leave": "<user> has left the server."
 }

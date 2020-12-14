@@ -45,6 +45,7 @@ class DiscordBot extends EventEmitter {
 		});
 		client.config = config;
 		client.commands = commands;
+		client.on('error', console.error);
 		client.on('ready', () => {
 			if (!client.utils) {
 				setTimeout(() => client.emit('ready'), 100);
@@ -88,7 +89,8 @@ class DiscordBot extends EventEmitter {
 						if (instance.name == cmd || instance.aliases.includes(cmd)) {
 							if (message.channel.type == 'dm' && !instance.private)
 								client.utils.sendMessage(message.channel, 'error_private_disable');
-							else if (instance.permission && !instance.permission(message))
+							else if (!client.config.owners.includes(message.author.id)
+								&& instance.permission && !instance.permission(message))
 								client.utils.sendMessage(message.channel, 'error_no_access');
 							else
 								try {

@@ -2,12 +2,6 @@ module.exports = {
 	name: 'clear',
 	aliases: ['clean'],
 	command: async command => {
-		if (!command.message.member.hasPermission('MANAGE_MESSAGES')) {
-			command.message.client.utils.sendMessage(command.message.channel, 'error_no_permission', {
-				permission: 'MANAGE_MESSAGES'
-			});
-			return;
-		}
 		if (!command.message.guild.me.hasPermission('MANAGE_MESSAGES')) {
 			command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
 				permission: 'MANAGE_MESSAGES'

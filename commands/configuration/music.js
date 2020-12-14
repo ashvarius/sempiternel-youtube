@@ -22,7 +22,7 @@ const max = Object.freeze({
 	bitrate: 48
 });
 const FFMPEG_ARGUMENTS = [
-	'-af', 'bass=g=10,dynaudnorm'
+	'-af', 'bass=g=20,dynaudnorm'
 ];
 const cache = {};
 
@@ -42,7 +42,15 @@ const getvideo = async (client, id) => {
 		video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
 	const format = ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' });
 	video = {
-		title: video.videoDetails.title.replace(/\[|\]/g, '|').replace(/\`/g, '\''),
+		title: video.videoDetails.title
+			.replace(/\[/g, '\{')
+			.replace(/\]/g, '\}')
+			.replace(/\|/g, '\/')
+			.replace(/\`/g, '\'')
+			.replace(/\*/g, '\+')
+			.replace(/\~/g, '\-')
+			.replace(/\_/g, '\-')
+			.replace(/\>/g, '\-'),
 		url: video.videoDetails.video_url,
 		id: video.videoDetails.videoId,
 		thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,

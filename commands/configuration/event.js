@@ -73,6 +73,52 @@ const generateCanvas = async (text, user, background) => {
 	return canvas;
 };
 
+const keyOf = (guild, user) => {
+	return {
+		server: guild.name,
+		user: user,
+		tag: user.tag,
+		id: user.id
+	};
+};
+
+const sendImage = async (guild, user, event) => {
+	const guildData = guild.client.utils.readFile(`guilds/${guild.id}.json`);
+	if (!(guildData.event && guildData.event[event] && guildData.event[event].channel))
+		return;
+	const channel = guild.channels.cache.get(guildData.event[event].channel);
+	if (!(channel && channel.permissionsFor(guild.me).has(['EMBED_LINKS', 'ATTACH_FILES'])))
+		return;
+	let canvas;
+	try {
+		canvas = await generateCanvas(guild.client.utils.getMessage(channel, custom[event]), user, guildData.event.background || guild.client.config.background);
+	} catch {
+		if (!guildData.event.background)
+			return;
+		try {
+			canvas = await generateCanvas(guild.client.utils.getMessage(channel, custom[event]), user, guild.client.config.background);
+			delete guildData.event.background;
+			guild.client.utils.savFile(`guilds/${guild.id}.json`, guildData);
+		} catch {
+			return;
+		}
+	}
+	const object = keyOf(guild, user);
+	let message;
+	if (guildData.event[event].message) {
+		message = guildData.event[event].message;
+		for (const key of Object.keys(object))
+			message = `${message}`.replace(new RegExp(`<${key}>`, 'g'), object[key]);
+		if (message.length > 2048)
+			return (guild.client.utils.getMessage(channel, 'error_too_large_message'));
+	} else
+		message = guild.client.utils.getMessage(channel, `event_message_${event}`, object)
+	const embed = guild.client.utils.createEmbed(message);
+	embed.attachFiles(new MessageAttachment(canvas.toBuffer(), 'canvas.png'));
+	embed.setImage('attachment://canvas.png');
+	guild.client.utils.sendEmbed(channel, embed);
+};
+
 module.exports = {
 	name: 'event',
 	aliases: [],
@@ -88,7 +134,7 @@ module.exports = {
 			embed.addField(`${command.prefix}${command.command} log <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_log'));
 			embed.addField(`${command.prefix}${command.command} image <link>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_image'));
 			embed.addField(`${command.prefix}${command.command} <event> <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_event'));
-			//embed.addField(`${command.prefix}${command.command} <event> message <message>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_event_message'));
+			embed.addField(`${command.prefix}${command.command} <event> message <message>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_event_message'));
 			embed.addField('\u200B', `${command.message.client.utils.getMessage(command.message.channel, 'events')}: ${Object.keys(custom).join(', ')}`);
 			command.message.client.utils.sendEmbed(command.message.channel, embed);
 			return;
@@ -122,7 +168,23 @@ module.exports = {
 			guildData.event.background = command.args[1];
 			command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
 			command.message.client.utils.sendMessage(command.message.channel, `event_image`);
-		//} else if (option == 'message') {
+		} else if (option == 'message') {
+			if (command.args.length == 2) {
+				const embed = command.message.client.utils.createEmbed();
+				embed.addField(`${command.prefix}${command.command} ${command.args[0]} ${command.args[1]} <message>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_event_message'));
+				embed.addField('\u200B', `${command.message.client.utils.getMessage(command.message.channel, 'variables')}: ${Object.keys(keyOf(command.message.guild, command.message.author)).map(item => `<${item}>`).join(', ')}`);
+				command.message.client.utils.sendEmbed(command.message.channel, embed);
+				return;
+			}
+			const message = command.args.slice(2).join(' ');
+			const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
+			if (!guildData.event)
+				guildData.event = {};
+			if (typeof guildData.event[cmd] != 'object')
+				guildData.event[cmd] = {};
+			guildData.event[cmd].message = message;
+			command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
+			command.message.client.utils.sendMessage(command.message.channel, `event_${cmd}_message`, { message });
 		} else {
 			if (!['on', 'off'].includes(option)) {
 				const embed = command.message.client.utils.createEmbed();
@@ -133,9 +195,11 @@ module.exports = {
 			const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
 			if (!guildData.event)
 				guildData.event = {};
-			guildData.event[cmd] = option == 'on' && command.message.channel.id;
+			if (typeof guildData.event[cmd] != 'object')
+				guildData.event[cmd] = {};
+			guildData.event[cmd].channel = option == 'on' && command.message.channel.id;
 			command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
-			command.message.client.utils.sendMessage(command.message.channel, `event_${cmd}`, { option });
+			command.message.client.utils.sendMessage(command.message.channel, `event_${cmd}_activation`, { option });
 		}
 	},
 	permission: message => {
@@ -144,37 +208,9 @@ module.exports = {
 		return true;
 	},
 	guildMemberAdd: async member => {
-		if (!member.guild.me.hasPermission('ATTACH_FILES'))
-			return;
-		const event = 'join';
-		const guildData = member.client.utils.readFile(`guilds/${member.guild.id}.json`);
-		if (!guildData.event)
-			guildData.event = {};
-		if (!guildData.event[event])
-			return;
-		const channel = member.guild.channels.cache.get(guildData.event[event]);
-		if (!channel)
-			return;
-		const embed = member.client.utils.createEmbed();
-		embed.attachFiles(new MessageAttachment((await generateCanvas(member.client.utils.getMessage(channel, custom[event]), member.user, guildData.event.background || member.client.config.background)).toBuffer(), 'canvas.png'));
-		embed.setImage('attachment://canvas.png');
-		member.client.utils.sendEmbed(channel, embed);
+		await sendImage(member.guild, member.user, 'join');
 	},
 	guildMemberRemove: async member => {
-		if (!member.guild.me.hasPermission('ATTACH_FILES'))
-			return;
-		const event = 'leave';
-		const guildData = member.client.utils.readFile(`guilds/${member.guild.id}.json`);
-		if (!guildData.event)
-			guildData.event = {};
-		if (!guildData.event[event])
-			return;
-		const channel = member.guild.channels.cache.get(guildData.event[event]);
-		if (!channel)
-			return;
-		const embed = member.client.utils.createEmbed();
-		embed.attachFiles(new MessageAttachment((await generateCanvas(member.client.utils.getMessage(channel, custom[event]), member.user, guildData.event.background || member.client.config.background)).toBuffer(), 'canvas.png'));
-		embed.setImage('attachment://canvas.png');
-		member.client.utils.sendEmbed(channel, embed);
+		await sendImage(member.guild, member.user, 'leave');
 	}
 };

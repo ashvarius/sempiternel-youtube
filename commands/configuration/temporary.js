@@ -43,11 +43,12 @@ module.exports = {
 		const guildData = newState.member.client.utils.readFile(`guilds/${newState.guild.id}.json`);
 		if (!guildData.temporary)
 			return;
-		if (cache[newState.guild.id]
+		if (oldState.channelID
+			&& cache[newState.guild.id]
 			&& cache[newState.guild.id].includes(oldState.channelID)
 			&& !Array.from(oldState.channel.members.filter(member => !member.user.bot)).length)
 			oldState.channel.delete().then(() => cache[newState.guild.id].splice(cache[newState.guild.id].indexOf(oldState.channelID), 1)).catch(() => { });
-		if (!guildData.temporary.includes(newState.channelID))
+		if (!(newState.channelID && guildData.temporary.includes(newState.channelID)))
 			return;
 		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
 			if (!newState.guild.me.hasPermission(permission))

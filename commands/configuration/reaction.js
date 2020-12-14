@@ -2,12 +2,6 @@ module.exports = {
 	name: 'reaction',
 	aliases: [],
 	command: async command => {
-		if (!command.message.member.hasPermission('ADMINISTRATOR')) {
-			command.message.client.utils.sendMessage(command.message.channel, 'error_no_permission', {
-				permission: 'ADMINISTRATOR'
-			});
-			return;
-		}
 		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS', 'MANAGE_MESSAGES'])
 			if (!command.message.guild.me.hasPermission(permission)) {
 				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
