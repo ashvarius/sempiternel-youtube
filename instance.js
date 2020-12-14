@@ -26,7 +26,11 @@ class DiscordBot extends EventEmitter {
 			for (const category of Object.keys(commands))
 				for (const command of Object.values(commands[category]))
 					if (typeof command[event] == 'function')
-						await command[event](var1, var2);
+						try {
+							await command[event](var1, var2);
+						} catch (error) {
+							console.error(error);
+						}
 		};
 		const client = this.client = new Client({
 			shards: 'auto',
@@ -87,7 +91,11 @@ class DiscordBot extends EventEmitter {
 							else if (instance.permission && !instance.permission(message))
 								client.utils.sendMessage(message.channel, 'error_no_access');
 							else
-								instance.command(command_object);
+								try {
+									await instance.command(command_object);
+								} catch (error) {
+									console.error(error);
+								}
 							return;
 						}
 			client.utils.sendMessage(message.channel, 'error_no_command', { command });

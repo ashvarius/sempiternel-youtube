@@ -20,7 +20,7 @@
 	"temporary_add": "The channel <channel> has been registered.",
 	"temporary_remove": "The channel <channel> has been unregistered.",
 	"music_success": "The music channel has been created.",
-	"music_watting": "Waiting for music ...\nTo add music, you need to put the link of a youtube video.",
+	"music_watting": "Waiting for music ...\nTo add music, you need to put the title, link of a youtube video or an youtube playlist.",
 	"music_playlist": "To put this playlist back in the queue, copy this:",
 	"music_add": "Current song added to your playlist.",
 	"music_remove": "Current song deleted from your playlist.",
