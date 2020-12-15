@@ -53,7 +53,7 @@ const addtext = (canvas, style, text, { x = 0, y = 0 }, max = { width: 0, height
 	do {
 		context.font = `${++font_size}px sans-serif`;
 		metrics = context.measureText(text);
-	} while (metrics.width < max.width && metrics.emHeightAscent < max.height)
+	} while (metrics.width < max.width && metrics.emHeightAscent < max.height);
 	context.font = `${--font_size}px sans-serif`;
 	metrics = context.measureText(text);
 	context.shadowColor = '#000000';
@@ -112,7 +112,7 @@ const sendImage = async (guild, user, event) => {
 		if (message.length > 2048)
 			return (guild.client.utils.getMessage(channel, 'error_too_large_message'));
 	} else
-		message = guild.client.utils.getMessage(channel, `event_message_${event}`, object)
+		message = guild.client.utils.getMessage(channel, `event_message_${event}`, object);
 	const embed = guild.client.utils.createEmbed(message);
 	embed.attachFiles(new MessageAttachment(canvas.toBuffer(), 'canvas.png'));
 	embed.setImage('attachment://canvas.png');
@@ -167,7 +167,7 @@ module.exports = {
 				guildData.event = {};
 			guildData.event.background = command.args[1];
 			command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
-			command.message.client.utils.sendMessage(command.message.channel, `event_image`);
+			command.message.client.utils.sendMessage(command.message.channel, 'event_image');
 		} else if (option == 'message') {
 			if (command.args.length == 2) {
 				const embed = command.message.client.utils.createEmbed();

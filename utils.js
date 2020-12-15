@@ -25,7 +25,7 @@ class Utils {
 	}
 	savFile(path, object) {
 		if (!object)
-			throw "object undefined";
+			throw 'object undefined';
 		if (loadedFiles[path] == object)
 			return object;
 		path = `${this.path}/${path}`;
@@ -122,7 +122,7 @@ class Utils {
 		const embed = this.createEmbed(description);
 		return this.replaceEmbed(message, embed);
 	}
-	generateTranscoder = (url, { start = 0, args } = {}) => {
+	generateTranscoder(url, { start = 0, args } = {}) {
 		let options = [
 			'-reconnect', '1',
 			'-reconnect_streamed', '1',
@@ -139,7 +139,7 @@ class Utils {
 			options = options.concat(args);
 		return new prism.FFmpeg({ args: options });
 	}
-	playeTranscoder = (player, trancoder) => {
+	playeTranscoder(player, trancoder) {
 		const opus = trancoder.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
 		const dispatcher = player.createDispatcher({
 			type: 'opus',

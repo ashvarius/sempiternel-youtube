@@ -156,7 +156,7 @@ module.exports = {
 						if (bot) {
 							command.message.client.bots.splice(command.message.client.bots.indexOf(bot), 1);
 							bot.client.emit('exit');
-							bot = bot.client.user.tag
+							bot = bot.client.user.tag;
 						} else
 							bot = token;
 						botsData[command.message.author.id].splice(number - 1, 1);

@@ -29,7 +29,7 @@ const cache = {};
 const getvideo = async (client, id) => {
 	if (cache[id])
 		return cache[id];
-	video = await ytdl.getInfo(id, {
+	let video = await ytdl.getInfo(id, {
 		requestOptions: {
 			headers: {
 				cookie: client.config['youtube-cookie']
@@ -43,14 +43,14 @@ const getvideo = async (client, id) => {
 	const format = ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' });
 	video = {
 		title: video.videoDetails.title
-			.replace(/\[/g, '\{')
-			.replace(/\]/g, '\}')
-			.replace(/\|/g, '\/')
-			.replace(/\`/g, '\'')
-			.replace(/\*/g, '\+')
-			.replace(/\~/g, '\-')
-			.replace(/\_/g, '\-')
-			.replace(/\>/g, '\-'),
+			.replace(/\[/g, '{')
+			.replace(/\]/g, '}')
+			.replace(/\|/g, '/')
+			.replace(/`/g, '\'')
+			.replace(/\*/g, '+')
+			.replace(/~/g, '-')
+			.replace(/_/g, '-')
+			.replace(/>/g, '-'),
 		url: video.videoDetails.video_url,
 		id: video.videoDetails.videoId,
 		thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
@@ -68,7 +68,7 @@ const waitingembed = (client, channel) => {
 	for (const key of Object.keys(emojis))
 		description += `\n${emojis[key]} ${client.utils.getMessage(channel, `music_reaction_${key}`)}`;
 	return client.utils.createEmbed(description);
-}
+};
 
 const updateMessage = async (client, guildId) => {
 	if (!client.music[guildId])
@@ -89,7 +89,7 @@ const updateMessage = async (client, guildId) => {
 		content += `\n${client.utils.getMessage(message.channel, 'activate')}: ${options.join(', ')}\n`;
 	const now = await getvideo(client, client.music[guildId].now.id);
 	content += `\n${client.utils.getMessage(message.channel, 'now')} - [${now.title}](${now.url})`;
-	const array = [video.id];
+	const array = [now.id];
 	if (client.music[guildId].playlist.length) {
 		content += '\n';
 		const min = client.music[guildId].page * max.page;
@@ -183,7 +183,7 @@ const play = async (client, guildId) => {
 		await client.music[guildId].connection.voice.setSelfMute(true);
 	}
 	await updateMessage(client, guildId);
-}
+};
 
 const add = async (ids, channel, member, silence = false) => {
 	const guild = channel.guild;
@@ -253,7 +253,7 @@ const add = async (ids, channel, member, silence = false) => {
 		else if (!silence)
 			await updateMessage(guild.client, guild.id);
 	}
-}
+};
 
 module.exports = {
 	name: 'music',
@@ -385,7 +385,7 @@ module.exports = {
 		} else if (messageReaction.emoji.name == emojis.pageup || messageReaction.emoji.name == emojis.pagedown) {
 			if (messageReaction.emoji.name == emojis.pageup && music.page > 0)
 				music.page--;
-			else if (messageReaction.emoji.name == emojis.pagedown && mmusic.playlist.length > (mmusic.page + 1) * max.page)
+			else if (messageReaction.emoji.name == emojis.pagedown && music.playlist.length > (music.page + 1) * max.page)
 				music.page++;
 			else
 				return;
@@ -472,8 +472,8 @@ module.exports = {
 			if (!(channel && channel.permissionsFor(client.user).has(['READ_MESSAGE_HISTORY', 'MANAGE_MESSAGES'])))
 				continue;
 			const minimumtime = Date.now() - 2 * 7 * 24 * 60 * 60 * 1000;
-			while (1) {
-				let removed = 0;
+			let removed = 0;
+			do {
 				const array = [];
 				for (const message of (await channel.messages.fetch()).values())
 					if (message.id != guildData.music.message)
@@ -482,13 +482,10 @@ module.exports = {
 							removed++;
 						} else
 							array.push(message);
-				if (array.length)
-					try {
-						removed += (await channel.bulkDelete(array)).size;
-						if (!removed)
-							break;
-					} catch { }
-			}
+				if (array.length) {
+					removed += await channel.bulkDelete(array).then(data => data.size).catch(() => { });
+				}
+			} while (removed);
 			let message = await channel.messages.cache.get(guildData.music.message);
 			if (!message) {
 				if (!channel.permissionsFor(client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))

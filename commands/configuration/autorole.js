@@ -57,7 +57,7 @@ module.exports = {
 	},
 	guildMemberAdd: member => {
 		if (!member.guild.me.hasPermission('MANAGE_ROLES'))
-			return
+			return;
 		const guildData = member.client.utils.readFile(`guilds/${member.guild.id}.json`);
 		if (!guildData.autorole)
 			return;

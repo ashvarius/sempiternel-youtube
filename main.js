@@ -15,10 +15,12 @@ bot.on('exit', async (code = 0) => {
 	exit(code);
 });
 
+// eslint-disable-next-line no-undef
 process.on('SIGINT', () => {
 	bot.emit('exit');
 });
 
+// eslint-disable-next-line no-undef
 process.on('uncaughtException', error => {
 	console.error(error);
 	bot.emit('exit', 1);

@@ -10,7 +10,7 @@ class DiscordBot extends EventEmitter {
 	constructor(config = {}) {
 		super();
 		config = Object.assign({
-			color: "#000000",
+			color: '#000000',
 			disable: []
 		}, default_config, config);
 		const commands = {};
@@ -23,6 +23,14 @@ class DiscordBot extends EventEmitter {
 				}
 			}
 		dispatcher = async (event, var1, var2) => {
+			try {
+				if (var1 && var1.partial)
+					await var1.fetch();
+				if (var2 && var2.partial)
+					await var2.fetch();
+			} catch {
+				return;
+			}
 			for (const category of Object.keys(commands))
 				for (const command of Object.values(commands[category]))
 					if (typeof command[event] == 'function')
@@ -35,6 +43,13 @@ class DiscordBot extends EventEmitter {
 		const client = this.client = new Client({
 			shards: 'auto',
 			fetchAllMembers: false,
+			partials: [
+				'USER',
+				'CHANNEL',
+				'GUILD_MEMBER',
+				'MESSAGE',
+				'REACTION'
+			],
 			presence: {
 				status: 'idle',
 				activity: {
@@ -132,8 +147,8 @@ class DiscordBot extends EventEmitter {
 				if (!this.client.config.presence)
 					this.client.config.presence = {
 						activity: {
-							name: "his program",
-							type: "LISTENING"
+							name: 'his program',
+							type: 'LISTENING'
 						}
 					};
 				this.client.config.presence.status = 'online';
@@ -156,6 +171,6 @@ class DiscordBot extends EventEmitter {
 		if (this.client.user)
 			console.log(`${this.client.user.username} is destroy`);
 	}
-};
+}
 
 module.exports = DiscordBot;
