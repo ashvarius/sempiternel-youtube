@@ -1,4 +1,4 @@
-const { Client, Constants } = require('discord.js');
+const { Client, Constants, VoiceState } = require('discord.js');
 const EventEmitter = require('events');
 const fs = require('fs');
 const Utils = require('./utils.js');
@@ -7,7 +7,7 @@ const default_config = require('./config.json');
 let dispatcher;
 
 class DiscordBot extends EventEmitter {
-	constructor(config = {}) {
+	constructor(logger, config = {}, options = {}) {
 		super();
 		config = Object.assign({
 			color: '#000000',
@@ -24,10 +24,19 @@ class DiscordBot extends EventEmitter {
 			}
 		dispatcher = async (event, var1, var2) => {
 			try {
-				if (var1 && var1.partial)
-					await var1.fetch();
-				if (var2 && var2.partial)
-					await var2.fetch();
+				for (const var3 of [var1, var2]) {
+					if (var3 && var3.partial)
+						await var3.fetch();
+					if (var3 instanceof VoiceState) {
+						if (!var3.channel)
+							return;
+						await var3.guild.members.fetch({
+							user: var3.id,
+							cache: true,
+							force: false
+						});
+					}
+				}
 			} catch {
 				return;
 			}
@@ -37,11 +46,12 @@ class DiscordBot extends EventEmitter {
 						try {
 							await command[event](var1, var2);
 						} catch (error) {
-							console.error(error);
+							logger.log('error', error);
 						}
 		};
-		const client = this.client = new Client({
-			shards: 'auto',
+		const client = this.client = new Client(Object.assign({
+			messageCacheLifetime: 60 * 60,
+			messageSweepInterval: 10 * 60,
 			fetchAllMembers: false,
 			partials: [
 				'USER',
@@ -57,10 +67,14 @@ class DiscordBot extends EventEmitter {
 					type: 'WATCHING'
 				}
 			}
-		});
+		}, options));
+		client.logger = logger;
 		client.config = config;
 		client.commands = commands;
-		client.on('error', console.error);
+		client.on('debug', m => logger.log('debug', m));
+		client.on('warn', m => logger.log('warn', m));
+		client.on('error', m => logger.log('error', m));
+		client.on('shardError', m => logger.log('error', m));
 		client.on('ready', () => {
 			if (!client.utils) {
 				setTimeout(() => client.emit('ready'), 100);
@@ -68,11 +82,12 @@ class DiscordBot extends EventEmitter {
 			}
 			dispatcher('ready', client);
 			this.client.user.setPresence(this.client.config.presence);
-			console.log(`${client.user.username} is ready`);
+			logger.log('info', `${client.user.username} is ready`);
 			this.emit('ready');
 		});
 		client.on('message', async message => {
-			if (message.channel.type == 'text' && !message.channel.permissionsFor(client.user).has('SEND_MESSAGES'))
+			if (message.channel.type == 'text'
+				&& !message.channel.permissionsFor(client.user).has('SEND_MESSAGES'))
 				return;
 			await dispatcher('message', message);
 			let [command, ...args] = message.content.split(' ').filter(item => item.length);
@@ -101,7 +116,9 @@ class DiscordBot extends EventEmitter {
 			for (const category of Object.keys(commands))
 				for (const instance of Object.values(commands[category]))
 					if (!client.config.disable.includes(instance.name))
-						if (instance.name == cmd || instance.aliases.includes(cmd)) {
+						if ((instance.name == cmd || instance.aliases.includes(cmd))) {
+							if (instance.protect && instance.protect(message.channel))
+								return;
 							if (message.channel.type == 'dm' && !instance.private)
 								client.utils.sendMessage(message.channel, 'error_private_disable');
 							else if (!client.config.owners.includes(message.author.id)
@@ -111,7 +128,7 @@ class DiscordBot extends EventEmitter {
 								try {
 									await instance.command(command_object);
 								} catch (error) {
-									console.error(error);
+									logger.log('error', error);
 								}
 							return;
 						}
@@ -159,7 +176,7 @@ class DiscordBot extends EventEmitter {
 						type: 'WATCHING'
 					}
 				});
-				console.log(`${this.client.user.username} is logged`);
+				this.client.logger.log('info', `${this.client.user.username} is logged`);
 				executor(token, this.client);
 			}).catch(error => reject(error));
 		});
@@ -169,7 +186,7 @@ class DiscordBot extends EventEmitter {
 			await dispatcher('destroy', this.client);
 		this.client.destroy();
 		if (this.client.user)
-			console.log(`${this.client.user.username} is destroy`);
+			this.client.logger.log('info', `${this.client.user.username} is destroy`);
 	}
 }
 

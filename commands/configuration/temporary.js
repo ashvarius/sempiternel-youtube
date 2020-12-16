@@ -40,8 +40,6 @@ module.exports = {
 		return true;
 	},
 	voiceStateUpdate: async (oldState, newState) => {
-		if (!newState.member)
-			return;
 		const guildData = newState.member.client.utils.readFile(`guilds/${newState.guild.id}.json`);
 		if (!guildData.temporary)
 			return;

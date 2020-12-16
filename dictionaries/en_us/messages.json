@@ -46,5 +46,6 @@
 	"event_join_message": "Join event message has been sent to `<message>`.",
 	"event_leave_message": "Leave event message has been sent to `<message>`.",
 	"event_message_join": "Welcome <user> to the server.",
-	"event_message_leave": "<user> has left the server."
+	"event_message_leave": "<user> has left the server.",
+	"invite_success": "Click [here](<link>) to invite the bot."
 }

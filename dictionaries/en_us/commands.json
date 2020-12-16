@@ -10,6 +10,7 @@
     "temporary": "Make temporary channels.",
     "user": "Get information about someone.",
 	"music": "Create a channel to manage music on the bot.",
-	"info": "Display information about the bot.",
+	"invite": "Get the bot invite link.",
+	"stats": "Get bot statistics.",
 	"embed": "Send an embed with the bot."
 }

@@ -3,9 +3,9 @@ module.exports = {
 	aliases: [],
 	private: true,
 	command: async command => {
-		const users = Array.from(command.message.mentions.users.values());
-		for (const id of command.args) {
-			const user = await command.message.client.users.fetch(id).catch(() => { });
+		const users = [];
+		for (const arg of command.args) {
+			const user = await command.message.client.utils.getUserFromMention(arg);
 			if (user)
 				users.push(user);
 		}

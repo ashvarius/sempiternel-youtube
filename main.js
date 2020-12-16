@@ -1,7 +1,30 @@
+const process = require('process');
+const winston = require('winston');
 const BotClass = require('./instance.js');
-const { exit } = require('process');
 
-const bot = new BotClass();
+const logger = winston.createLogger({
+	transports: [
+		new winston.transports.Console({
+			level: 'debug',
+			format: winston.format.colorize({ all: true })
+		}),
+		new winston.transports.File({
+			filename: 'latest.log',
+			options: {
+				flags: 'w'
+			}
+		})
+	],
+	format: winston.format.combine(
+		winston.format.timestamp({
+			format: 'YYYY-MM-DD HH:mm:ss'
+		}),
+		winston.format.errors({ stack: true }),
+		winston.format.printf(info => `${info.timestamp} ${info.level}: ${info.stack ? info.stack : info.message}`)
+	)
+});
+
+const bot = new BotClass(logger, {}, require('./config.json').client);
 bot.client.main = true;
 bot.client.BotClass = BotClass;
 bot.client.bots = [];
@@ -12,30 +35,24 @@ bot.on('exit', async (code = 0) => {
 		if (instance != bot)
 			await instance.client.emit('exit');
 	await bot.destroy();
-	exit(code);
+	process.exit(code);
 });
 
-// eslint-disable-next-line no-undef
-process.on('SIGINT', () => {
-	bot.emit('exit');
-});
-
-// eslint-disable-next-line no-undef
-process.on('uncaughtException', error => {
-	console.error(error);
-	bot.emit('exit', 1);
-});
+process.on('SIGINT', () => bot.emit('exit'));
+process.on('uncaughtException', error => logger.log('error', error));
+process.on('unhandledRejection', error => logger.log('error', error));
 
 bot.login().then(() => {
 	const botsData = bot.client.utils.readFile('../bots.json');
 	for (const id of Object.keys(botsData))
 		for (const token of botsData[id]) {
-			const pending = new BotClass({
+			const pending = new BotClass(logger, {
 				owners: [
 					id
 				],
 				token
 			});
-			pending.login().then(() => bot.client.bots.push(pending)).catch(() => { });
+			bot.client.bots.push(pending);
+			pending.login();
 		}
 });

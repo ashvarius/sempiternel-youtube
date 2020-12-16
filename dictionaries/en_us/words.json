@@ -12,10 +12,10 @@
 	"channels": "Channels",
 	"users": "Users",
 	"emojis": "Emojis",
-	"invitation": "Invitation",
-	"link": "Link",
 	"events": "Events",
 	"welcome": "Welcome",
 	"goodbye": "Goodbye",
-	"variables": "Variables"
+	"variables": "Variables",
+	"shard": "Shard",
+	"ping": "Ping"
 }

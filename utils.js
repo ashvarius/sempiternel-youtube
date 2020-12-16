@@ -148,6 +148,13 @@ class Utils {
 		opus.pipe(dispatcher);
 		return dispatcher;
 	}
+	getUserFromMention(mention) {
+		const matches = mention.match(/^<@!?(\d+)>$/);
+		if (!matches)
+			return this.client.users.fetch(mention).catch(() => { });
+		const id = matches[1];
+		return this.client.users.fetch(id);
+	}
 }
 
 module.exports = Utils;

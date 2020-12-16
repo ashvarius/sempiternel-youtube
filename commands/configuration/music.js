@@ -175,7 +175,7 @@ const play = async (client, guildId) => {
 			}
 			await play(client, guildId);
 		} catch (error) {
-			console.log(error);
+			client.logger.log('error', error);
 		}
 	});
 	if (client.music[guildId].connection.voice.serverMute) {
@@ -188,7 +188,10 @@ const play = async (client, guildId) => {
 const add = async (ids, channel, member, silence = false) => {
 	const guild = channel.guild;
 	for (let id of ids) {
-		if (channel.client.music && channel.client.music[guild.id] && channel.client.music[guild.id].playlist.length >= max.video) {
+		if (!silence
+			&& channel.client.music
+			&& channel.client.music[guild.id]
+			&& channel.client.music[guild.id].playlist.length >= max.video) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_full');
 			send.delete({ timeout: 10 * 1000 });
 			break;
@@ -240,7 +243,7 @@ const add = async (ids, channel, member, silence = false) => {
 						return;
 					message.edit('', { embed: waitingembed(channel.client, channel) });
 				} catch (error) {
-					console.log(error);
+					channel.client.logger.log('error', error);
 				}
 			});
 			channel.client.music[guild.id].connection = connection;
@@ -299,14 +302,22 @@ module.exports = {
 			return false;
 		return true;
 	},
+	protect: (channel) => {
+		if (channel.type == 'dm')
+			return;
+		const guildData = channel.client.utils.readFile(`guilds/${channel.guild.id}.json`);
+		if (!guildData.music)
+			return;
+		return channel.id == (guildData.music && guildData.music.channel);
+	},
 	message: async (message) => {
 		if (message.channel.type == 'dm' || message.author.id == message.client.user.id)
 			return;
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
 		if (!guildData.music)
 			return;
-		const channel = message.guild.channels.cache.get(guildData.music.channel);
-		if (!(channel == message.channel && channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES')))
+		const channel = message.guild.channels.cache.get(guildData.music.channel) || {};
+		if (!(channel.id == message.channel.id && channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES')))
 			return;
 		await message.delete();
 		if (message.author.bot)

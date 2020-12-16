@@ -9,8 +9,11 @@ module.exports = {
 			for (const category of Object.keys(command.message.client.commands))
 				for (const instance of Object.values(command.message.client.commands[category]))
 					if (!command.message.client.config.disable.includes(instance.name)
-						&& (!private || instance.private)
-						&& (!instance.permission || instance.permission(command.message))) {
+						&& (!private
+							|| instance.private)
+						&& (command.message.client.config.owners.includes(command.message.author.id)
+							|| !instance.permission
+							|| instance.permission(command.message))) {
 						if (!commands[category])
 							commands[category] = {
 								count: 0,
