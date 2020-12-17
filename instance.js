@@ -128,6 +128,7 @@ class DiscordBot extends EventEmitter {
 								try {
 									await instance.command(command_object);
 								} catch (error) {
+									client.utils.sendMessage(message.channel, 'error', { error });
 									logger.log('error', error);
 								}
 							return;

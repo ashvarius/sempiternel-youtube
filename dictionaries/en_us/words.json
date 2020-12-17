@@ -17,5 +17,8 @@
 	"goodbye": "Goodbye",
 	"variables": "Variables",
 	"shard": "Shard",
-	"ping": "Ping"
+	"ping": "Ping",
+	"who": "Who",
+	"victim": "Victim",
+	"unknown": "Unknown"
 }

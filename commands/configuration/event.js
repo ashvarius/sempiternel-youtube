@@ -119,16 +119,45 @@ const sendImage = async (guild, user, event) => {
 	guild.client.utils.sendEmbed(channel, embed);
 };
 
+const log = async (guild, user, type) => {
+	if (!guild.me.hasPermission('VIEW_AUDIT_LOG'))
+		return;
+	const guildData = guild.client.utils.readFile(`guilds/${guild.id}.json`);
+	if (!(guildData.event && guildData.event.log))
+		return;
+	const channel = guild.channels.cache.get(guildData.event.log);
+	if (!channel)
+		return;
+	const fetchedLogs = await guild.fetchAuditLogs({
+		limit: 1,
+		type,
+	});
+	const log = fetchedLogs.entries.first();
+	let who;
+	if (log) {
+		const { executor, target } = log;
+		if (target.id === user.id)
+			who = executor;
+	}
+	const embed = guild.client.utils.createEmbed();
+	embed.setTitle(type);
+	console.log(who);
+	embed.addField(guild.client.utils.getMessage(channel, 'who'), who ? who.tag : guild.client.utils.getMessage(channel, 'unknown'), true);
+	embed.addField(guild.client.utils.getMessage(channel, 'victim'), user.tag, true);
+	guild.client.utils.sendEmbed(channel, embed);
+};
+
 module.exports = {
 	name: 'event',
 	aliases: [],
 	command: async command => {
-		if (!command.message.guild.me.hasPermission('ATTACH_FILES')) {
-			command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
-				permission: 'ATTACH_FILES'
-			});
-			return;
-		}
+		for (const permission of ['BAN_MEMBERS', 'VIEW_AUDIT_LOG', 'ATTACH_FILES'])
+			if (!command.message.guild.me.hasPermission(permission)) {
+				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
+					permission
+				});
+				return;
+			}
 		if (!command.args.length || !['log', 'image'].concat(Object.keys(custom)).includes(command.args[0].toLowerCase())) {
 			const embed = command.message.client.utils.createEmbed();
 			embed.addField(`${command.prefix}${command.command} log <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_log'));
@@ -212,5 +241,14 @@ module.exports = {
 	},
 	guildMemberRemove: async member => {
 		await sendImage(member.guild, member.user, 'leave');
+		if (!member.guild.me.hasPermission('BAN_MEMBERS') || !(await member.guild.fetchBan(member.user)))
+			await log(member.guild, member.user, 'MEMBER_KICK');
+	},
+	messageDelete: async message => {
+		if (message.channel.type != 'dm')
+			await log(message.guild, message.author, 'MESSAGE_DELETE');
+	},
+	guildBanAdd: async (guild, user) => {
+		await log(guild, user, 'MEMBER_BAN_ADD');
 	}
 };

@@ -1,4 +1,5 @@
 const { Constants, Util } = require('discord.js');
+const Canvas = require('canvas');
 
 module.exports = {
 	name: 'bot',
@@ -23,6 +24,8 @@ module.exports = {
 		if (command.message.client.config.owners.includes(command.message.author.id)) {
 			if (embed.fields.length)
 				embed.addField('\u200B', '\u200B');
+			embed.addField(`${command.prefix}${command.command} setname <name>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setname'));
+			embed.addField(`${command.prefix}${command.command} setavatar <url>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setavatar'));
 			embed.addField(`${command.prefix}${command.command} setpresence <type> <message>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence'));
 			embed.addField(`${command.prefix}${command.command} setcolor <hex>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setcolor'));
 			embed.addField(`${command.prefix}${command.command} <enable/disable> <command>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_command'));
@@ -103,9 +106,9 @@ module.exports = {
 					if (command.args.length == 1) {
 						const embed = command.message.client.utils.createEmbed();
 						if (cmd == 'addtoken')
-							embed.addField(`${command.prefix}${command.command} addtoken <token>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_addtoken')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_token')}`);
+							embed.addField(`${command.prefix}${command.command} ${command.args[0]} <token>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_addtoken')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_token')}`);
 						else
-							embed.addField(`${command.prefix}${command.command} removetoken <number>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_removetoken'));
+							embed.addField(`${command.prefix}${command.command} ${command.args[0]} <number>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_removetoken'));
 						command.message.client.utils.sendEmbed(command.message.channel, embed);
 						return;
 					}
@@ -169,13 +172,48 @@ module.exports = {
 				}
 			}
 		}
-		if (['setpresence', 'setcolor', 'enable', 'disable'].includes(cmd)
+		if (['setname', 'setavatar', 'setpresence', 'setcolor', 'enable', 'disable'].includes(cmd)
 			&& command.message.client.config.owners.includes(command.message.author.id)) {
 			const botData = command.message.client.utils.readFile('config.json');
-			if (cmd == 'setpresence') {
+			if (cmd == 'setname') {
+				if (command.args.length < 2) {
+					const embed = command.message.client.utils.createEmbed();
+					embed.addField(`${command.prefix}${command.command} ${command.args[0]} <name>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setname'));
+					command.message.client.utils.sendEmbed(command.message.channel, embed);
+					return;
+				}
+				const name = command.args.slice(1).join(' ');
+				if (name.length > 32) {
+					command.message.client.utils.sendMessage(command.message.channel, 'error_too_large', {
+						type: command.message.client.utils.getMessage(command.message.channel, 'name'),
+						max: '32 characters'
+					});
+					return;
+				}
+				command.message.client.user.setUsername(name);
+				console.log(name);
+				command.message.client.utils.sendMessage(command.message.channel, 'bot_setname');
+			} else if (cmd == 'setavatar') {
+				if (command.args.length < 2) {
+					const embed = command.message.client.utils.createEmbed();
+					embed.addField(`${command.prefix}${command.command} ${command.args[0]} <url>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setavatar'));
+					command.message.client.utils.sendEmbed(command.message.channel, embed);
+					return;
+				}
+				const url = command.args[1];
+				try {
+					new URL(url);
+					await Canvas.loadImage(url);
+					await command.message.client.user.setAvatar(url);
+				} catch (error) {
+					command.message.client.utils.sendMessage(command.message.channel, 'error_api', { error: error.message });
+					return;
+				}
+				command.message.client.utils.sendMessage(command.message.channel, 'bot_setavatar');
+			} else if (cmd == 'setpresence') {
 				if (command.args.length <= 2) {
 					const embed = command.message.client.utils.createEmbed();
-					embed.addField(`${command.prefix}${command.command} setpresence <type> <message>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence')}\n${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence_flags')}`);
+					embed.addField(`${command.prefix}${command.command} ${command.args[0]} <type> <message>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence')}\n${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence_flags')}`);
 					command.message.client.utils.sendEmbed(command.message.channel, embed);
 					return;
 				}
