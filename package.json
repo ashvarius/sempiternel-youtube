@@ -2,7 +2,7 @@
   "name": "sempiternel",
   "version": "0.0.2",
   "description": "discord bot",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
     "main": "./start.sh"
   },
@@ -16,6 +16,7 @@
     "ffmpeg-static": "^4.2.7",
     "fs": "^0.0.1-security",
     "prism-media": "^1.2.3",
+    "sodium": "^3.0.2",
     "winston": "^3.3.3",
     "ytdl-core": "^4.1.6",
     "ytpl": "^2.0.3",

@@ -119,7 +119,7 @@ const sendImage = async (guild, user, event) => {
 	guild.client.utils.sendEmbed(channel, embed);
 };
 
-const log = async (guild, user, type) => {
+const log = async (guild, user, type, content) => {
 	if (!guild.me.hasPermission('VIEW_AUDIT_LOG'))
 		return;
 	const guildData = guild.client.utils.readFile(`guilds/${guild.id}.json`);
@@ -139,11 +139,11 @@ const log = async (guild, user, type) => {
 		if (target.id === user.id)
 			who = executor;
 	}
-	const embed = guild.client.utils.createEmbed();
+	const embed = guild.client.utils.createEmbed(content);
 	embed.setTitle(type);
-	console.log(who);
 	embed.addField(guild.client.utils.getMessage(channel, 'who'), who ? who.tag : guild.client.utils.getMessage(channel, 'unknown'), true);
 	embed.addField(guild.client.utils.getMessage(channel, 'victim'), user.tag, true);
+	embed.setTimestamp();
 	guild.client.utils.sendEmbed(channel, embed);
 };
 
@@ -173,7 +173,7 @@ module.exports = {
 		if (cmd == 'log') {
 			if (!['on', 'off'].includes(option)) {
 				const embed = command.message.client.utils.createEmbed();
-				embed.addField(`${command.prefix}${command.command} ${command.args[0]} <yes/no>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_log'));
+				embed.addField(`${command.prefix}${command.command} ${command.args[0]} <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'event_help_log'));
 				command.message.client.utils.sendEmbed(command.message.channel, embed);
 				return;
 			}
@@ -246,7 +246,7 @@ module.exports = {
 	},
 	messageDelete: async message => {
 		if (message.channel.type != 'dm')
-			await log(message.guild, message.author, 'MESSAGE_DELETE');
+			await log(message.guild, message.author, 'MESSAGE_DELETE', message.content);
 	},
 	guildBanAdd: async (guild, user) => {
 		await log(guild, user, 'MEMBER_BAN_ADD');

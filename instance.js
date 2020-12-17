@@ -4,6 +4,12 @@ const fs = require('fs');
 const Utils = require('./utils.js');
 const default_config = require('./config.json');
 
+const isLetters = str => {
+	if (str.match(/^[A-Za-z]+$/))
+		return true;
+	return false;
+};
+
 let dispatcher;
 
 class DiscordBot extends EventEmitter {
@@ -104,7 +110,7 @@ class DiscordBot extends EventEmitter {
 					return;
 			} else
 				prefix = '';
-			if (!command.length)
+			if (!(command.length && isLetters(command)))
 				return;
 			const cmd = command.toLowerCase();
 			const command_object = {
@@ -151,7 +157,7 @@ class DiscordBot extends EventEmitter {
 					dispatcher(event, var1, var2);
 				});
 	}
-	login(token) {
+	login(token, firestore) {
 		if (token)
 			this.token = token;
 		if (this.client.ws.destroyed) {
