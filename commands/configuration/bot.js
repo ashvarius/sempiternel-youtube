@@ -280,6 +280,8 @@ module.exports = {
 					});
 					return;
 				}
+				if (!botData.disable)
+					botData.disable = [];
 				if (botData.disable.includes(_command))
 					botData.disable.splice(botData.disable.indexOf(_command), 1);
 				if (cmd == 'disable')
