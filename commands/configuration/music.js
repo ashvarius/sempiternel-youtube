@@ -27,9 +27,13 @@ const FFMPEG_ARGUMENTS = [
 let cache;
 
 const getvideo = async (client, id) => {
-	if (cache.get(id))
-		return cache.get(id);
-	let video = await ytdl.getInfo(id, {
+	let video;
+	if (cache.get(id)) {
+		video = cache.get(id);
+		if (video.expire > Date.now())
+			return video;
+	}
+	video = await ytdl.getInfo(id, {
 		requestOptions: {
 			headers: {
 				cookie: client.config['youtube-cookie']
@@ -53,11 +57,12 @@ const getvideo = async (client, id) => {
 			.replace(/>/g, '-'),
 		url: video.videoDetails.video_url,
 		id: video.videoDetails.videoId,
-		thumbnail: video.videoDetails.thumbnail.thumbnails[video.videoDetails.thumbnail.thumbnails.length - 1].url,
+		thumbnail: video.videoDetails.thumbnails[video.videoDetails.thumbnails.length - 1].url,
 		next: video.related_videos.length && video.related_videos[Math.floor(Math.random() * video.related_videos.length)].id,
 		format: {
 			url: format.url
-		}
+		},
+		expire: url.parse(format.url, true).query.expire * 1000
 	};
 	cache.set(id, video);
 	return video;

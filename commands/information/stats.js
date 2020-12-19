@@ -12,6 +12,7 @@ module.exports = {
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'channels'), command.message.client.channels.cache.size);
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'users'), command.message.client.users.cache.size);
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'emojis'), command.message.client.emojis.cache.size);
+		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'voices'), command.message.client.voice.connections.size);
 		command.message.client.utils.sendEmbed(command.message.channel, embed);
 	}
 };
