@@ -33,7 +33,7 @@ module.exports = {
 					embed.addField(command.message.client.utils.getMessage(command.message.channel, 'date of premium purchase'), member.premiumSince.toUTCString(), true);
 				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'name'), member.displayName, true);
 				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'color'), member.displayHexColor, true);
-				if (member.lastMessage)
+				if (member.lastMessage && member.lastMessage.content)
 					embed.addField(command.message.client.utils.getMessage(command.message.channel, 'last message'), member.lastMessage.content, true);
 				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'roles'), Array.from(member.roles.cache.values()).join(', '), true);
 				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'permissions'), member.permissions.toArray().map(item => `\`${item}\``).join(', '));
