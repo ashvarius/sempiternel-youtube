@@ -33,5 +33,6 @@
 	"roles": "Roles",
 	"permissions": "Permissions",
 	"yes": "Yes",
-	"no": "No"
+	"no": "No",
+	"members": "Members"
 }

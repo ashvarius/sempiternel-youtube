@@ -11,7 +11,7 @@ module.exports = {
 		}
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'servers'), command.message.client.guilds.cache.size, true);
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'channels'), command.message.client.channels.cache.size, true);
-		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'users'), command.message.client.users.cache.size, true);
+		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'members'), command.message.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0), true);
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'emojis'), command.message.client.emojis.cache.size, true);
 		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'voices'), command.message.client.voice.connections.size, true);
 		command.message.client.utils.sendEmbed(command.message.channel, embed);

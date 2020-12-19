@@ -123,7 +123,7 @@ module.exports = {
 							command.message.client.utils.sendMessage(command.message.channel, 'error_max_bot');
 							return;
 						}
-						const bot = new command.message.client.BotClass({
+						const bot = new command.message.client.BotClass(command.message.client.logger, {
 							owners: [
 								command.message.author.id
 							],
