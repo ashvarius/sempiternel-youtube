@@ -24,11 +24,11 @@ const max = Object.freeze({
 const FFMPEG_ARGUMENTS = [
 	'-af', 'bass=g=20,dynaudnorm'
 ];
-const cache = {};
+let cache;
 
 const getvideo = async (client, id) => {
-	if (cache[id])
-		return cache[id];
+	if (cache.get(id))
+		return cache.get(id);
 	let video = await ytdl.getInfo(id, {
 		requestOptions: {
 			headers: {
@@ -59,7 +59,7 @@ const getvideo = async (client, id) => {
 			url: format.url
 		}
 	};
-	cache[id] = video;
+	cache.set(id, video);
 	return video;
 };
 
@@ -77,7 +77,7 @@ const updateMessage = async (client, guildId) => {
 	const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 	if (!channel)
 		return;
-	const message = channel.messages.cache.get(guildData.music.message);
+	const message = await channel.messages.fetch(guildData.music.message);
 	if (!message)
 		return;
 	const options = [];
@@ -319,6 +319,8 @@ module.exports = {
 		const channel = message.guild.channels.cache.get(guildData.music.channel) || {};
 		if (!(channel.id == message.channel.id && channel.permissionsFor(message.guild.me).has('MANAGE_MESSAGES')))
 			return;
+		if (message.deleted)
+			return;
 		await message.delete();
 		if (message.author.bot)
 			return;
@@ -471,10 +473,7 @@ module.exports = {
 		await updateMessage(newState.client, newState.guild.id);
 	},
 	ready: async (client) => {
-		setInterval(() => {
-			for (const key of Object.keys(cache))
-				delete cache[key];
-		}, 1000 * 60 * 60);
+		cache = client.utils.createCache(500);
 		for (const guild of client.guilds.cache.values()) {
 			const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
 			if (!guildData.music)
@@ -497,7 +496,7 @@ module.exports = {
 					removed += await channel.bulkDelete(array).then(data => data.size).catch(() => { });
 				}
 			} while (removed);
-			let message = await channel.messages.cache.get(guildData.music.message);
+			let message = await channel.messages.fetch(guildData.music.message);
 			if (!message) {
 				if (!channel.permissionsFor(client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))
 					continue;

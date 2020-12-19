@@ -135,9 +135,12 @@ const log = async (guild, user, type, content) => {
 	const log = fetchedLogs.entries.first();
 	let who;
 	if (log) {
-		const { executor, target } = log;
-		if (target.id === user.id)
+		const { executor, target, reason } = log;
+		if (target.id === user.id) {
 			who = executor;
+			if (!content)
+				content = reason;
+		}
 	}
 	const embed = guild.client.utils.createEmbed(content);
 	embed.setTitle(type);
@@ -241,7 +244,7 @@ module.exports = {
 	},
 	guildMemberRemove: async member => {
 		await sendImage(member.guild, member.user, 'leave');
-		if (!member.guild.me.hasPermission('BAN_MEMBERS') || !(await member.guild.fetchBan(member.user)))
+		if (!member.guild.me.hasPermission('BAN_MEMBERS') || !(await member.guild.fetchBan(member.user.id).catch(() => { })))
 			await log(member.guild, member.user, 'MEMBER_KICK');
 	},
 	messageDelete: async message => {

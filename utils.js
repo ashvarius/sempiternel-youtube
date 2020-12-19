@@ -1,8 +1,9 @@
 const fs = require('fs');
 const prism = require('prism-media');
 const { MessageEmbed } = require('discord.js');
+const Cache = require('./cache.js');
 
-const loadedFiles = {};
+const loadedFiles = new Cache();
 const dictionaries = {};
 
 if (fs.existsSync('dictionaries'))
@@ -18,30 +19,26 @@ class Utils {
 	constructor(client) {
 		this.client = client;
 		this.path = `data/${this.client.user.id}`;
-		setInterval(() => {
-			for (const key of Object.keys(loadedFiles))
-				delete loadedFiles[key];
-		}, 1000 * 60 * 60);
 	}
 	savFile(path, object) {
 		if (!object)
 			throw 'object undefined';
-		if (loadedFiles[path] == object)
+		if (loadedFiles.get(path) == object)
 			return object;
 		path = `${this.path}/${path}`;
 		if (!fs.existsSync(path))
 			fs.mkdirSync(path.slice(0, path.lastIndexOf('/')), { recursive: true });
 		fs.writeFileSync(path, JSON.stringify(object));
-		loadedFiles[path] = object;
+		loadedFiles.set(path, object);
 		return object;
 	}
 	readFile(path) {
 		path = `${this.path}/${path}`;
-		if (loadedFiles[path])
-			return loadedFiles[path];
+		if (loadedFiles.get(path))
+			return loadedFiles.get(path);
 		if (fs.existsSync(path)) {
 			const parsed = JSON.parse(fs.readFileSync(path));
-			loadedFiles[path] = parsed;
+			loadedFiles.set(path, parsed);
 			return parsed;
 		}
 		return {};
@@ -154,6 +151,9 @@ class Utils {
 			return this.client.users.fetch(mention).catch(() => { });
 		const id = matches[1];
 		return this.client.users.fetch(id);
+	}
+	createCache(limit) {
+		return new Cache(limit);
 	}
 }
 

@@ -70,8 +70,8 @@ module.exports = {
 		});
 		if (!cache[newState.guild.id])
 			cache[newState.guild.id] = [];
-		cache[newState.guild.id].push(channel.id);
-		newState.setChannel(channel).catch(() => { });
+		const index = cache[newState.guild.id].push(channel.id) - 1;
+		newState.setChannel(channel).catch(() => channel.delete().then(() => cache[newState.guild.id].splice(index, 1)).catch(() => { }));
 	},
 	destroy: async client => {
 		for (let guild of Object.keys(cache)) {
