@@ -1,6 +1,7 @@
 module.exports = {
 	name: 'reaction',
 	aliases: [],
+	description: 'description_reaction',
 	command: async command => {
 		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS', 'MANAGE_MESSAGES'])
 			if (!command.message.guild.me.hasPermission(permission)) {

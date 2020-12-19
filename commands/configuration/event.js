@@ -153,6 +153,7 @@ const log = async (guild, user, type, content) => {
 module.exports = {
 	name: 'event',
 	aliases: [],
+	description: 'description_event',
 	command: async command => {
 		for (const permission of ['BAN_MEMBERS', 'VIEW_AUDIT_LOG', 'ATTACH_FILES'])
 			if (!command.message.guild.me.hasPermission(permission)) {

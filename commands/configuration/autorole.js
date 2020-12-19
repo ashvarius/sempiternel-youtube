@@ -1,6 +1,7 @@
 module.exports = {
 	name: 'autorole',
 	aliases: [],
+	description: 'description_autorole',
 	command: command => {
 		if (!command.args.length || !['add', 'remove', 'restore'].includes(command.args[0].toLowerCase())) {
 			const embed = command.message.client.utils.createEmbed();

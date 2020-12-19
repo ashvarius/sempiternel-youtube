@@ -1,6 +1,7 @@
 module.exports = {
 	name: 'emoji',
 	aliases: [],
+	description: 'description_emoji',
 	command: async command => {
 		if (!command.message.guild.me.hasPermission('MANAGE_EMOJIS')) {
 			command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {

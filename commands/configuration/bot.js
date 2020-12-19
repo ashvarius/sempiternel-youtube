@@ -5,6 +5,7 @@ module.exports = {
 	name: 'bot',
 	aliases: ['token'],
 	private: true,
+	description: 'description_bot',
 	command: async command => {
 		const embed = command.message.client.utils.createEmbed();
 		if (command.message.client.main) {
@@ -191,7 +192,6 @@ module.exports = {
 					return;
 				}
 				command.message.client.user.setUsername(name);
-				console.log(name);
 				command.message.client.utils.sendMessage(command.message.channel, 'bot_setname');
 			} else if (cmd == 'setavatar') {
 				if (command.args.length < 2) {

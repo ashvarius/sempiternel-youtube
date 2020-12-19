@@ -3,6 +3,7 @@ const cache = {};
 module.exports = {
 	name: 'temporary',
 	aliases: [],
+	description: 'description_temporary',
 	command: command => {
 		if (!command.args.length || !['add', 'remove'].includes(command.args[0].toLowerCase())) {
 			const embed = command.message.client.utils.createEmbed();

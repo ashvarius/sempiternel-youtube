@@ -63,6 +63,7 @@ module.exports = {
 	name: 'embed',
 	aliases: [],
 	private: true,
+	description: 'description_embed',
 	command: async command => {
 		if (!command.args.length) {
 			const embed = command.message.client.utils.createEmbed();

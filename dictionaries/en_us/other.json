@@ -20,5 +20,18 @@
 	"ping": "Ping",
 	"who": "Who",
 	"victim": "Victim",
-	"unknown": "Unknown"
+	"unknown": "Unknown",
+	"voices": "Voices",
+	"bot": "Bot",
+	"id": "ID",
+	"badges": "Badges",
+	"creation date": "Creation Date",
+	"registration date": "Registration Date",
+	"date of premium purchase": "Date of Premium Purchase",
+	"color": "Color",
+	"last message": "Last Message",
+	"roles": "Roles",
+	"permissions": "Permissions",
+	"yes": "Yes",
+	"no": "No"
 }

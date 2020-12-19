@@ -2,6 +2,7 @@ module.exports = {
 	name: 'help',
 	aliases: [],
 	private: true,
+	description: 'description_help',
 	command: command => {
 		if (!command.args.length) {
 			const private = command.message.channel.type == 'dm';
@@ -35,7 +36,7 @@ module.exports = {
 							const embed = command.message.client.utils.createEmbed();
 							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'name'), `\`${instance.name}\``);
 							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'aliases'), instance.aliases.length ? `\`${instance.aliases.join('`, `')}\`` : command.message.client.utils.getMessage(command.message.channel, 'nothing'));
-							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'description'), command.message.client.utils.getMessage(command.message.channel, instance.name));
+							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'description'), command.message.client.utils.getMessage(command.message.channel, instance.description));
 							command.message.client.utils.sendEmbed(command.message.channel, embed);
 							return;
 						}

@@ -2,6 +2,7 @@ module.exports = {
 	name: 'user',
 	aliases: [],
 	private: true,
+	description: 'description_user',
 	command: async command => {
 		const users = [];
 		for (const arg of command.args) {
@@ -19,25 +20,25 @@ module.exports = {
 			}));
 			embed.setAuthor(user.tag);
 			embed.setTimestamp();
-			embed.addField('id', user.id, true);
+			embed.addField(command.message.client.utils.getMessage(command.message.channel, 'bot'), command.message.client.utils.getMessage(command.message.channel, user.bot ? 'yes' : 'no'), true);
+			embed.addField(command.message.client.utils.getMessage(command.message.channel, 'id'), user.id, true);
 			const flags = (await user.fetchFlags()).toArray();
 			if (flags.length)
-				embed.addField('flags', `\`${flags.join('`, `')}\``, true);
-			embed.addField('createdAt', user.createdAt.toUTCString(), true);
-			const member = await command.message.guild.members.fetch(user.id);
+				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'badges'), `\`${flags.join('`, `')}\``, true);
+			embed.addField(command.message.client.utils.getMessage(command.message.channel, 'creation date'), user.createdAt.toUTCString(), true);
+			const member = command.message.channel.type != 'dm' && await command.message.guild.members.fetch(user.id);
 			if (member) {
-				embed.addField('joinedAt', member.joinedAt.toUTCString(), true);
+				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'registration date'), member.joinedAt.toUTCString(), true);
 				if (member.premiumSince)
-					embed.addField('premiumSince', member.premiumSince.toUTCString(), true);
-				embed.addField('displayName', member.displayName, true);
-				embed.addField('displayHexColor', member.displayHexColor, true);
+					embed.addField(command.message.client.utils.getMessage(command.message.channel, 'date of premium purchase'), member.premiumSince.toUTCString(), true);
+				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'name'), member.displayName, true);
+				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'color'), member.displayHexColor, true);
 				if (member.lastMessage)
-					embed.addField('lastMessage', member.lastMessage.content, true);
-				embed.addField('roles', Array.from(member.roles.cache.values()).join(', '), true);
-				embed.addField('permissions', member.permissions.toArray().map(item => `\`${item}\``).join(', '));
+					embed.addField(command.message.client.utils.getMessage(command.message.channel, 'last message'), member.lastMessage.content, true);
+				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'roles'), Array.from(member.roles.cache.values()).join(', '), true);
+				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'permissions'), member.permissions.toArray().map(item => `\`${item}\``).join(', '));
 			}
 			command.message.client.utils.sendEmbed(command.message.channel, embed);
-			console.log(user.embed);
 		}
 	}
 };

@@ -266,6 +266,7 @@ const add = async (ids, channel, member, silence = false) => {
 module.exports = {
 	name: 'music',
 	aliases: [],
+	description: 'description_music',
 	command: async command => {
 		for (const permission of ['MANAGE_CHANNELS', 'CONNECT'])
 			if (!command.message.guild.me.hasPermission(permission)) {

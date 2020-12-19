@@ -2,6 +2,7 @@ module.exports = {
 	name: 'avatar',
 	aliases: ['pp'],
 	private: true,
+	description: 'description_avatar',
 	command: async command => {
 		const users = [];
 		for (const arg of command.args) {
