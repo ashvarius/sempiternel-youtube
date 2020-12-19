@@ -26,7 +26,7 @@ module.exports = {
 			if (flags.length)
 				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'badges'), `\`${flags.join('`, `')}\``, true);
 			embed.addField(command.message.client.utils.getMessage(command.message.channel, 'creation date'), user.createdAt.toUTCString(), true);
-			const member = command.message.channel.type != 'dm' && await command.message.guild.members.fetch(user.id);
+			const member = command.message.channel.type != 'dm' && await command.message.guild.members.fetch(user.id).catch(() => { });
 			if (member) {
 				embed.addField(command.message.client.utils.getMessage(command.message.channel, 'registration date'), member.joinedAt.toUTCString(), true);
 				if (member.premiumSince)
