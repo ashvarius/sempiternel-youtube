@@ -1,7 +1,15 @@
 const ytdl = require('ytdl-core');
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
+const spotify = require('spotify-url-info');
+const scdl = require('soundcloud-downloader').create({ saveClientID: true });
+const miniget = require('miniget');
 const url = require('url');
+const types = Object.freeze({
+	youtube: '#FF0000',
+	soundcloud: '#F48220',
+	spotify: '#1DB954'
+});
 const emojis = Object.freeze({
 	random: '🔀',
 	previous: '⏮️',
@@ -17,23 +25,18 @@ const emojis = Object.freeze({
 });
 const max = Object.freeze({
 	page: 16,
-	video: 50,
+	track: 50,
 	update: 2,
 	bitrate: 48
 });
 const FFMPEG_ARGUMENTS = [
 	'-af', 'bass=g=20,dynaudnorm'
 ];
+const default_thumbnail = 'https://upload.wikimedia.org/wikipedia/commons/4/45/Michel_Richard_Delalande_engraving_BNF_Gallica.jpg';
 let cache;
 
-const getvideo = async (client, id) => {
-	let video;
-	if (cache.get(id)) {
-		video = cache.get(id);
-		if (video.expire > Date.now())
-			return video;
-	}
-	video = await ytdl.getInfo(id, {
+const generateYoutubeTrack = async (client, info) => {
+	const video = await ytdl.getInfo(info.id ? info.id : info.url, {
 		requestOptions: {
 			headers: {
 				cookie: client.config['youtube-cookie']
@@ -42,33 +45,97 @@ const getvideo = async (client, id) => {
 	});
 	if (video.videoDetails.isLiveContent)
 		return;
-	if (video.videoDetails.title.length > 50)
-		video.videoDetails.title = `${video.videoDetails.title.substring(0, 50)}...`;
 	const format = ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' });
-	video = {
-		title: video.videoDetails.title
-			.replace(/\[/g, '{')
-			.replace(/\]/g, '}')
-			.replace(/\|/g, '/')
-			.replace(/`/g, '\'')
-			.replace(/\*/g, '+')
-			.replace(/~/g, '-')
-			.replace(/_/g, '-')
-			.replace(/>/g, '-'),
+	return {
+		title: video.videoDetails.title,
 		url: video.videoDetails.video_url,
 		id: video.videoDetails.videoId,
-		thumbnail: video.videoDetails.thumbnails[video.videoDetails.thumbnails.length - 1].url,
+		thumbnail: video.videoDetails.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
 		next: video.related_videos.length && video.related_videos[Math.floor(Math.random() * video.related_videos.length)].id,
 		format: {
 			url: format.url
 		},
 		expire: url.parse(format.url, true).query.expire * 1000
 	};
-	cache.set(id, video);
-	return video;
 };
 
-const waitingembed = (client, channel) => {
+const generateSoundCloudTrack = async (info) => {
+	const data = await scdl.getInfo(info.url);
+	const parsed = url.parse(data.media.transcodings[0].url);
+	parsed.query = {
+		client_id: await scdl.getClientID()
+	};
+	const body = await miniget(url.format(parsed)).text();
+	const media = JSON.parse(body);
+	return {
+		title: data.title,
+		url: data.permalink_url,
+		id: data.id,
+		thumbnail: data.artwork_url,
+		format: {
+			url: media.url
+		}
+	};
+};
+
+const generateSpotifyTrack = async (info) => {
+	const data = await spotify.getData(info.url);
+	return {
+		title: data.name,
+		url: data.external_urls.spotify,
+		id: data.id,
+		thumbnail: data.album.images.reduce((a, b) => (a.width > b.width ? a : b)).url,
+		format: {
+			url: data.preview_url
+		}
+	};
+};
+
+const getTrack = async (client, info) => {
+	let track;
+	if (info.id)
+		if (cache.get(`${info.type}_${info.id}`)) {
+			track = cache.get(`${info.type}_${info.id}`);
+			if (track.expire && track.expire > Date.now())
+				return track;
+		}
+	if (info.type == types.youtube)
+		track = await generateYoutubeTrack(client, info);
+	else if (info.type == types.soundcloud)
+		track = await generateSoundCloudTrack(info);
+	else if (info.type == types.spotify)
+		track = await generateSpotifyTrack(info);
+	else {
+		const parsed = url.parse(info.url);
+		const filename = parsed.pathname.substring(parsed.pathname.lastIndexOf('/') + 1);
+		track = {
+			title: filename,
+			thumbnail: default_thumbnail,
+			url: info.url,
+			format: {
+				url: info.url
+			}
+		};
+	}
+	if (!track)
+		return;
+	track.color = info.type;
+	if (track.title.length > 50)
+		track.title = `${track.title.substring(0, 50)}...`;
+	track.title = track.title
+		.replace(/\[/g, '{')
+		.replace(/\]/g, '}')
+		.replace(/\|/g, '/')
+		.replace(/`/g, '\'')
+		.replace(/\*/g, '+')
+		.replace(/~/g, '-')
+		.replace(/_/g, '-')
+		.replace(/>/g, '-');
+	cache.set(`${info.type}_${track.id}`, track);
+	return track;
+};
+
+const waitingEmbed = (client, channel) => {
 	let description = `${client.utils.getMessage(channel, 'music_watting')}\n`;
 	for (const key of Object.keys(emojis))
 		description += `\n${emojis[key]} ${client.utils.getMessage(channel, `music_reaction_${key}`)}`;
@@ -92,21 +159,20 @@ const updateMessage = async (client, guildId) => {
 	let content = client.music[guildId].connection.dispatcher && client.music[guildId].connection.dispatcher.paused ? '⏸️' : '▶️';
 	if (options.length)
 		content += `\n${client.utils.getMessage(message.channel, 'activate')}: ${options.join(', ')}\n`;
-	const now = await getvideo(client, client.music[guildId].now.id);
+	const now = await getTrack(client, client.music[guildId].now);
+	if (!client.music[guildId])
+		return;
 	content += `\n${client.utils.getMessage(message.channel, 'now')} - [${now.title}](${now.url})`;
-	const array = [now.id];
 	if (client.music[guildId].playlist.length) {
 		content += '\n';
 		const min = client.music[guildId].page * max.page;
 		let index = 0;
 		let info;
-		while ((info = client.music[guildId].playlist[index++])) {
+		while (client.music[guildId] && (info = client.music[guildId].playlist[index++]))
 			if (index > min && index <= min + max.page) {
-				const video = await getvideo(client, info.id);
-				content += `\n${index} - [${video.title}](${video.url})`;
+				const track = await getTrack(client, info);
+				content += `\n${index} - [${track.title}](${track.url})`;
 			}
-			array.push(info.id);
-		}
 	}
 	const send = async () => {
 		if (!client.music[guildId])
@@ -114,7 +180,8 @@ const updateMessage = async (client, guildId) => {
 		client.music[guildId].embed = { content, last: 0 };
 		const embed = client.utils.createEmbed(content);
 		embed.setThumbnail(now.thumbnail);
-		const sent = await message.edit(`||${client.utils.getMessage(message.channel, 'music_playlist')}\n${JSON.stringify(array)}||`, { embed });
+		embed.setColor(now.color);
+		const sent = await client.utils.replaceEmbed(message, embed);
 		if (!client.music[guildId])
 			return;
 		client.music[guildId].embed.last = Date.now();
@@ -151,8 +218,8 @@ const play = async (client, guildId) => {
 	if (client.music[guildId].playlist.length <= client.music[guildId].page * max.page)
 		client.music[guildId].page--;
 	client.music[guildId].now = info;
-	const video = await getvideo(client, info.id);
-	const transcoder = client.utils.generateTranscoder(video.format.url, {
+	const track = await getTrack(client, info);
+	const transcoder = client.utils.generateTranscoder(track.format.url, {
 		start: info.time,
 		args: FFMPEG_ARGUMENTS
 	});
@@ -170,12 +237,16 @@ const play = async (client, guildId) => {
 				const guildData = client.utils.readFile(`guilds/${guildId}.json`);
 				const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 				if (channel)
-					if (client.music[guildId].repeat)
-						await add([client.music[guildId].now.id], channel, null, true);
-					else if (client.music[guildId].autoplay && client.music[guildId].now.id && !client.music[guildId].playlist.length) {
-						const video = await getvideo(client, client.music[guildId].now.id);
-						if (video.next)
-							await add([video.next], channel, null, true);
+					if (client.music[guildId].repeat) {
+						if (info.time)
+							delete info.time;
+						await add([info], channel, null, true);
+					} else if (client.music[guildId].autoplay && !client.music[guildId].playlist.length) {
+						if (track.next)
+							await add([{
+								type: info.type,
+								id: track.next
+							}], channel, null, true);
 					}
 			}
 			await play(client, guildId);
@@ -190,25 +261,32 @@ const play = async (client, guildId) => {
 	await updateMessage(client, guildId);
 };
 
-const add = async (ids, channel, member, silence = false) => {
+const add = async (infos, channel, member, silence = false) => {
 	const guild = channel.guild;
-	for (let id of ids) {
+	for (let info of infos) {
 		if (!silence
 			&& channel.client.music
 			&& channel.client.music[guild.id]
-			&& channel.client.music[guild.id].playlist.length >= max.video) {
+			&& channel.client.music[guild.id].playlist.length >= max.track) {
 			const send = await channel.client.utils.sendMessage(channel, 'error_full');
 			send.delete({ timeout: 10 * 1000 });
 			break;
 		}
-		let time = url.parse(id, true).query.t;
-		if (!time)
-			time = 0;
+		if (!info.time) {
+			if (info.url)
+				try {
+					info.time = url.parse(info.url, true).query.t;
+					// eslint-disable-next-line no-empty
+				} catch { }
+			if (!info.time)
+				info.time = 0;
+		}
 		try {
-			id = ytdl.getVideoID(id);
-			const video = await getvideo(channel.client, id, time);
-			if (!video)
+			const track = await getTrack(channel.client, info);
+			if (!track)
 				continue;
+			if (!info.id)
+				info.id = track.id;
 			if (!guild.me.voice.channelID) {
 				const voice = member && await guild.channels.cache.get(member.voice.channelID);
 				if (!(voice && voice.joinable && voice.speakable))
@@ -246,14 +324,14 @@ const add = async (ids, channel, member, silence = false) => {
 					const message = channel.messages.cache.get(guildData.music.message);
 					if (!message)
 						return;
-					message.edit('', { embed: waitingembed(channel.client, channel) });
+					channel.client.utils.replaceEmbed(message, waitingEmbed(channel.client, channel));
 				} catch (error) {
 					channel.client.logger.log('error', error);
 				}
 			});
 			channel.client.music[guild.id].connection = connection;
 		}
-		channel.client.music[guild.id].playlist.push({ id, time });
+		channel.client.music[guild.id].playlist.push(info);
 		while (channel.client.music[guild.id].playlist.length > (channel.client.music[guild.id].page + 1) * max.page)
 			channel.client.music[guild.id].page++;
 		if (!channel.client.music[guild.id].now)
@@ -293,7 +371,7 @@ module.exports = {
 			rateLimitPerUser: 5,
 			reason: 'Create a music channel'
 		});
-		const message = await command.message.client.utils.sendEmbed(channel, waitingembed(command.message.client, channel));
+		const message = await command.message.client.utils.sendEmbed(channel, waitingEmbed(command.message.client, channel));
 		guildData.music = {
 			channel: channel.id,
 			message: message.id
@@ -330,32 +408,67 @@ module.exports = {
 		await message.delete();
 		if (message.author.bot)
 			return;
-		let ids = [];
+		let infos = [];
 		try {
-			const temp = JSON.parse(message.content);
-			ids = ids.concat(temp);
-		} catch {
-			try {
+			new URL(message.content);
+			if (ytdl.validateURL(message.content)) {
+				infos.push({
+					type: types.youtube,
+					url: message.content
+				});
+			} else if (ytpl.validateID(message.content)) {
 				const playlist = await ytpl(message.content);
 				for (const item of playlist.items)
-					ids.push(item.id);
-			} catch {
+					infos.push({ type: types.youtube, id: item.id });
+			} else if (scdl.isValidUrl(message.content)) {
 				try {
-					new URL(message.content);
-					ids.push(message.content);
+					const info = await scdl.getSetInfo(message.content);
+					for (const track of info.tracks)
+						infos.push({
+							type: types.soundcloud,
+							url: track.permalink_url,
+							id: track.id
+						});
 				} catch {
-					const filters = await ytsr.getFilters(message.content);
-					const filter = filters.get('Type').get('Video');
-					if (!filter.url)
-						return;
-					const search = await ytsr(filter.url, { limit: 1 });
-					if (!search.items.length)
-						return;
-					ids.push(search.items[0].id);
+					infos.push({
+						type: types.soundcloud,
+						url: message.content
+					});
+				}
+			} else {
+				try {
+					const info = await spotify.getData(message.content);
+					if (info.type == 'track')
+						infos.push({
+							type: types.spotify,
+							url: info.external_urls.spotify,
+							id: info.id
+						});
+					else if (info.type == 'album')
+						for (const track of info.tracks.items)
+							infos.push({
+								type: types.spotify,
+								url: track.external_urls.spotify,
+								id: track.id
+							});
+					else return;
+				} catch {
+					infos.push({
+						url: message.content
+					});
 				}
 			}
+		} catch (error) {
+			const filters = await ytsr.getFilters(message.content);
+			const filter = filters.get('Type').get('Video');
+			if (!filter.url)
+				return;
+			const search = await ytsr(filter.url, { limit: 1 });
+			if (!search.items.length)
+				return;
+			infos.push({ type: types.youtube, id: search.items[0].id });
 		}
-		await add(ids, message.channel, message.member);
+		await add(infos, message.channel, message.member);
 	},
 	messageReactionAdd: async (messageReaction, user) => {
 		if (user.id == messageReaction.client.user.id)
@@ -367,8 +480,15 @@ module.exports = {
 		if (!(messageReaction.client.music && messageReaction.client.music[messageReaction.message.guild.id])) {
 			if (messageReaction.emoji.name == emojis.own) {
 				const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
-				if (userData.music)
+				if (userData.music && userData.music.length) {
+					if (typeof userData.music[0] == 'string') {
+						userData.music = userData.music.map(id => {
+							return { type: types.youtube, id };
+						});
+						messageReaction.client.utils.savFile(`users/${user.id}.json`, userData);
+					}
 					await add(userData.music, messageReaction.message.channel, messageReaction.message.guild.members.cache.get(user.id));
+				}
 			}
 			return;
 		}
@@ -412,18 +532,20 @@ module.exports = {
 			const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
 			if (!userData.music)
 				userData.music = [];
-			const id = music.now.id;
+			const info = music.now;
+			if (info.time)
+				delete info.time;
 			let key;
-			if (messageReaction.emoji.name == emojis.save && !userData.music.includes(id)) {
-				if (userData.music.length >= max.video) {
+			if (messageReaction.emoji.name == emojis.save && !userData.music.includes(info)) {
+				if (userData.music.length >= max.track) {
 					const send = await messageReaction.client.utils.sendMessage(messageReaction.message.channel, 'error_full');
 					send.delete({ timeout: 10 * 1000 });
 					return;
 				}
-				userData.music.push(id);
+				userData.music.push(info);
 				key = 'music_add';
-			} else if (messageReaction.emoji.name == emojis.free && userData.music.includes(id)) {
-				userData.music.splice(userData.music.indexOf(id), 1);
+			} else if (messageReaction.emoji.name == emojis.free && userData.music.includes(info)) {
+				userData.music.splice(userData.music.indexOf(info), 1);
 				key = 'music_remove';
 			} else
 				return;
@@ -445,7 +567,7 @@ module.exports = {
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
 		if (!(guildData.music && message.id == guildData.music.message))
 			return;
-		message = await message.client.utils.sendEmbed(message.channel, waitingembed(message.client, message.channel));
+		message = await message.client.utils.sendEmbed(message.channel, waitingEmbed(message.client, message.channel));
 		guildData.music.message = message.id;
 		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
 		for (const emoji of Object.values(emojis)) {
@@ -506,7 +628,7 @@ module.exports = {
 			if (!message) {
 				if (!channel.permissionsFor(client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))
 					continue;
-				message = await client.utils.sendEmbed(channel, waitingembed(client, channel));
+				message = await client.utils.sendEmbed(channel, waitingEmbed(client, channel));
 				guildData.music.message = message.id;
 				client.utils.savFile(`guilds/${guild.id}.json`, guildData);
 				for (const emoji of Object.values(emojis)) {
@@ -533,7 +655,7 @@ module.exports = {
 				const message = channel.messages.cache.get(guildData.music.message);
 				if (!message)
 					return;
-				await message.edit('', { embed: waitingembed(client, message.channel) });
+				await client.utils.replaceEmbed(message, waitingEmbed(client, channel));
 			}
 		delete client.music;
 	}

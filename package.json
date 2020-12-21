@@ -10,17 +10,24 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
+    "bufferutil": "^4.0.2",
     "canvas": "^2.6.1",
     "discord.js": "^12.5.1",
+    "erlpack": "github:discord/erlpack",
     "events": "^3.2.0",
     "ffmpeg-static": "^4.2.7",
     "fs": "^0.0.1-security",
     "libsodium-wrappers": "^0.7.8",
+    "miniget": "^4.1.0",
     "prism-media": "^1.2.3",
+    "soundcloud-downloader": "^0.2.2",
+    "spotify-url-info": "^2.2.0",
+    "utf-8-validate": "^5.0.3",
     "winston": "^3.3.3",
     "ytdl-core": "^4.2.1",
     "ytpl": "^2.0.3",
-    "ytsr": "^3.0.0"
+    "ytsr": "^3.0.0",
+    "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
     "eslint": "^7.16.0"
