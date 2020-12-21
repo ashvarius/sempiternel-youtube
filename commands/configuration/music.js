@@ -482,8 +482,10 @@ module.exports = {
 				const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
 				if (userData.music && userData.music.length) {
 					if (typeof userData.music[0] == 'string') {
-						userData.music = userData.music.map(id => {
-							return { type: types.youtube, id };
+						userData.music = userData.music.map(item => {
+							if (typeof item == 'string')
+								return { type: types.youtube, id: item };
+							return item;
 						});
 						messageReaction.client.utils.savFile(`users/${user.id}.json`, userData);
 					}
