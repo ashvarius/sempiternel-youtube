@@ -1,3 +1,5 @@
+const os = require('os');
+
 module.exports = {
 	name: 'stats',
 	aliases: [],
@@ -5,15 +7,52 @@ module.exports = {
 	description: 'description_stats',
 	command: async command => {
 		const embed = command.message.client.utils.createEmbed();
-		if (command.message.channel.type != 'dm') {
-			embed.addField(command.message.client.utils.getMessage(command.message.channel, 'shard'), command.message.guild.shard.id + 1, true);
-			embed.addField(command.message.client.utils.getMessage(command.message.channel, 'ping'), command.message.guild.shard.ping, true);
-		}
-		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'servers'), command.message.client.guilds.cache.size, true);
-		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'channels'), command.message.client.channels.cache.size, true);
-		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'members'), command.message.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0), true);
-		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'emojis'), command.message.client.emojis.cache.size, true);
-		embed.addField(command.message.client.utils.getMessage(command.message.channel, 'voices'), command.message.client.voice.connections.size, true);
+		embed.addFields([
+			{
+				name: `🔌 ${command.message.client.utils.getMessage(command.message.channel, 'servers')}`,
+				value: command.message.client.guilds.cache.size,
+				inline: true,
+			},
+			{
+				name: `🧑 ${command.message.client.utils.getMessage(command.message.channel, 'users')}`,
+				value: command.message.client.users.cache.size,
+				inline: true,
+			},
+			{
+				name: `🎧 ${command.message.client.utils.getMessage(command.message.channel, 'voices')}`,
+				value: command.message.client.voice.connections.size,
+				inline: true,
+			}
+		]);
+		if (command.message.channel.type != 'dm')
+			embed.addFields([
+				{
+					name: `🏟 ${command.message.client.utils.getMessage(command.message.channel, 'shard')}`,
+					value: command.message.guild.shard.id,
+					inline: true
+				},
+				{
+					name: `⏱ ${command.message.client.utils.getMessage(command.message.channel, 'ping')}`,
+					value: command.message.guild.shard.ping,
+					inline: true
+				}
+			]);
+		embed.addFields({
+			name: `🧮 ${command.message.client.utils.getMessage(command.message.channel, 'ram')}`,
+			value: `${((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(2)}G/${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}G`,
+			inline: true
+		});
+		let totalSeconds = (command.message.client.uptime / 1000);
+		const days = Math.floor(totalSeconds / 86400);
+		totalSeconds %= 86400;
+		const hours = Math.floor(totalSeconds / 3600);
+		totalSeconds %= 3600;
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = Math.floor(totalSeconds % 60);
+		embed.addFields({
+			name: `⏳ ${command.message.client.utils.getMessage(command.message.channel, 'uptime')}`,
+			value: `${days} days, ${hours} hours, ${minutes} minutes and ${seconds} seconds`
+		});
 		command.message.client.utils.sendEmbed(command.message.channel, embed);
 	}
 };

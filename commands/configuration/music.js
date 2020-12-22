@@ -174,6 +174,8 @@ const updateMessage = async (client, guildId) => {
 				content += `\n${index} - [${track.title}](${track.url})`;
 			}
 	}
+	if (!client.music[guildId])
+		return;
 	const send = async () => {
 		if (!client.music[guildId])
 			return;
@@ -254,6 +256,8 @@ const play = async (client, guildId) => {
 			client.logger.log('error', error);
 		}
 	});
+	if (!client.music[guildId])
+		return;
 	if (client.music[guildId].connection.voice.serverMute) {
 		client.music[guildId].connection.dispatcher.pause();
 		await client.music[guildId].connection.voice.setSelfMute(true);

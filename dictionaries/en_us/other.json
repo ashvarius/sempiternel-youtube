@@ -8,6 +8,7 @@
 	"random": "Random",
 	"repeat": "Repeat",
 	"autoplay": "Autoplay",
+	"server": "Server",
 	"servers": "Servers",
 	"channels": "Channels",
 	"users": "Users",
@@ -34,5 +35,9 @@
 	"permissions": "Permissions",
 	"yes": "Yes",
 	"no": "No",
-	"members": "Members"
+	"members": "Members",
+	"processor": "Processor",
+	"ram": "RAM",
+	"uptime": "Uptime",
+	"features": "Features"
 }

@@ -21,5 +21,6 @@
 	"error_channel_exists": "The channel already exists.",
 	"error_full": "It's full, you can't add anything.",
 	"error_too_large_message": "The bot is trying to send a too large message.",
-	"error_too_large": "The `<type>` is too large and should not exceed `<max>`."
+	"error_too_large": "The `<type>` is too large and should not exceed `<max>`.",
+	"error_not_find": "Could not find the `<type>`."
 }

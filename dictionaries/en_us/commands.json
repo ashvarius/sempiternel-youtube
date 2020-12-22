@@ -12,5 +12,6 @@
 	"description_music": "Create a channel to manage music on the bot.",
 	"description_invite": "Get the bot invite link.",
 	"description_stats": "Get bot statistics.",
-	"description_embed": "Send an embed with the bot."
+	"description_embed": "Send an embed with the bot.",
+	"description_server": "Obtain information about a server."
 }
