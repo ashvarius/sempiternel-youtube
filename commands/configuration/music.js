@@ -43,6 +43,16 @@ const generateYoutubeTrack = async (client, info) => {
 			}
 		}
 	});
+	const autoplay = video.response.contents.twoColumnWatchNextResults.autoplay.autoplay.sets;
+	let next;
+	if (autoplay.length) {
+		const parsed = url.parse(video.videoDetails.video_url);
+		next = url.format({
+			protocol: parsed.protocol,
+			hostname: parsed.hostname,
+		});
+		next += autoplay[0].autoplayVideo.commandMetadata.webCommandMetadata.url;
+	}
 	if (video.videoDetails.isLiveContent)
 		return;
 	const format = ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' });
@@ -51,7 +61,10 @@ const generateYoutubeTrack = async (client, info) => {
 		url: video.videoDetails.video_url,
 		id: video.videoDetails.videoId,
 		thumbnail: video.videoDetails.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
-		next: video.related_videos.length && video.related_videos[Math.floor(Math.random() * video.related_videos.length)].id,
+		next: {
+			type: types.youtube,
+			url: next
+		},
 		format: {
 			url: format.url
 		},
@@ -245,10 +258,7 @@ const play = async (client, guildId) => {
 						await add([info], channel, null, true);
 					} else if (client.music[guildId].autoplay && !client.music[guildId].playlist.length) {
 						if (track.next)
-							await add([{
-								type: info.type,
-								id: track.next
-							}], channel, null, true);
+							await add([track.next], channel, null, true);
 					}
 			}
 			await play(client, guildId);
