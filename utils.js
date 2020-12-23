@@ -90,7 +90,7 @@ class Utils {
 			return (this.getMessage(channel, 'error_too_large_message'));
 		return message;
 	}
-	async sendEmbed(channel, embed) {
+	async sendEmbed(channel, embed, force = false) {
 		if (channel.type != 'dm' && !channel.permissionsFor(channel.guild.me).has('EMBED_LINKS')) {
 			const description = channel.client.utils.getMessage(channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' });
 			channel.send(description);
@@ -98,7 +98,7 @@ class Utils {
 		}
 		if (embed.author && embed.author.iconURL && !embed.author.url)
 			embed.author.url = embed.author.iconURL;
-		if (channel.type != 'dm' && channel.guild.webhook) {
+		if (!force && channel.type != 'dm' && channel.guild.webhook) {
 			const webhook = await channel.guild.webhook.edit({ channel }).catch(() => {
 				delete channel.guild.webhook;
 			});
@@ -107,10 +107,10 @@ class Utils {
 		}
 		return await channel.send(embed);
 	}
-	sendMessage(channel, key, object) {
+	sendMessage(channel, key, object, force) {
 		const description = this.getMessage(channel, key, object);
 		const embed = this.createEmbed(description);
-		return this.sendEmbed(channel, embed);
+		return this.sendEmbed(channel, embed, force);
 	}
 	replaceEmbed(message, embed) {
 		if (message.channel.type != 'dm' && !message.channel.permissionsFor(message.guild.me).has('EMBED_LINKS')) {

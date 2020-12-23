@@ -375,7 +375,7 @@ module.exports = {
 			rateLimitPerUser: 5,
 			reason: 'Create a music channel'
 		});
-		const message = await command.message.client.utils.sendEmbed(channel, waitingEmbed(command.message.client, channel));
+		const message = await command.message.client.utils.sendEmbed(channel, waitingEmbed(command.message.client, channel), true);
 		guildData.music = {
 			channel: channel.id,
 			message: message.id
@@ -399,7 +399,7 @@ module.exports = {
 		return channel.id == (guildData.music && guildData.music.channel);
 	},
 	message: async (message) => {
-		if (message.channel.type == 'dm' || message.author.id == message.client.user.id)
+		if (message.author.bot || message.channel.type == 'dm')
 			return;
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
 		if (!guildData.music)
@@ -573,7 +573,7 @@ module.exports = {
 		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
 		if (!(guildData.music && message.id == guildData.music.message))
 			return;
-		message = await message.client.utils.sendEmbed(message.channel, waitingEmbed(message.client, message.channel));
+		message = await message.client.utils.sendEmbed(message.channel, waitingEmbed(message.client, message.channel), true);
 		guildData.music.message = message.id;
 		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
 		for (const emoji of Object.values(emojis)) {
@@ -634,7 +634,7 @@ module.exports = {
 			if (!message) {
 				if (!channel.permissionsFor(client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))
 					continue;
-				message = await client.utils.sendEmbed(channel, waitingEmbed(client, channel));
+				message = await client.utils.sendEmbed(channel, waitingEmbed(client, channel), true);
 				guildData.music.message = message.id;
 				client.utils.savFile(`guilds/${guild.id}.json`, guildData);
 				for (const emoji of Object.values(emojis)) {

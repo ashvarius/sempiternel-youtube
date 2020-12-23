@@ -314,6 +314,8 @@ module.exports = {
 		return false;
 	},
 	ready: (client) => {
+		if (!client.main)
+			return;
 		const botsData = client.utils.readFile('../bots.json');
 		for (const id of Object.keys(botsData))
 			for (const token of botsData[id]) {

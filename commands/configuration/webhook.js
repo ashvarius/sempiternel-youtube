@@ -59,10 +59,10 @@ module.exports = {
 				return;
 			}
 			const name = command.args.slice(1).join(' ');
-			if (name.length > 32) {
+			if (name.length > 80) {
 				command.message.client.utils.sendMessage(command.message.channel, 'error_too_large', {
 					type: command.message.client.utils.getMessage(command.message.channel, 'name'),
-					max: '32 characters'
+					max: '80 characters'
 				});
 				return;
 			}

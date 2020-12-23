@@ -30,7 +30,7 @@ module.exports = {
 				let emoji;
 				while (!emoji) {
 					if (!message)
-						message = await command.message.client.utils.sendMessage(command.message.channel, 'reaction_await_reaction', { role });
+						message = await command.message.client.utils.sendMessage(command.message.channel, 'reaction_await_reaction', { role }, true);
 					else
 						await command.message.client.utils.replaceMessage(message, 'reaction_await_reaction', { role });
 					const reaction = Array.from((await message.awaitReactions((reaction, user) => {
