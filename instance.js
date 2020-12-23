@@ -33,15 +33,12 @@ class DiscordBot extends EventEmitter {
 				for (const var3 of [var1, var2]) {
 					if (var3 && var3.partial)
 						await var3.fetch();
-					if (var3 instanceof VoiceState) {
-						if (!var3.channel)
-							return;
+					if (var3 instanceof VoiceState)
 						await var3.guild.members.fetch({
 							user: var3.id,
 							cache: true,
 							force: false
 						});
-					}
 				}
 			} catch {
 				return;

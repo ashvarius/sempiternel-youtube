@@ -2,6 +2,7 @@ const fs = require('fs');
 const prism = require('prism-media');
 const { MessageEmbed } = require('discord.js');
 const Cache = require('./cache.js');
+const webhook = require('./commands/configuration/webhook.js');
 
 const loadedFiles = new Cache();
 const dictionaries = {};
@@ -89,7 +90,7 @@ class Utils {
 			return (this.getMessage(channel, 'error_too_large_message'));
 		return message;
 	}
-	sendEmbed(channel, embed) {
+	async sendEmbed(channel, embed) {
 		if (channel.type != 'dm' && !channel.permissionsFor(channel.guild.me).has('EMBED_LINKS')) {
 			const description = channel.client.utils.getMessage(channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' });
 			channel.send(description);
@@ -97,7 +98,14 @@ class Utils {
 		}
 		if (embed.author && embed.author.iconURL && !embed.author.url)
 			embed.author.url = embed.author.iconURL;
-		return channel.send(embed);
+		if (channel.type != 'dm' && channel.guild.webhook) {
+			const webhook = await channel.guild.webhook.edit({ channel }).catch(() => {
+				delete channel.guild.webhook;
+			});
+			if (webhook)
+				return await webhook.send(embed);
+		}
+		return await channel.send(embed);
 	}
 	sendMessage(channel, key, object) {
 		const description = this.getMessage(channel, key, object);

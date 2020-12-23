@@ -46,12 +46,19 @@ module.exports = {
 				value: user.createdAt.toUTCString(),
 				inline: true
 			});
-			if (member)
+			if (member) {
 				embed.addFields({
 					name: `🎓 ${command.message.client.utils.getMessage(command.message.channel, 'registration date')}`,
 					value: member.joinedAt.toUTCString(),
 					inline: true
 				});
+				if (member.premiumSince)
+					embed.addFields({
+						name: `🎁 ${command.message.client.utils.getMessage(command.message.channel, 'date of premium purchase')}`,
+						value: member.premiumSince.toUTCString(),
+						inline: true
+					});
+			}
 			const flags = (await user.fetchFlags()).toArray();
 			if (flags.length)
 				embed.addFields({
@@ -59,13 +66,7 @@ module.exports = {
 					value: flags.map(item => `\`${item}\``).join(', '),
 					inline: true
 				});
-			if (member) {
-				if (member.premiumSince)
-					embed.addFields({
-						name: `🎁 ${command.message.client.utils.getMessage(command.message.channel, 'date of premium purchase')}`,
-						value: member.premiumSince.toUTCString(),
-						inline: true
-					});
+			if (member)
 				embed.addFields([
 					{
 						name: `🏆 ${command.message.client.utils.getMessage(command.message.channel, 'roles')}`,
@@ -77,7 +78,6 @@ module.exports = {
 						value: member.permissions.toArray().map(item => `\`${item}\``).join(', ')
 					}
 				]);
-			}
 			command.message.client.utils.sendEmbed(command.message.channel, embed);
 		}
 	}

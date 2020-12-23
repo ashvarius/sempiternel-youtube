@@ -7,23 +7,23 @@ module.exports = {
 			const embed = command.message.client.utils.createEmbed();
 			embed.addField(`${command.prefix}${command.command} add <role>`, command.message.client.utils.getMessage(command.message.channel, 'autorole_help_add'));
 			embed.addField(`${command.prefix}${command.command} remove <role>`, command.message.client.utils.getMessage(command.message.channel, 'autorole_help_remove'));
-			embed.addField(`${command.prefix}${command.command} restore <yes/no>`, command.message.client.utils.getMessage(command.message.channel, 'autorole_help_restore'));
+			embed.addField(`${command.prefix}${command.command} restore <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'autorole_help_restore'));
 			command.message.client.utils.sendEmbed(command.message.channel, embed);
 			return;
 		}
 		const cmd = command.args[0].toLowerCase();
 		if (cmd == 'restore') {
 			const option = command.args[1] && command.args[1].toLowerCase();
-			if (!['yes', 'no'].includes(option)) {
+			if (!['on', 'off'].includes(option)) {
 				const embed = command.message.client.utils.createEmbed();
-				embed.addField(`${command.prefix}${command.command} ${command.args[0]} <yes/no>`, command.message.client.utils.getMessage(command.message.channel, 'autorole_help_restore'));
+				embed.addField(`${command.prefix}${command.command} ${command.args[0]} <on/off>`, command.message.client.utils.getMessage(command.message.channel, 'autorole_help_restore'));
 				command.message.client.utils.sendEmbed(command.message.channel, embed);
 				return;
 			}
 			const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
 			if (!guildData.autorole)
 				guildData.autorole = {};
-			guildData.autorole.restore = option == 'yes';
+			guildData.autorole.restore = option == 'on';
 			command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
 			command.message.client.utils.sendMessage(command.message.channel, 'autorole_restore', { option });
 		} else {

@@ -25,7 +25,11 @@ module.exports = {
 					}
 			const embed = command.message.client.utils.createEmbed();
 			for (const category of Object.keys(commands))
-				embed.addField(`**${command.message.client.utils.getMessage(command.message.channel, category)}** (\`${commands[category].count}\`)`, commands[category].list.join(', '));
+				embed.addFields({
+					name: `${command.message.client.utils.getMessage(command.message.channel, category)} (\`${commands[category].count}\`)`,
+					value: commands[category].list.join(', '),
+					inline: true
+				});
 			command.message.client.utils.sendEmbed(command.message.channel, embed);
 		} else {
 			const cmd = command.args[0].toLowerCase();

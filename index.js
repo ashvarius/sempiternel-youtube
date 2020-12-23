@@ -42,17 +42,4 @@ process.on('SIGINT', () => bot.emit('exit'));
 process.on('uncaughtException', error => logger.log('error', error));
 process.on('unhandledRejection', error => logger.log('error', error));
 
-bot.login().then(() => {
-	const botsData = bot.client.utils.readFile('../bots.json');
-	for (const id of Object.keys(botsData))
-		for (const token of botsData[id]) {
-			const pending = new BotClass(logger, {
-				owners: [
-					id
-				],
-				token
-			});
-			bot.client.bots.push(pending);
-			pending.login();
-		}
-});
+bot.login();

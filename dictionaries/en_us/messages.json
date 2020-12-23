@@ -49,5 +49,9 @@
 	"event_leave_message": "Leave event message has been sent to `<message>`.",
 	"event_message_join": "Welcome <user> to the server.",
 	"event_message_leave": "<user> has left the server.",
-	"invite_success": "Click [here](<link>) to invite the bot."
+	"invite_success": "Click [here](<link>) to invite the bot.",
+	"webhook_activation_on": "Webhook has been activated.",
+	"webhook_activation_off": "Webhook has been desactivated.",
+	"webhook_setname": "The name has been changed.",
+	"webhook_setavatar": "The avatar has been changed."
 }

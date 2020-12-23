@@ -6,7 +6,7 @@ module.exports = {
 		for (const permission of ['MANAGE_ROLES', 'ADD_REACTIONS', 'MANAGE_MESSAGES'])
 			if (!command.message.guild.me.hasPermission(permission)) {
 				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
-					permission: permission
+					permission
 				});
 				return;
 			}

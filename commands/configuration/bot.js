@@ -312,5 +312,19 @@ module.exports = {
 		if (message.client.config.owners.includes(message.author.id))
 			return true;
 		return false;
+	},
+	ready: (client) => {
+		const botsData = client.utils.readFile('../bots.json');
+		for (const id of Object.keys(botsData))
+			for (const token of botsData[id]) {
+				const pending = new client.BotClass(client.logger, {
+					owners: [
+						id
+					],
+					token
+				});
+				client.bots.push(pending);
+				pending.login();
+			}
 	}
 };
