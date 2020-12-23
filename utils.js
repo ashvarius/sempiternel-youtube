@@ -99,11 +99,14 @@ class Utils {
 		if (embed.author && embed.author.iconURL && !embed.author.url)
 			embed.author.url = embed.author.iconURL;
 		if (!force && channel.type != 'dm' && channel.guild.webhook) {
-			const webhook = await channel.guild.webhook.edit({ channel }).catch(() => {
+			try {
+				if (channel.guild.webhook.channelID != channel.id)
+					await channel.guild.webhook.edit({ channel });
+				const message = await channel.guild.webhook.send(embed);
+				return message;
+			} catch {
 				delete channel.guild.webhook;
-			});
-			if (webhook)
-				return await webhook.send(embed);
+			}
 		}
 		return await channel.send(embed);
 	}
