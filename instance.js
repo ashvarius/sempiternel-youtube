@@ -1,4 +1,4 @@
-const { Client, Constants, VoiceState } = require('discord.js');
+const { Client, Constants, VoiceState, MessageEmbed } = require('discord.js');
 const EventEmitter = require('events');
 const fs = require('fs');
 const Utils = require('./utils.js');
@@ -8,6 +8,17 @@ const isLetters = str => {
 	if (str.match(/^[A-Za-z]+$/))
 		return true;
 	return false;
+};
+
+const updateOptions = (client, options = []) => {
+	const new_options = [];
+	for (const option of options) {
+		option.description = client.utils.getMessage(client.config.language, option.description);
+		if (option.options)
+			option.options = updateOptions(client, option.options)
+		new_options.push(option);
+	}
+	return (new_options);
 };
 
 let dispatcher;
@@ -78,66 +89,74 @@ class DiscordBot extends EventEmitter {
 		client.on('warn', m => logger.log('warn', m));
 		client.on('error', m => logger.log('error', m));
 		client.on('shardError', m => logger.log('error', m));
-		client.on('ready', () => {
+		client.on('ready', async () => {
 			if (!client.utils) {
 				setTimeout(() => client.emit('ready'), 100);
 				return;
+			}
+			const commands_registered = await client.api.applications(client.user.id).commands.get();
+			for (const category of Object.keys(commands))
+				for (const command of Object.values(commands[category]))
+					if (!client.config.disable.includes(command.name)) {
+						command.description = client.utils.getMessage(client.config.language, command.description);
+						if (command.options)
+						command.options = updateOptions(client, command.options);
+						let command_registered = commands_registered.find(item => item.name == command.name);
+						if (command_registered != null)
+							if (command_registered.description != command.description
+								|| JSON.stringify(command_registered.options) != JSON.stringify(command.options)) {
+								logger.log('info', `Deleting command ${command.name}...`);
+								await client.api.applications(client.user.id).commands(command_registered.id).delete();
+								command_registered = null;
+							}
+						if (command_registered == null) {
+							logger.log('info', `Creating command ${command.name}...`);
+							await client.api.applications(client.user.id).commands.post({
+								data: {
+									name: command.name,
+									description: command.description,
+									options: command.options
+								}
+							});
+						}
+						commands_registered.splice(commands_registered.indexOf(command_registered), 1);
+					}
+			for (const command_registered of commands_registered) {
+				logger.log('info', `Deleting command ${command_registered.name}...`);
+				client.api.applications(client.user.id).commands(command_registered.id).delete();
 			}
 			dispatcher('ready', client);
 			this.client.user.setPresence(this.client.config.presence);
 			logger.log('info', `${client.user.username} is ready`);
 			this.emit('ready');
 		});
-		client.on('message', async message => {
-			if (message.channel.type == 'text'
-				&& !message.channel.permissionsFor(client.user).has('SEND_MESSAGES'))
-				return;
-			await dispatcher('message', message);
-			let [command, ...args] = message.content.split(' ').filter(item => item.length);
-			if (!command)
-				return;
-			let prefix;
-			if (message.channel.type != 'dm') {
-				prefix = message.guild.prefix;
-				if (!prefix)
-					prefix = config.prefix;
-				if (!command.indexOf(prefix))
-					command = command.slice(prefix.length);
-				else
-					return;
-			} else
-				prefix = '';
-			if (!(command.length && isLetters(command)))
-				return;
-			const cmd = command.toLowerCase();
-			const command_object = {
-				command,
-				args,
-				prefix,
-				message
-			};
-			for (const category of Object.keys(commands))
-				for (const instance of Object.values(commands[category]))
-					if (!client.config.disable.includes(instance.name))
-						if ((instance.name == cmd || instance.aliases.includes(cmd))) {
-							if (instance.protect && instance.protect(message.channel))
+		const command = (object = {}) => {
+			return new Promise(async resolve => {
+				for (const category of Object.keys(commands))
+					for (const instance of Object.values(commands[category]))
+						if (!client.config.disable.includes(instance.name))
+							if (instance.protect && instance.protect(object.channel))
+								resolve();
+				for (const category of Object.keys(commands))
+					for (const instance of Object.values(commands[category]))
+						if (!client.config.disable.includes(instance.name))
+							if ((instance.name == object.name || instance.aliases.includes(object.name))) {
+								if (object.channel.type == 'dm' && !instance.private)
+									resolve(client.utils.getMessage(object.channel, 'error_private_disable'));
+								else if (!client.config.owners.includes(object.user.id)
+									&& instance.permission && !instance.permission(object))
+									resolve(client.utils.getMessage(object.channel, 'error_no_access'));
+								else
+									try {
+										resolve(await instance.command(object));
+									} catch (error) {
+										logger.log('error', error);
+										resolve(client.utils.getMessage(object.channel, 'error', { error }));
+									}
 								return;
-							if (message.channel.type == 'dm' && !instance.private)
-								client.utils.sendMessage(message.channel, 'error_private_disable');
-							else if (!client.config.owners.includes(message.author.id)
-								&& instance.permission && !instance.permission(message))
-								client.utils.sendMessage(message.channel, 'error_no_access');
-							else
-								try {
-									await instance.command(command_object);
-								} catch (error) {
-									client.utils.sendMessage(message.channel, 'error', { error });
-									logger.log('error', error);
-								}
-							return;
-						}
-			client.utils.sendMessage(message.channel, 'error_no_command', { command });
-		});
+							}
+			});
+		};
 		client.on('exit', async (code = 0) => {
 			if (this.exit) {
 				this.emit('exit', code);
@@ -146,6 +165,60 @@ class DiscordBot extends EventEmitter {
 			await this.destroy();
 			if (code)
 				this.login();
+		});
+
+		client.ws.on("INTERACTION_CREATE", async interaction => {
+			if (interaction.type != 2)
+				return;
+			if (interaction.data.options == null)
+				interaction.data.options = [];
+			const object = {
+				name: interaction.data.name,
+				options: interaction.data.options,
+				prefix: '/',
+				client,
+			};
+			let guild;
+			if (interaction.guild_id != null)
+				guild = await client.guilds.fetch(interaction.guild_id);
+			let member;
+			if (guild && interaction.member != null)
+				member = await guild.members.fetch(interaction.member.user.id);
+			let user;
+			if (interaction.user != null)
+				user = await client.users.fetch(interaction.user.id);
+			else if (member)
+				user = member.user;
+			let channel;
+			if (interaction.channel_id)
+				channel = await client.channels.fetch(interaction.channel_id);
+			Object.assign(object, {
+				guild,
+				member,
+				user,
+				channel
+			});
+			command(object).then(message => {
+				let data;
+				if (message == null)
+					data = {
+						type: 5
+					};
+				else {
+					let embed;
+					if (message instanceof MessageEmbed)
+						embed = message;
+					else
+						embed = client.utils.createEmbed(message);
+					data = {
+						type: 4,
+						data: {
+							embeds: [embed]
+						}
+					};
+				}
+				client.api.interactions(interaction.id, interaction.token).callback.post({ data });
+			});
 		});
 		const register = Object.keys(client._events);
 		for (const event of Object.values(Constants.Events))

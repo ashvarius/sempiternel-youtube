@@ -2,7 +2,6 @@ const fs = require('fs');
 const prism = require('prism-media');
 const { MessageEmbed } = require('discord.js');
 const Cache = require('./cache.js');
-const webhook = require('./commands/configuration/webhook.js');
 
 const loadedFiles = new Cache();
 const dictionaries = {};
@@ -61,24 +60,14 @@ class Utils {
 		embed.setColor(this.client.config.color);
 		return embed;
 	}
-	getDictionary(object) {
-		let dictionary = object.dictionary;
-		if (!dictionary) {
-			let language = object.language;
-			if (!language)
-				language = this.client.config.language;
-			dictionary = dictionaries[language];
-			object.dictionary = dictionary;
-		}
-		Object.assign(dictionary, dictionaries.errors);
+	getDictionary(language) {
+		let dictionary = dictionaries[language];
+		if (!dictionary)
+			dictionary = dictionaries[this.client.config.language];
 		return dictionary;
 	}
-	getMessage(channel, key, object = {}) {
-		let dictionary;
-		if (channel.type == 'dm')
-			dictionary = this.getDictionary(channel.recipient);
-		else
-			dictionary = this.getDictionary(channel.guild);
+	getMessage(language, key, object = {}) {
+		const dictionary = this.getDictionary(language);
 		let message = dictionary[key];
 		if (!message) {
 			message = dictionary.error_no_message;
@@ -87,38 +76,24 @@ class Utils {
 		for (const key of Object.keys(object))
 			message = `${message}`.replace(new RegExp(`<${key}>`, 'g'), object[key]);
 		if (message.length > 2048)
-			return (this.getMessage(channel, 'error_too_large_message'));
+			return (this.getMessage(language, 'error_too_large_message'));
 		return message;
 	}
-	async sendEmbed(channel, embed, force = false) {
+	async sendEmbed(channel, embed) {
 		if (channel.type != 'dm' && !channel.permissionsFor(channel.guild.me).has('EMBED_LINKS')) {
-			const description = channel.client.utils.getMessage(channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' });
-			channel.send(description);
+			channel.send(channel.client.utils.getMessage(channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' }));
 			return;
 		}
 		if (embed.author && embed.author.iconURL && !embed.author.url)
 			embed.author.url = embed.author.iconURL;
-		if (!force && channel.type != 'dm' && channel.guild.webhook) {
-			try {
-				if (channel.guild.webhook.channelID != channel.id)
-					await channel.guild.webhook.edit({ channel });
-				const message = await channel.guild.webhook.send(embed);
-				return message;
-			} catch {
-				delete channel.guild.webhook;
-			}
-		}
 		return await channel.send(embed);
 	}
-	sendMessage(channel, key, object, force) {
-		const description = this.getMessage(channel, key, object);
-		const embed = this.createEmbed(description);
-		return this.sendEmbed(channel, embed, force);
+	sendMessage(channel, key, object) {
+		return this.sendEmbed(channel, this.createEmbed(this.getMessage(channel, key, object)));
 	}
 	replaceEmbed(message, embed) {
 		if (message.channel.type != 'dm' && !message.channel.permissionsFor(message.guild.me).has('EMBED_LINKS')) {
-			const description = message.client.utils.getMessage(message.channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' });
-			message.edit(description);
+			channel.edit(message.channel.client.utils.getMessage(message.channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' }));
 			return;
 		}
 		if (embed.author && embed.author.iconURL && !embed.author.url)
@@ -126,9 +101,7 @@ class Utils {
 		return message.edit(embed);
 	}
 	replaceMessage(message, key, object) {
-		const description = this.getMessage(message.channel, key, object);
-		const embed = this.createEmbed(description);
-		return this.replaceEmbed(message, embed);
+		return this.replaceEmbed(this.createEmbed(this.getMessage(message.channel, key, object)), embed);
 	}
 	generateTranscoder(url, { start = 0, args } = {}) {
 		let options = [
@@ -155,13 +128,6 @@ class Utils {
 		}, { opus });
 		opus.pipe(dispatcher);
 		return dispatcher;
-	}
-	getUserFromMention(mention) {
-		const matches = mention.match(/^<@!?(\d+)>$/);
-		if (!matches)
-			return this.client.users.fetch(mention).catch(() => { });
-		const id = matches[1];
-		return this.client.users.fetch(id);
 	}
 	createCache(limit) {
 		return new Cache(limit);
