@@ -27,11 +27,11 @@ const logger = winston.createLogger({
 const bot = new BotClass(logger, {}, require('./config.json').client);
 bot.client.main = true;
 bot.client.BotClass = BotClass;
-bot.client.bots = [];
+bot.client.bot = [];
 
 bot.exit = true;
 bot.on('exit', async (code = 0) => {
-	for (const instance of bot.client.bots)
+	for (const instance of bot.client.bot)
 		if (instance != bot)
 			await instance.client.emit('exit');
 	await bot.destroy();

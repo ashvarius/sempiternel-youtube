@@ -4,11 +4,6 @@ const fs = require('fs');
 const admin = require('firebase-admin');
 const Utils = require('./utils.js');
 const default_config = require('./config.json');
-const isLetters = str => {
-	if (str.match(/^[A-Za-z]+$/))
-		return true;
-	return false;
-};
 
 const updateOptions = (client, options = []) => {
 	const new_options = [];
@@ -93,19 +88,20 @@ class DiscordBot extends EventEmitter {
 		client.on('error', m => logger.log('error', m));
 		client.on('shardError', m => logger.log('error', m));
 		client.on('ready', async () => {
-			if (!client.utils) {
+			if (client.utils == null) {
 				setTimeout(() => client.emit('ready'), 100);
 				return;
 			}
-			Object.assign(this.client.config, await this.client.utils.readFile('config.json'));
-			if (this.client.config.presence == null)
-				this.client.config.presence = {
+			Object.assign(client.config, await client.utils.readFile(client.utils.firestore.collection('bot').doc(client.user.id)));
+			console.log(client.config);
+			if (client.config.presence == null)
+				client.config.presence = {
 					activity: {
 						name: 'his program',
 						type: 'LISTENING'
 					}
 				};
-			this.client.config.presence.status = 'online';
+			client.config.presence.status = 'online';
 			const commands_registered = await client.api.applications(client.user.id).commands.get();
 			for (const category of Object.keys(commands))
 				for (let command of Object.values(commands[category]))

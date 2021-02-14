@@ -19,44 +19,63 @@ class Utils {
 	constructor(client, firestore) {
 		this.client = client;
 		this.firestore = firestore;
-		if (fs.existsSync('data') && fs.existsSync(`data/${client.user.id}`))
-		for (const folder of fs.readdirSync(`data/${client.user.id}`)) {
-			for (const file of fs.readdirSync(`data/${client.user.id}/${folder}`))
-			{
-				const path = `data/${client.user.id}/${folder}/${file}`;
-				this.savFile(`${folder}/${file}`, JSON.parse(fs.readFileSync(path)))
-					.then(() => fs.unlinkSync(path));
-			}
-			fs.rmdirSync(`data/${client.user.id}/${folder}`);
-		}
+		if (this.client.main)
+			if (fs.existsSync('data')) {
+				for (const bot_id of fs.readdirSync('data'))
+					if (bot_id != "bots.json") {
+						let config = {};
+						if (fs.existsSync(`data/${bot_id}/config.json`)) {
+							config = JSON.parse(fs.readFileSync(`data/${bot_id}/config.json`));
+							fs.unlinkSync(`data/${bot_id}/config.json`);
+						}
+						if (bot_id == this.client.user.id
+							&& fs.existsSync(`data/bots.json`)) {
+							config.bot = JSON.parse(fs.readFileSync(`data/bots.json`));
+							fs.unlinkSync(`data/bots.json`);
+							}
+						const docRef = this.firestore.collection('bot').doc(bot_id);
+						docRef.set(config);
+						if (fs.existsSync(`data/${bot_id}/users`)) {
+							for (const file of fs.readdirSync(`data/${bot_id}/users`)) {
+								docRef.collection('user').doc(file.split('.')[0]).set(JSON.parse(fs.readFileSync(`data/${bot_id}/users/${file}`)));
+								fs.unlinkSync(`data/${bot_id}/users/${file}`);
+							}
+							fs.rmdirSync(`data/${bot_id}/users`);
+						}
+						if (fs.existsSync(`data/${bot_id}/guilds`)) {
+							for (const file of fs.readdirSync(`data/${bot_id}/guilds`)) {
+								docRef.collection('guild').doc(file.split('.')[0]).set(JSON.parse(fs.readFileSync(`data/${bot_id}/guilds/${file}`)));
+								fs.unlinkSync(`data/${bot_id}/guilds/${file}`);
+							}
+							fs.rmdirSync(`data/${bot_id}/guilds`);
+						}
+						fs.rmdirSync(`data/${bot_id}`);
+					}
+					fs.rmdirSync(`data`);
+				}
 	}
-	async savFile(path, object) {
+	async savFile(docRef, object) {
 		if (!object)
 			throw 'object undefined';
-		if (loadedFiles.get(path) == object)
+		if (loadedFiles.get(docRef.path) == object)
 			return object;
-		let docRef = this.firestore;
-		for (const item of path.split('/'))
-			docRef = docRef.collection(item).doc(this.client.user.id);
 		await docRef.set(object);
-		loadedFiles.set(path, object);
+		loadedFiles.set(docRef.path, object);
 		return object;
 	}
-	async readFile(path) {
-		if (loadedFiles.get(path))
-			return loadedFiles.get(path);
-		let docRef = this.firestore;
-		for (const item of path.split('/'))
-			docRef = docRef.collection(item).doc(this.client.user.id);
+	async readFile(docRef) {
+		if (loadedFiles.get(docRef.path))
+			return loadedFiles.get(docRef.path);
 		const doc = await docRef.get();
 		if (doc.exists)
-			return doc.data();
+		{
+			const object = doc.data();
+			loadedFiles.set(docRef.path, object);
+			return object;
+		}
 		return {};
 	}
-	deleteFile(path) {
-		let docRef = this.firestore;
-		for (const item of path.split('/'))
-			docRef = docRef.collection(item).doc(this.client.user.id);
+	deleteFile(docRef) {
 		return docRef.delete();
 	}
 	createEmbed(description) {
