@@ -5,10 +5,12 @@
 	],
 	"token": "NzA1Mzc2MTE0NTQwODA2MTc0.Xqqysg.sIVtR6w8hKETysuvjHtvOh3Fx-Y",
 	"permissions": [
+		"ADMINISTRATOR",
 		"BAN_MEMBERS",
 		"MANAGE_CHANNELS",
 		"ADD_REACTIONS",
 		"VIEW_AUDIT_LOG",
+		"VIEW_CHANNEL",
 		"SEND_MESSAGES",
 		"MANAGE_MESSAGES",
 		"EMBED_LINKS",
@@ -25,5 +27,17 @@
 	"background": "https://cdn.discordapp.com/attachments/637413011392299009/786610421498380358/Untitled.jpg",
 	"client": {
 		"shards": "auto"
+	},
+	"firebase-credential": {
+		"type": "service_account",
+		"project_id": "sempiternel-discord",
+		"private_key_id": "89e2d458514b9faa31867aacb7525c57fd50cf1c",
+		"private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDJyZPc9zrgZ9Vx\nAdkXf/kNOc4z/kqcSr7qmEXYaD3LhAwccniB1H+3vdJp8TFSEvMLkVxw7n1Qh5JE\nUnM2GelErqHkdROBiV+2b1fNuOLyklecwJukQMGlOdPHexmUJykyOj3MIqR2nWsH\nkdv8hHL+XxDCrJiKJgaOhEWBItopAohPr66f+fFgEKS/9CY/hZOzz0kybyP3XVFb\nAzTFsPoFFV7sn+JixbvzTkkcSHl3t8T+55jejztETfOK+zBabShPvMeEcdNKZO38\nDYYvsbNn1DtabE70iY4JyfLU0jiKeFB8WaLQ/JYjGuTW3lAY1UesPgidJoSLvMwd\nCmZt6r/XAgMBAAECggEAEQ9DuviujO5Ps0AkFG0zUb+YrqNJt4ZHjG8skyvXnZnK\nVFVb2XjCW3cRj6IJOMEgCdL+QmXx85mimg1xGW/TXYUjbBHMgQprgcb5YLZy1BiJ\n46y8+9lQWyGqb+ujsUzQ73gmZVhrGG7H7687LqbGpLlwzKSUON8XdXu6oeefvhEG\nvQBaTqQ+bhe56rN1ZQTs6doKMMw6+uMbquhXqm8r/2aD8f1PS+vZBNdMIoLQRZiw\nC+M65bfHSLTcCNVX2nuvMUzSIrpxKzU4DanHUAmD9qZbcpJV76h/7KIIGxEmPnJU\nrsDliMLlVFFw3pGcaO+h3NJWKhnMFKkLE1cOD0zxEQKBgQD+QFloRmWQTpMORrxb\nN+BbHH+gc6PRcLsIf8JlkyXFGT8+vy385biOJNx7wr+FdeNqWASdNDXkJrv2r25H\n3pHDe0yYRSWmd44zWaToszLAuLCFTh8jg6qka6YQmPf+gWxLuWR4sxYsHUJErhvd\nNjcLRfnv1Db5t0yuAapn9ezPxQKBgQDLLNtnkhuNiBqeZpx7cd5c5vQM6EQMPpUq\n+i2vb1cRoDknwy4Cglu2efBDXPjKtnkSZLHRFVNpJLW3GqHKlSLur/emQiKwVfpm\n1213uxwqB1fa99vK97RFM/c/XFpOA5lhhQCcGh9NYcl6Pab9QXzuqeYyJWA9jk9q\n4UZ8hvJO6wKBgFWV+cLFN7kdChmbLBqUs5xX+opbgwCkrwEMaLbikqtHdWe82VEx\nTy/iLqomg2v8pCIPIPZ+NcnoVAuVQE1HGdAw+DalyCfCRQb6HS4L7IC9awZkpszA\nrLeOWSdrJsfwbzEKZkzPFB6jdsRBy7VqY5sS4jCeQidLUa+ddexq9111AoGAFK2W\nDu5x22+0tdZfqrimFvJyeDXTZyOfbuZTa/168RJLft6AekTmLKYwa8q0j30OyW5y\nIoN3H8ZasC4HtWSET6KdI9CrUyMM/xaBz6O9dBGXQXPkbL3VHQ3y5gHyNupq29/7\ndee6s9d19/j6W+AkZO3pvcTMDLfFIW2YDOh3FM0CgYEA0hIL1R8rpf8onU0xwzQx\nxRaXEQ7CbW5hPmf12zdYR0fTBE+TeGFPokpUzvi/BmKkTgYRMf92ffz3QT05ntDL\nAJ/NeR9qrGGx+3Cma+xdTJ6L8J6po5Jsxi74kKTrP5fUU5MkXdnWJGXDwVJwhlUT\nxIrcnS0FHsH6qoJJTFAJpIY=\n-----END PRIVATE KEY-----\n",
+		"client_email": "firebase-adminsdk-y0coh@sempiternel-discord.iam.gserviceaccount.com",
+		"client_id": "110141638150700737246",
+		"auth_uri": "https://accounts.google.com/o/oauth2/auth",
+		"token_uri": "https://oauth2.googleapis.com/token",
+		"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-y0coh%40sempiternel-discord.iam.gserviceaccount.com"
 	}
 }

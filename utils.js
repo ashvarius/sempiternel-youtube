@@ -16,42 +16,48 @@ if (fs.existsSync('dictionaries'))
 	}
 
 class Utils {
-	constructor(client) {
+	constructor(client, firestore) {
 		this.client = client;
-		this.path = `data/${this.client.user.id}`;
+		this.firestore = firestore;
+		if (fs.existsSync('data') && fs.existsSync(`data/${client.user.id}`))
+		for (const folder of fs.readdirSync(`data/${client.user.id}`)) {
+			for (const file of fs.readdirSync(`data/${client.user.id}/${folder}`))
+			{
+				const path = `data/${client.user.id}/${folder}/${file}`;
+				this.savFile(`${folder}/${file}`, JSON.parse(fs.readFileSync(path)))
+					.then(() => fs.unlinkSync(path));
+			}
+			fs.rmdirSync(`data/${client.user.id}/${folder}`);
+		}
 	}
-	savFile(path, object) {
+	async savFile(path, object) {
 		if (!object)
 			throw 'object undefined';
 		if (loadedFiles.get(path) == object)
 			return object;
-		path = `${this.path}/${path}`;
-		if (!fs.existsSync(path))
-			fs.mkdirSync(path.slice(0, path.lastIndexOf('/')), { recursive: true });
-		fs.writeFileSync(path, JSON.stringify(object));
+		let docRef = this.firestore;
+		for (const item of path.split('/'))
+			docRef = docRef.collection(item).doc(this.client.user.id);
+		await docRef.set(object);
 		loadedFiles.set(path, object);
 		return object;
 	}
-	readFile(path) {
-		path = `${this.path}/${path}`;
+	async readFile(path) {
 		if (loadedFiles.get(path))
 			return loadedFiles.get(path);
-		if (fs.existsSync(path)) {
-			const parsed = JSON.parse(fs.readFileSync(path));
-			loadedFiles.set(path, parsed);
-			return parsed;
-		}
+		let docRef = this.firestore;
+		for (const item of path.split('/'))
+			docRef = docRef.collection(item).doc(this.client.user.id);
+		const doc = await docRef.get();
+		if (doc.exists)
+			return doc.data();
 		return {};
 	}
 	deleteFile(path) {
-		path = `${this.path}/${path}`;
-		if (!fs.statSync(path).isDirectory()) {
-			fs.unlinkSync(path);
-			return;
-		}
-		for (const filename of fs.readdirSync(path))
-			this.deleteFile(`${path}/${filename}`);
-		fs.rmdirSync(path);
+		let docRef = this.firestore;
+		for (const item of path.split('/'))
+			docRef = docRef.collection(item).doc(this.client.user.id);
+		return docRef.delete();
 	}
 	createEmbed(description) {
 		const embed = new MessageEmbed();

@@ -1,9 +1,9 @@
 const { Client, Constants, VoiceState, MessageEmbed } = require('discord.js');
 const EventEmitter = require('events');
 const fs = require('fs');
+const admin = require('firebase-admin');
 const Utils = require('./utils.js');
 const default_config = require('./config.json');
-
 const isLetters = str => {
 	if (str.match(/^[A-Za-z]+$/))
 		return true;
@@ -63,6 +63,9 @@ class DiscordBot extends EventEmitter {
 							logger.log('error', error);
 						}
 		};
+		this.firebase = admin.initializeApp({
+			credential: admin.credential.cert(config['firebase-credential'])
+		});
 		const client = this.client = new Client(Object.assign({
 			messageCacheLifetime: 60 * 60,
 			messageSweepInterval: 10 * 60,
@@ -94,10 +97,20 @@ class DiscordBot extends EventEmitter {
 				setTimeout(() => client.emit('ready'), 100);
 				return;
 			}
+			Object.assign(this.client.config, await this.client.utils.readFile('config.json'));
+			if (this.client.config.presence == null)
+				this.client.config.presence = {
+					activity: {
+						name: 'his program',
+						type: 'LISTENING'
+					}
+				};
+			this.client.config.presence.status = 'online';
 			const commands_registered = await client.api.applications(client.user.id).commands.get();
 			for (const category of Object.keys(commands))
-				for (const command of Object.values(commands[category]))
+				for (let command of Object.values(commands[category]))
 					if (!client.config.disable.includes(command.name)) {
+						command = JSON.parse(JSON.stringify(command));
 						command.description = client.utils.getMessage(client.config.language, command.description);
 						if (command.options)
 						command.options = updateOptions(client, command.options);
@@ -126,7 +139,8 @@ class DiscordBot extends EventEmitter {
 				client.api.applications(client.user.id).commands(command_registered.id).delete();
 			}
 			dispatcher('ready', client);
-			this.client.user.setPresence(this.client.config.presence);
+			this.client.options.presence = this.client.config.presence;
+			await this.client.user.setPresence(this.client.options.presence);
 			logger.log('info', `${client.user.username} is ready`);
 			this.emit('ready');
 		});
@@ -227,7 +241,7 @@ class DiscordBot extends EventEmitter {
 					dispatcher(event, var1, var2);
 				});
 	}
-	login(token, firestore) {
+	login(token) {
 		if (token)
 			this.token = token;
 		if (this.client.ws.destroyed) {
@@ -235,17 +249,8 @@ class DiscordBot extends EventEmitter {
 			this.client.ws.status = Constants.Status.IDLE;
 		}
 		return new Promise((executor, reject) => {
-			this.client.login(this.client.config.token).then(token => {
-				this.client.utils = new Utils(this.client);
-				Object.assign(this.client.config, this.client.utils.readFile('config.json'));
-				if (!this.client.config.presence)
-					this.client.config.presence = {
-						activity: {
-							name: 'his program',
-							type: 'LISTENING'
-						}
-					};
-				this.client.config.presence.status = 'online';
+			this.client.login(this.client.config.token).then(async token => {
+				this.client.utils = new Utils(this.client, this.firebase.firestore());
 				this.client.user.setPresence({
 					status: 'idle',
 					activity: {
