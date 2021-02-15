@@ -10,7 +10,7 @@ const updateOptions = (client, options = []) => {
 	for (const option of options) {
 		option.description = client.utils.getMessage(client.config.language, option.description);
 		if (option.options)
-			option.options = updateOptions(client, option.options)
+			option.options = updateOptions(client, option.options);
 		new_options.push(option);
 	}
 	return (new_options);
@@ -92,8 +92,7 @@ class DiscordBot extends EventEmitter {
 				setTimeout(() => client.emit('ready'), 100);
 				return;
 			}
-			Object.assign(client.config, await client.utils.readFile(client.utils.firestore.collection('bot').doc(client.user.id)));
-			console.log(client.config);
+			Object.assign(client.config, await client.utils.readFile(client.utils.docRef));
 			if (client.config.presence == null)
 				client.config.presence = {
 					activity: {
@@ -109,7 +108,7 @@ class DiscordBot extends EventEmitter {
 						command = JSON.parse(JSON.stringify(command));
 						command.description = client.utils.getMessage(client.config.language, command.description);
 						if (command.options)
-						command.options = updateOptions(client, command.options);
+							command.options = updateOptions(client, command.options);
 						let command_registered = commands_registered.find(item => item.name == command.name);
 						if (command_registered != null)
 							if (command_registered.description != command.description
@@ -134,23 +133,26 @@ class DiscordBot extends EventEmitter {
 				logger.log('info', `Deleting command ${command_registered.name}...`);
 				client.api.applications(client.user.id).commands(command_registered.id).delete();
 			}
-			dispatcher('ready', client);
+			await dispatcher('ready', client);
 			this.client.options.presence = this.client.config.presence;
 			await this.client.user.setPresence(this.client.options.presence);
 			logger.log('info', `${client.user.username} is ready`);
 			this.emit('ready');
 		});
 		const command = (object = {}) => {
+			// eslint-disable-next-line no-async-promise-executor
 			return new Promise(async resolve => {
 				for (const category of Object.keys(commands))
 					for (const instance of Object.values(commands[category]))
 						if (!client.config.disable.includes(instance.name))
-							if (instance.protect && instance.protect(object.channel))
+							if (instance.protect && await instance.protect(object.channel)) {
 								resolve();
+								return;
+							}
 				for (const category of Object.keys(commands))
 					for (const instance of Object.values(commands[category]))
 						if (!client.config.disable.includes(instance.name))
-							if ((instance.name == object.name || instance.aliases.includes(object.name))) {
+							if (instance.name == object.name) {
 								if (object.channel.type == 'dm' && !instance.private)
 									resolve(client.utils.getMessage(object.channel, 'error_private_disable'));
 								else if (!client.config.owners.includes(object.user.id)
@@ -177,7 +179,7 @@ class DiscordBot extends EventEmitter {
 				this.login();
 		});
 
-		client.ws.on("INTERACTION_CREATE", async interaction => {
+		client.ws.on('INTERACTION_CREATE', async interaction => {
 			if (interaction.type != 2)
 				return;
 			if (interaction.data.options == null)
@@ -208,27 +210,26 @@ class DiscordBot extends EventEmitter {
 				user,
 				channel
 			});
-			command(object).then(message => {
-				let data;
-				if (message == null)
-					data = {
-						type: 5
-					};
-				else {
-					let embed;
-					if (message instanceof MessageEmbed)
-						embed = message;
-					else
-						embed = client.utils.createEmbed(message);
-					data = {
-						type: 4,
-						data: {
-							embeds: [embed]
-						}
-					};
-				}
-				client.api.interactions(interaction.id, interaction.token).callback.post({ data });
-			});
+			const message = await command(object);
+			let data;
+			if (message == null)
+				data = {
+					type: 2
+				};
+			else {
+				let embed;
+				if (message instanceof MessageEmbed)
+					embed = message;
+				else
+					embed = client.utils.createEmbed(message);
+				data = {
+					type: 4,
+					data: {
+						embeds: [embed]
+					}
+				};
+			}
+			client.api.interactions(interaction.id, interaction.token).callback.post({ data });
 		});
 		const register = Object.keys(client._events);
 		for (const event of Object.values(Constants.Events))

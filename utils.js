@@ -19,20 +19,21 @@ class Utils {
 	constructor(client, firestore) {
 		this.client = client;
 		this.firestore = firestore;
+		this.docRef = firestore.collection('bot').doc(client.user.id);
 		if (this.client.main)
 			if (fs.existsSync('data')) {
 				for (const bot_id of fs.readdirSync('data'))
-					if (bot_id != "bots.json") {
+					if (bot_id != 'bots.json') {
 						let config = {};
 						if (fs.existsSync(`data/${bot_id}/config.json`)) {
 							config = JSON.parse(fs.readFileSync(`data/${bot_id}/config.json`));
 							fs.unlinkSync(`data/${bot_id}/config.json`);
 						}
 						if (bot_id == this.client.user.id
-							&& fs.existsSync(`data/bots.json`)) {
-							config.bot = JSON.parse(fs.readFileSync(`data/bots.json`));
-							fs.unlinkSync(`data/bots.json`);
-							}
+							&& fs.existsSync('data/bots.json')) {
+							config.bot = JSON.parse(fs.readFileSync('data/bots.json'));
+							fs.unlinkSync('data/bots.json');
+						}
 						const docRef = this.firestore.collection('bot').doc(bot_id);
 						docRef.set(config);
 						if (fs.existsSync(`data/${bot_id}/users`)) {
@@ -51,29 +52,32 @@ class Utils {
 						}
 						fs.rmdirSync(`data/${bot_id}`);
 					}
-					fs.rmdirSync(`data`);
-				}
+				fs.rmdirSync('data');
+			}
 	}
 	async savFile(docRef, object) {
 		if (!object)
 			throw 'object undefined';
-		if (loadedFiles.get(docRef.path) == object)
+		if (Object.is(loadedFiles.get(docRef.path), object))
 			return object;
 		await docRef.set(object);
 		loadedFiles.set(docRef.path, object);
 		return object;
 	}
 	async readFile(docRef) {
+		let object = null;
 		if (loadedFiles.get(docRef.path))
-			return loadedFiles.get(docRef.path);
-		const doc = await docRef.get();
-		if (doc.exists)
-		{
-			const object = doc.data();
-			loadedFiles.set(docRef.path, object);
-			return object;
+			object = loadedFiles.get(docRef.path);
+		else {
+			const doc = await docRef.get();
+			if (doc.exists) {
+				object = doc.data();
+				loadedFiles.set(docRef.path, object);
+			}
 		}
-		return {};
+		if (object == null)
+			return {};
+		return JSON.parse(JSON.stringify(object));
 	}
 	deleteFile(docRef) {
 		return docRef.delete();
@@ -118,7 +122,7 @@ class Utils {
 	}
 	replaceEmbed(message, embed) {
 		if (message.channel.type != 'dm' && !message.channel.permissionsFor(message.guild.me).has('EMBED_LINKS')) {
-			channel.edit(message.channel.client.utils.getMessage(message.channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' }));
+			message.edit(message.client.utils.getMessage(message.channel, 'error_bot_no_permission', { permission: 'EMBED_LINKS' }));
 			return;
 		}
 		if (embed.author && embed.author.iconURL && !embed.author.url)
@@ -126,7 +130,7 @@ class Utils {
 		return message.edit(embed);
 	}
 	replaceMessage(message, key, object) {
-		return this.replaceEmbed(this.createEmbed(this.getMessage(message.channel, key, object)), embed);
+		return this.replaceEmbed(message, this.createEmbed(this.getMessage(message.channel, key, object)));
 	}
 	generateTranscoder(url, { start = 0, args } = {}) {
 		let options = [

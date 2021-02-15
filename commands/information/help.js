@@ -1,20 +1,37 @@
 module.exports = {
 	name: 'help',
-	aliases: [],
 	private: true,
 	description: 'description_help',
-	command: command => {
-		if (!command.args.length) {
-			const private = command.message.channel.type == 'dm';
+	options: [
+		{
+			type: 3,
+			name: 'string',
+			description: 'description_help'
+		}
+	],
+	command: object => {
+		if (object.options.length) {
+			const command = object.options[0].value.toLowerCase();
+			for (const category of Object.keys(object.client.commands))
+				for (const instance of Object.values(object.client.commands[category]))
+					if (!object.client.config.disable.includes(instance.name))
+						if (instance.name == command) {
+							const embed = object.client.utils.createEmbed();
+							embed.addField(object.client.utils.getMessage(object.channel, 'name'), `\`${instance.name}\``);
+							embed.addField(object.client.utils.getMessage(object.channel, 'description'), object.client.utils.getMessage(object.channel, instance.description));
+							return embed;
+						}
+			return object.client.utils.getMessage(object.channel, 'error_no_command', { command });
+		} else {
 			const commands = {};
-			for (const category of Object.keys(command.message.client.commands))
-				for (const instance of Object.values(command.message.client.commands[category]))
-					if (!command.message.client.config.disable.includes(instance.name)
-						&& (!private
+			for (const category of Object.keys(object.client.commands))
+				for (const instance of Object.values(object.client.commands[category]))
+					if (!object.client.config.disable.includes(instance.name)
+						&& (object.channel.type != 'dm'
 							|| instance.private)
-						&& (command.message.client.config.owners.includes(command.message.author.id)
+						&& (object.client.config.owners.includes(object.user.id)
 							|| !instance.permission
-							|| instance.permission(command.message))) {
+							|| instance.permission(object))) {
 						if (!commands[category])
 							commands[category] = {
 								count: 0,
@@ -23,28 +40,14 @@ module.exports = {
 						commands[category].count++;
 						commands[category].list.push(`\`${instance.name}\``);
 					}
-			const embed = command.message.client.utils.createEmbed();
+			const embed = object.client.utils.createEmbed();
 			for (const category of Object.keys(commands))
 				embed.addFields({
-					name: `${command.message.client.utils.getMessage(command.message.channel, category)} (\`${commands[category].count}\`)`,
+					name: `${object.client.utils.getMessage(object.channel, category)} (\`${commands[category].count}\`)`,
 					value: commands[category].list.join(', '),
 					inline: true
 				});
-			command.message.client.utils.sendEmbed(command.message.channel, embed);
-		} else {
-			const cmd = command.args[0].toLowerCase();
-			for (const category of Object.keys(command.message.client.commands))
-				for (const instance of Object.values(command.message.client.commands[category]))
-					if (!command.message.client.config.disable.includes(instance.name))
-						if (instance.name == cmd || instance.aliases.includes(cmd)) {
-							const embed = command.message.client.utils.createEmbed();
-							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'name'), `\`${instance.name}\``);
-							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'aliases'), instance.aliases.length ? `\`${instance.aliases.join('`, `')}\`` : command.message.client.utils.getMessage(command.message.channel, 'nothing'));
-							embed.addField(command.message.client.utils.getMessage(command.message.channel, 'description'), command.message.client.utils.getMessage(command.message.channel, instance.description));
-							command.message.client.utils.sendEmbed(command.message.channel, embed);
-							return;
-						}
-			command.message.client.utils.sendMessage(command.message.channel, 'error_no_command', { command: cmd });
+			return embed;
 		}
 	}
 };
