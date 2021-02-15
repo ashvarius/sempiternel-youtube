@@ -8,6 +8,8 @@ const default_config = require('./config.json');
 const updateOptions = (client, options = []) => {
 	const new_options = [];
 	for (const option of options) {
+		if (option.type > 2)
+			option.name = client.utils.getMessage(client.config.language, option.name).toLowerCase();
 		option.description = client.utils.getMessage(client.config.language, option.description);
 		if (option.options)
 			option.options = updateOptions(client, option.options);

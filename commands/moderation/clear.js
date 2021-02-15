@@ -5,15 +5,15 @@ module.exports = {
 		{
 			type: 4,
 			name: 'integer',
-			description: 'description_user'
+			description: 'description_clear',
+			required: true
 		}
 	],
 	command: async object => {
-		if (!object.guild.me.hasPermission('MANAGE_MESSAGES')) {
+		if (!object.guild.me.hasPermission('MANAGE_MESSAGES'))
 			return object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
 				permission: 'MANAGE_MESSAGES'
 			});
-		}
 		let number = object.options[0].value;
 		let deleted = 0;
 		while (number) {

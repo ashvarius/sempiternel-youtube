@@ -42,5 +42,13 @@
 	"features": "Features",
 	"index": "Index",
 	"type": "Type",
-	"user": "User"
+	"string": "String",
+	"integer": "Integer",
+	"boolean": "Boolean",
+	"user": "User",
+	"channel": "Channel",
+	"role": "Role",
+	"title": "Title",
+	"footer": "Footer",
+	"image": "Image"
 }
