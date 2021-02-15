@@ -50,5 +50,6 @@
 	"role": "Role",
 	"title": "Title",
 	"footer": "Footer",
-	"image": "Image"
+	"image": "Image",
+	"bassboost": "Bass Boost"
 }

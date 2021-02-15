@@ -1,16 +1,18 @@
 const ytdl = require('ytdl-core');
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
-const spotify = require('spotify-url-info');
 const scdl = require('soundcloud-downloader').create({ saveClientID: true });
+const spotify = require('spotify-url-info');
 const miniget = require('miniget');
-const url = require('url');
+const { URL } = require('url');
+const googleTTS = require('google-tts-api');
 const types = Object.freeze({
 	youtube: '#FF0000',
 	soundcloud: '#F48220',
 	spotify: '#1DB954'
 });
 const emojis = Object.freeze({
+	bassboost: '🌋',
 	random: '🔀',
 	previous: '⏮️',
 	pause: '⏯️',
@@ -27,31 +29,27 @@ const max = Object.freeze({
 	page: 16,
 	track: 50,
 	update: 2,
-	bitrate: 48
+	length: 64
 });
-const FFMPEG_ARGUMENTS = [
+const FFMPEG_ARGUMENTS_BASS = [
 	'-af', 'bass=g=20,dynaudnorm'
 ];
 const default_thumbnail = 'https://upload.wikimedia.org/wikipedia/commons/4/45/Michel_Richard_Delalande_engraving_BNF_Gallica.jpg';
 let cache;
 
 const generateYoutubeTrack = async (client, info) => {
-	const video = await ytdl.getInfo(info.id ? info.id : info.url, {
+	const video = await ytdl.getInfo(info.url, {
 		requestOptions: {
 			headers: {
 				cookie: client.config['youtube-cookie']
 			}
 		}
 	});
-	const autoplay = video.response.contents.twoColumnWatchNextResults.autoplay.autoplay.sets;
-	let next;
-	if (autoplay.length) {
-		const parsed = url.parse(video.videoDetails.video_url);
-		next = url.format({
-			protocol: parsed.protocol,
-			hostname: parsed.hostname,
-		});
-		next += autoplay[0].autoplayVideo.commandMetadata.webCommandMetadata.url;
+	let next = null;
+	if (video.related_videos.length) {
+		const url = new URL(video.videoDetails.video_url);
+		url.searchParams.set('v', video.related_videos[0].id);
+		next = url.toString();
 	}
 	if (video.videoDetails.isLiveContent)
 		return;
@@ -59,7 +57,6 @@ const generateYoutubeTrack = async (client, info) => {
 	return {
 		title: video.videoDetails.title,
 		url: video.videoDetails.video_url,
-		id: video.videoDetails.videoId,
 		thumbnail: video.videoDetails.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
 		next: {
 			type: types.youtube,
@@ -68,22 +65,19 @@ const generateYoutubeTrack = async (client, info) => {
 		format: {
 			url: format.url
 		},
-		expire: url.parse(format.url, true).query.expire * 1000
+		expire: new URL(format.url).searchParams.get('expire') * 1000
 	};
 };
 
 const generateSoundCloudTrack = async (info) => {
 	const data = await scdl.getInfo(info.url);
-	const parsed = url.parse(data.media.transcodings[0].url);
-	parsed.query = {
-		client_id: await scdl.getClientID()
-	};
-	const body = await miniget(url.format(parsed)).text();
+	const url = new URL(data.media.transcodings[0].url);
+	url.searchParams.set('client_id', await scdl.getClientID());
+	const body = await miniget(url.toString()).text();
 	const media = JSON.parse(body);
 	return {
 		title: data.title,
 		url: data.permalink_url,
-		id: data.id,
 		thumbnail: data.artwork_url,
 		format: {
 			url: media.url
@@ -91,25 +85,53 @@ const generateSoundCloudTrack = async (info) => {
 	};
 };
 
-const generateSpotifyTrack = async (info) => {
+const generateSpotifyTrack = async (client, info) => {
 	const data = await spotify.getData(info.url);
+	let filters = await ytsr.getFilters(`${data.artists[0].name} ${data.album.name} ${data.name}`);
+	let filter = filters.get('Type').get('Video');
+	filters = await ytsr.getFilters(filter.url);
+	filter = filters.get('Features').get('HD');
+	const search = await ytsr(filter.url, { limit: 1 });
+	if (!search.items.length)
+		return;
+	const youtube = search.items[0].url;
+	const video = await ytdl.getInfo(youtube, {
+		requestOptions: {
+			headers: {
+				cookie: client.config['youtube-cookie']
+			}
+		}
+	});
+	let next = null;
+	if (video.related_videos.length) {
+		const url = new URL(video.videoDetails.video_url);
+		url.searchParams.set('v', video.related_videos[0].id);
+		next = url.toString();
+	}
+	if (video.videoDetails.isLiveContent)
+		return;
+	const format = ytdl.chooseFormat(video.formats, { filter: 'audioonly', quality: 'highestaudio' });
 	return {
 		title: data.name,
 		url: data.external_urls.spotify,
-		id: data.id,
 		thumbnail: data.album.images.reduce((a, b) => (a.width > b.width ? a : b)).url,
+		next: {
+			type: types.youtube,
+			url: next
+		},
 		format: {
-			url: data.preview_url
-		}
+			url: format.url
+		},
+		expire: new URL(format.url).searchParams.get('expire') * 1000
 	};
 };
 
 const getTrack = async (client, info) => {
 	let track;
-	if (info.id)
-		if (cache.get(`${info.type}_${info.id}`)) {
-			track = cache.get(`${info.type}_${info.id}`);
-			if (track.expire && track.expire > Date.now())
+	if (info.url)
+		if (cache.get(`${info.type}_${info.url}`)) {
+			track = cache.get(`${info.type}_${info.url}`);
+			if (!track.expire || track.expire > Date.now())
 				return track;
 		}
 	if (info.type == types.youtube)
@@ -117,9 +139,9 @@ const getTrack = async (client, info) => {
 	else if (info.type == types.soundcloud)
 		track = await generateSoundCloudTrack(info);
 	else if (info.type == types.spotify)
-		track = await generateSpotifyTrack(info);
+		track = await generateSpotifyTrack(client, info);
 	else {
-		const parsed = url.parse(info.url);
+		const parsed = new URL(info.url);
 		const filename = parsed.pathname.substring(parsed.pathname.lastIndexOf('/') + 1);
 		track = {
 			title: filename,
@@ -133,8 +155,8 @@ const getTrack = async (client, info) => {
 	if (!track)
 		return;
 	track.color = info.type;
-	if (track.title.length > 50)
-		track.title = `${track.title.substring(0, 50)}...`;
+	if (track.title.length > max.length)
+		track.title = `${track.title.substring(0, max.length - 3)}...`;
 	track.title = track.title
 		.replace(/\[/g, '{')
 		.replace(/\]/g, '}')
@@ -144,7 +166,7 @@ const getTrack = async (client, info) => {
 		.replace(/~/g, '-')
 		.replace(/_/g, '-')
 		.replace(/>/g, '-');
-	cache.set(`${info.type}_${track.id}`, track);
+	cache.set(`${info.type}_${track.url}`, track);
 	return track;
 };
 
@@ -158,7 +180,7 @@ const waitingEmbed = (client, channel) => {
 const updateMessage = async (client, guildId) => {
 	if (!client.music[guildId])
 		return;
-	const guildData = client.utils.readFile(`guilds/${guildId}.json`);
+	const guildData = await client.utils.readFile(client.utils.docRef.collection('guild').doc(guildId));
 	const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 	if (!channel)
 		return;
@@ -234,11 +256,20 @@ const play = async (client, guildId) => {
 		client.music[guildId].page--;
 	client.music[guildId].now = info;
 	const track = await getTrack(client, info);
+	let args = [];
+	if (client.music[guildId].bassboost)
+		args = FFMPEG_ARGUMENTS_BASS;
 	const transcoder = client.utils.generateTranscoder(track.format.url, {
 		start: info.time,
-		args: FFMPEG_ARGUMENTS
+		args
 	});
 	await client.music[guildId].connection.voice.setSelfMute(false);
+	const guild = await client.guilds.fetch(guildId);
+	let title = track.title;
+	if (title.length > 32)
+		title = title.substring(0, 32);
+	if (guild.me.hasPermission('CHANGE_NICKNAME'))
+		await guild.me.setNickname(title);
 	const dispatcher = client.utils.playeTranscoder(client.music[guildId].connection.player, transcoder);
 	dispatcher.on('finish', async () => {
 		try {
@@ -249,11 +280,11 @@ const play = async (client, guildId) => {
 			}
 			if (client.music[guildId].now
 				&& (client.music[guildId].repeat || client.music[guildId].autoplay)) {
-				const guildData = client.utils.readFile(`guilds/${guildId}.json`);
+				const guildData = await client.utils.readFile(client.utils.docRef.collection('guild').doc(guildId));
 				const channel = client.guilds.cache.get(guildId).channels.cache.get(guildData.music.channel);
 				if (channel)
 					if (client.music[guildId].repeat) {
-						if (info.time)
+						if (info.time != null)
 							delete info.time;
 						await add([info], channel, null, true);
 					} else if (client.music[guildId].autoplay && !client.music[guildId].playlist.length) {
@@ -289,7 +320,7 @@ const add = async (infos, channel, member, silence = false) => {
 		if (!info.time) {
 			if (info.url)
 				try {
-					info.time = url.parse(info.url, true).query.t;
+					info.time = new URL(info.url).searchParams.get('t');
 					// eslint-disable-next-line no-empty
 				} catch { }
 			if (!info.time)
@@ -299,8 +330,6 @@ const add = async (infos, channel, member, silence = false) => {
 			const track = await getTrack(channel.client, info);
 			if (!track)
 				continue;
-			if (!info.id)
-				info.id = track.id;
 			if (!guild.me.voice.channelID) {
 				const voice = member && await guild.channels.cache.get(member.voice.channelID);
 				if (!(voice && voice.joinable && voice.speakable))
@@ -319,6 +348,7 @@ const add = async (infos, channel, member, silence = false) => {
 			channel.client.music = {};
 		if (!channel.client.music[guild.id]) {
 			channel.client.music[guild.id] = {};
+			channel.client.music[guild.id].nickname = guild.me.nickname;
 			channel.client.music[guild.id].playlist = [];
 			channel.client.music[guild.id].page = 0;
 		}
@@ -326,12 +356,14 @@ const add = async (infos, channel, member, silence = false) => {
 			const connection = guild.me.voice.connection;
 			if (!connection)
 				return;
-			connection.on('disconnect', () => {
+			connection.on('disconnect', async () => {
 				try {
 					if (!guild.client.music)
 						return;
+					if (guild.me.hasPermission('CHANGE_NICKNAME'))
+						await guild.me.setNickname(guild.client.music[guild.id].nickname);
 					delete guild.client.music[guild.id];
-					const guildData = guild.client.utils.readFile(`guilds/${guild.id}.json`);
+					const guildData = await guild.client.utils.readFile(guild.client.utils.docRef.collection('guild').doc(guild.id));
 					const channel = guild.channels.cache.get(guildData.music.channel);
 					if (!channel)
 						return;
@@ -357,61 +389,56 @@ const add = async (infos, channel, member, silence = false) => {
 
 module.exports = {
 	name: 'music',
-	aliases: [],
 	description: 'description_music',
-	command: async command => {
-		for (const permission of ['MANAGE_CHANNELS', 'CONNECT'])
-			if (!command.message.guild.me.hasPermission(permission)) {
-				command.message.client.utils.sendMessage(command.message.channel, 'error_bot_no_permission', {
+	command: async object => {
+		for (const permission of ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+			if (!object.guild.me.hasPermission(permission))
+				return object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
 					permission
 				});
-				return;
-			}
-		const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
-		if (guildData.music && command.message.guild.channels.cache.get(guildData.music.channel)) {
-			command.message.client.utils.sendMessage(command.message.channel, 'error_channel_exists');
+		const guildData = await object.client.utils.readFile(object.client.utils.docRef.collection('guild').doc(object.guild.id));
+		if (guildData.music && object.guild.channels.cache.get(guildData.music.channel)) {
+			object.client.utils.sendMessage(object.channel, 'error_channel_exists');
 			return;
 		}
-		const channel = await command.message.guild.channels.create('Music', {
+		const channel = await object.guild.channels.create('Music', {
 			type: 'text',
 			topic: 'This channel is designed to handle music.',
-			parent: command.message.channel.parent,
+			parent: object.channel.parent,
 			permissionOverwrites: [
 				{
-					id: command.message.guild.me.id,
+					id: object.guild.me.id,
 					allow: ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY']
 				}
 			],
 			rateLimitPerUser: 5,
 			reason: 'Create a music channel'
 		});
-		const message = await command.message.client.utils.sendEmbed(channel, waitingEmbed(command.message.client, channel), true);
+		const message = await object.client.utils.sendEmbed(channel, waitingEmbed(object.client, channel), true);
 		guildData.music = {
 			channel: channel.id,
 			message: message.id
 		};
-		command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
-		command.message.client.utils.sendMessage(command.message.channel, 'music_success');
+		object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
 		for (const emoji of Object.values(emojis))
 			message.react(emoji);
+		return object.client.utils.getMessage(object.channel, 'music_success');
 	},
-	permission: (message) => {
-		if (!message.member.hasPermission('ADMINISTRATOR'))
+	permission: object => {
+		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;
 	},
-	protect: (channel) => {
+	protect: async channel => {
 		if (channel.type == 'dm')
 			return;
-		const guildData = channel.client.utils.readFile(`guilds/${channel.guild.id}.json`);
-		if (!guildData.music)
-			return;
+		const guildData = await channel.client.utils.readFile(channel.client.utils.docRef.collection('guild').doc(channel.guild.id));
 		return channel.id == (guildData.music && guildData.music.channel);
 	},
 	message: async (message) => {
 		if (message.author.bot || message.channel.type == 'dm')
 			return;
-		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
+		const guildData = await message.client.utils.readFile(message.client.utils.docRef.collection('guild').doc(message.guild.id));
 		if (!guildData.music)
 			return;
 		const channel = message.guild.channels.cache.get(guildData.music.channel) || {};
@@ -433,15 +460,14 @@ module.exports = {
 			} else if (ytpl.validateID(message.content)) {
 				const playlist = await ytpl(message.content);
 				for (const item of playlist.items)
-					infos.push({ type: types.youtube, id: item.id });
+					infos.push({ type: types.youtube, id: item.shortUrl });
 			} else if (scdl.isValidUrl(message.content)) {
 				try {
 					const info = await scdl.getSetInfo(message.content);
 					for (const track of info.tracks)
 						infos.push({
 							type: types.soundcloud,
-							url: track.permalink_url,
-							id: track.id
+							url: track.permalink_url
 						});
 				} catch {
 					infos.push({
@@ -455,15 +481,13 @@ module.exports = {
 					if (info.type == 'track')
 						infos.push({
 							type: types.spotify,
-							url: info.external_urls.spotify,
-							id: info.id
+							url: info.external_urls.spotify
 						});
 					else if (info.type == 'album')
 						for (const track of info.tracks.items)
 							infos.push({
 								type: types.spotify,
-								url: track.external_urls.spotify,
-								id: track.id
+								url: track.external_urls.spotify
 							});
 					else return;
 				} catch {
@@ -473,27 +497,38 @@ module.exports = {
 				}
 			}
 		} catch (error) {
-			const filters = await ytsr.getFilters(message.content);
-			const filter = filters.get('Type').get('Video');
-			if (!filter.url)
-				return;
-			const search = await ytsr(filter.url, { limit: 1 });
-			if (!search.items.length)
-				return;
-			infos.push({ type: types.youtube, id: search.items[0].id });
+			if (message.content.startsWith('tts '))
+				try {
+					infos.push({
+						url: googleTTS.getAudioUrl(message.content.substring(4), { lang: message.client.config.language })
+					});
+				} catch (error) {
+					const send = await channel.client.utils.sendMessage(channel, 'error_api', { error: error.message });
+					send.delete({ timeout: 10 * 1000 });
+				}
+			else {
+				let filters = await ytsr.getFilters(message.content);
+				let filter = filters.get('Type').get('Video');
+				filters = await ytsr.getFilters(filter.url);
+				filter = filters.get('Features').get('HD');
+				const search = await ytsr(filter.url, { limit: 1 });
+				if (!search.items.length)
+					return;
+				infos.push({ type: types.youtube, url: search.items[0].url });
+			}
 		}
 		await add(infos, message.channel, message.member);
 	},
 	messageReactionAdd: async (messageReaction, user) => {
 		if (user.id == messageReaction.client.user.id)
 			return;
-		const guildData = messageReaction.client.utils.readFile(`guilds/${messageReaction.message.guild.id}.json`);
+		const guildData = await messageReaction.client.utils.readFile(messageReaction.client.utils.docRef.collection('guild').doc(messageReaction.message.guild.id));
 		if (!(guildData.music && messageReaction.message.id == guildData.music.message))
 			return;
 		messageReaction.users.remove(user);
 		if (!(messageReaction.client.music && messageReaction.client.music[messageReaction.message.guild.id])) {
 			if (messageReaction.emoji.name == emojis.own) {
-				const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
+				const userData = await messageReaction.client.utils.readFile(messageReaction.client.utils.docRef.collection('user').doc(user.id));
 				if (userData.music && userData.music.length) {
 					if (typeof userData.music[0] == 'string') {
 						userData.music = userData.music.map(item => {
@@ -501,7 +536,7 @@ module.exports = {
 								return { type: types.youtube, id: item };
 							return item;
 						});
-						messageReaction.client.utils.savFile(`users/${user.id}.json`, userData);
+						messageReaction.client.utils.savFile(messageReaction.client.utils.docRef.collection('user').doc(user.id), userData);
 					}
 					await add(userData.music, messageReaction.message.channel, messageReaction.message.guild.members.cache.get(user.id));
 				}
@@ -525,6 +560,12 @@ module.exports = {
 				music.connection.dispatcher.emit('finish');
 			}
 			return;
+		} else if (messageReaction.emoji.name == emojis.bassboost) {
+			music['bassboost'] = !music['bassboost'];
+			music.now.time += Math.floor(music.connection.dispatcher.streamTime / 1000);
+			music.playlist.splice(0, 0, music.now);
+			music.now = null;
+			music.connection.dispatcher.emit('finish');
 		} else if (messageReaction.emoji.name == emojis.pause) {
 			if (music.connection.voice.serverMute)
 				return;
@@ -545,14 +586,14 @@ module.exports = {
 			else
 				return;
 		} else if (messageReaction.emoji.name == emojis.save || messageReaction.emoji.name == emojis.free) {
-			const userData = messageReaction.client.utils.readFile(`users/${user.id}.json`);
+			const userData = await messageReaction.client.utils.readFile(messageReaction.client.utils.docRef.collection('user').doc(user.id));
 			if (!userData.music)
 				userData.music = [];
 			const info = music.now;
-			if (info.time)
+			if (info.time != null)
 				delete info.time;
 			let key;
-			if (messageReaction.emoji.name == emojis.save && !userData.music.includes(info)) {
+			if (messageReaction.emoji.name == emojis.save && !userData.music.some(item => item.url == info.url)) {
 				if (userData.music.length >= max.track) {
 					const send = await messageReaction.client.utils.sendMessage(messageReaction.message.channel, 'error_full');
 					send.delete({ timeout: 10 * 1000 });
@@ -560,12 +601,12 @@ module.exports = {
 				}
 				userData.music.push(info);
 				key = 'music_add';
-			} else if (messageReaction.emoji.name == emojis.free && userData.music.includes(info)) {
+			} else if (messageReaction.emoji.name == emojis.free && userData.music.some(item => item.url == info.url)) {
 				userData.music.splice(userData.music.indexOf(info), 1);
 				key = 'music_remove';
 			} else
 				return;
-			messageReaction.client.utils.savFile(`users/${user.id}.json`, userData);
+			messageReaction.client.utils.savFile(messageReaction.client.utils.docRef.collection('user').doc(user.id), userData);
 			const send = await messageReaction.client.utils.sendMessage(messageReaction.message.channel, key);
 			send.delete({ timeout: 10 * 1000 });
 			return;
@@ -580,12 +621,12 @@ module.exports = {
 	messageDelete: async (message) => {
 		if (message.channel.type == 'dm' || !message.channel.permissionsFor(message.client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))
 			return;
-		const guildData = message.client.utils.readFile(`guilds/${message.guild.id}.json`);
+		const guildData = await message.client.utils.readFile(message.client.utils.docRef.collection('guild').doc(message.guild.id));
 		if (!(guildData.music && message.id == guildData.music.message))
 			return;
 		message = await message.client.utils.sendEmbed(message.channel, waitingEmbed(message.client, message.channel), true);
 		guildData.music.message = message.id;
-		message.client.utils.savFile(`guilds/${message.guild.id}.json`, guildData);
+		message.client.utils.savFile(message.client.utils.docRef.collection('guild').doc(message.guild.id), guildData);
 		for (const emoji of Object.values(emojis)) {
 			if (message.deleted)
 				return;
@@ -595,10 +636,19 @@ module.exports = {
 			await updateMessage(message.client, message.guild.id);
 	},
 	voiceStateUpdate: async (oldState, newState) => {
-		if (!(newState.id == newState.guild.me.user.id
-			&& newState.serverMute != oldState.serverMute
-			&& newState.client.music
+		if (!(newState.client.music
 			&& newState.client.music[newState.guild.id]))
+			return;
+		if (newState.id != newState.guild.me.user.id
+			&& oldState.channelID != newState.channelID
+			&& oldState.channelID == newState.client.music[newState.guild.id].connection.channel.id
+			&& newState.client.music[newState.guild.id].connection.dispatcher.paused
+			&& !Array.from(newState.client.music[newState.guild.id].connection.channel.members.values()).filter(member => !member.user.bot).length) {
+			newState.client.music[newState.guild.id].connection.disconnect();
+			return;
+		}
+		if (!(newState.id == newState.guild.me.user.id
+			&& newState.serverMute != oldState.serverMute))
 			return;
 		const music = newState.client.music[newState.guild.id];
 		if (!(music.connection && music.connection.dispatcher))
@@ -616,41 +666,57 @@ module.exports = {
 			return;
 		await updateMessage(newState.client, newState.guild.id);
 	},
-	ready: async (client) => {
-		cache = client.utils.createCache(500);
+	ready: async client => {
+		cache = client.utils.createCache();
 		for (const guild of client.guilds.cache.values()) {
-			const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
+			const guildData = await client.utils.readFile(client.utils.docRef.collection('guild').doc(guild.id));
 			if (!guildData.music)
 				continue;
-			const channel = guild.channels.cache.get(guildData.music.channel);
-			if (!(channel && channel.permissionsFor(client.user).has(['READ_MESSAGE_HISTORY', 'MANAGE_MESSAGES'])))
+			const channel = await client.channels.fetch(guildData.music.channel);
+			if (!channel) {
+				delete guildData.music;
+				client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id));
 				continue;
-			const minimumtime = Date.now() - 2 * 7 * 24 * 60 * 60 * 1000;
-			let removed = 0;
+			}
+			if (!channel.permissionsFor(client.user).has(['READ_MESSAGE_HISTORY', 'MANAGE_MESSAGES']))
+				continue;
+			const minimumTime = Date.now() - 2 * 7 * 24 * 60 * 60 * 1000;
+			let removed;
 			do {
+				removed = 0;
 				const array = [];
 				for (const message of (await channel.messages.fetch()).values())
 					if (message.id != guildData.music.message)
-						if (message.createdTimestamp <= minimumtime) {
+						if (message.createdTimestamp <= minimumTime) {
 							await message.delete();
 							removed++;
 						} else
 							array.push(message);
-				if (array.length) {
+				if (array.length)
 					removed += await channel.bulkDelete(array).then(data => data.size).catch(() => { });
-				}
 			} while (removed);
-			let message = await channel.messages.fetch(guildData.music.message);
-			if (!message) {
+			let message = await channel.messages.fetch(guildData.music.message).catch(() => { });
+			if (message != null) {
+				let deleted = false;
+				for (const emoji of Object.values(emojis))
+					if (message.reactions.cache.find(reaction => reaction.emoji.name == emoji) == null) {
+						await message.delete();
+						deleted = true;
+						break;
+					}
+				if (deleted)
+					continue;
+			}
+			if (message == null) {
 				if (!channel.permissionsFor(client.user).has(['ADD_REACTIONS', 'SEND_MESSAGES']))
 					continue;
 				message = await client.utils.sendEmbed(channel, waitingEmbed(client, channel), true);
 				guildData.music.message = message.id;
-				client.utils.savFile(`guilds/${guild.id}.json`, guildData);
+				client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id), guildData);
 				for (const emoji of Object.values(emojis)) {
 					if (message.deleted)
 						return;
-					await message.react(emoji).catch(() => { });
+					message.react(emoji).catch(() => { });
 				}
 			}
 			for (const reaction of message.reactions.cache.values())
@@ -664,7 +730,9 @@ module.exports = {
 			return;
 		for (let guild of client.guilds.cache.values())
 			if (client.music[guild.id]) {
-				const guildData = client.utils.readFile(`guilds/${guild.id}.json`);
+				if (guild.me.hasPermission('CHANGE_NICKNAME'))
+					await guild.me.setNickname(guild.client.music[guild.id].nickname);
+				const guildData = await client.utils.readFile(client.utils.docRef.collection('guild').doc(guild.id));
 				const channel = guild.channels.cache.get(guildData.music.channel);
 				if (!channel)
 					return;
