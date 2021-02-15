@@ -40,5 +40,6 @@
 		"token_uri": "https://oauth2.googleapis.com/token",
 		"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-y0coh%40sempiternel-discord.iam.gserviceaccount.com"
-	}
+	},
+	"support-server": "756814931709657108"
 }

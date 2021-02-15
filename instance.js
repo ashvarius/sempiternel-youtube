@@ -78,6 +78,11 @@ class DiscordBot extends EventEmitter {
 					name: 'logging',
 					type: 'WATCHING'
 				}
+			},
+			ws: {
+				properties: {
+					$browser: 'Discord iOS'
+				}
 			}
 		}, options));
 		client.logger = logger;
@@ -96,8 +101,8 @@ class DiscordBot extends EventEmitter {
 			if (client.config.presence == null)
 				client.config.presence = {
 					activity: {
-						name: 'his program',
-						type: 'LISTENING'
+						name: `@${client.user.username}`,
+						type: 'WATCHING'
 					}
 				};
 			client.config.presence.status = 'online';
@@ -169,6 +174,35 @@ class DiscordBot extends EventEmitter {
 							}
 			});
 		};
+		function getUserFromMention(mention) {
+			const matches = mention.match(/^<@!?(\d+)>$/);
+			if (!matches) return;
+			const id = matches[1];
+			return client.users.cache.get(id);
+		}
+		client.on('message', async message => {
+			dispatcher('message', message);
+			const user = getUserFromMention(message.content);
+			if (user && user.id == client.user.id) {
+				const guild = await client.guilds.fetch(client.config['support-server']);
+				if (!guild || !guild.me.hasPermission('CREATE_INSTANT_INVITE'))
+					return;
+				const textChannel = guild.channels.cache.find(channel => channel.type == 'text');
+				if (!textChannel)
+					return;
+				const invite = await textChannel.createInvite({
+					maxUses: 1,
+					unique: true
+				});
+				const embed = client.utils.createEmbed(client.utils.getMessage(message.channel, 'thanks', {
+					link: 'https://discord.com/api/oauth2/authorize?client_id=705376114540806174&scope=applications.commands',
+					server: invite,
+				}));
+				embed.setImage('https://discord.com/assets/a660b11b63a95e932719346ff67ea60f.png');
+				message.channel.send(embed);
+				return;
+			}
+		});
 		client.on('exit', async (code = 0) => {
 			if (this.exit) {
 				this.emit('exit', code);

@@ -1,6 +1,7 @@
 module.exports = {
 	name: 'avatar',
 	private: true,
+	standart: true,
 	description: 'description_avatar',
 	options: [
 		{

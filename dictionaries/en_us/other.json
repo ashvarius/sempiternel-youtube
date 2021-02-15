@@ -39,5 +39,8 @@
 	"processor": "Processor",
 	"ram": "RAM",
 	"uptime": "Uptime",
-	"features": "Features"
+	"features": "Features",
+	"index": "Index",
+	"type": "Type",
+	"user": "User"
 }

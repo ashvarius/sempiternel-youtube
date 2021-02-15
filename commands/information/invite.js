@@ -3,6 +3,7 @@ const { URL } = require('url');
 module.exports = {
 	name: 'invite',
 	private: true,
+	standart: true,
 	description: 'description_invite',
 	command: async object => {
 		const url = new URL(await object.client.generateInvite({

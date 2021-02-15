@@ -1,6 +1,7 @@
 module.exports = {
 	name: 'help',
 	private: true,
+	standart: true,
 	description: 'description_help',
 	options: [
 		{

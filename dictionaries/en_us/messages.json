@@ -1,4 +1,5 @@
 {
+	"thanks": "It is a pleasure to offer you my services.\n\nThe robot now uses [slash commands](https://discord.com/developers/docs/interactions/slash-commands).\nIf you don't have access to bot commands, please update permissions with [this link](<link>).\n\nIf you have any questions, please do not hesitate to join the [support server](<server>).",
 	"reboot_success": "The bot will restart.",
 	"bot_add": "`<user>` can now register a maximum of `<count>` robots.",
 	"bot_addtoken": "`<tag>` has been added to your account and is now online.",
@@ -22,10 +23,11 @@
 	"temporary_add": "The channel <channel> has been registered.",
 	"temporary_remove": "The channel <channel> has been unregistered.",
 	"music_success": "The music channel has been created.",
-	"music_watting": "Waiting for music ...\nTo add music, you need to put the title, link of a youtube video or a youtube playlist.",
+	"music_watting": "Waiting for music ...\nTo add music, you need to put something to search or youtube, soundcloud, spotify link.",
 	"music_playlist": "To put this playlist back in the queue, copy this:",
 	"music_add": "Current song added to your playlist.",
 	"music_remove": "Current song deleted from your playlist.",
+	"music_reaction_bassboost": "Boost the bass in all music.",
 	"music_reaction_random": "Randomize the playlist.",
 	"music_reaction_previous": "Replay the current music or go back to the previous music.",
 	"music_reaction_pause": "Pause or resume music.",

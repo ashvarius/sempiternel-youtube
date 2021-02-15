@@ -1,6 +1,7 @@
 module.exports = {
 	name: 'user',
 	private: true,
+	standart: true,
 	description: 'description_user',
 	options: [
 		{
