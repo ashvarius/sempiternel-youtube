@@ -11,10 +11,6 @@ module.exports = {
 		}
 	],
 	command: async object => {
-		if (!object.guild.me.hasPermission('MANAGE_MESSAGES'))
-			return object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
-				permission: 'MANAGE_MESSAGES'
-			});
 		let number = object.options[0].value;
 		let deleted = 0;
 		while (number) {

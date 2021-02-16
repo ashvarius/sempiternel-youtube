@@ -163,13 +163,19 @@ class DiscordBot extends EventEmitter {
 								else if (!client.config.owners.includes(object.user.id)
 									&& instance.permission && !instance.permission(object))
 									resolve(client.utils.getMessage(object.channel, 'error_no_access'));
-								else
+								else {
+									for (const permission of ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
+										if (!object.guild.me.hasPermission(permission))
+											return object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
+												permission
+											});
 									try {
 										resolve(await instance.command(object));
 									} catch (error) {
 										logger.log('error', error);
 										resolve(client.utils.getMessage(object.channel, 'error', { error }));
 									}
+								}
 								return;
 							}
 			});
@@ -248,7 +254,7 @@ class DiscordBot extends EventEmitter {
 			let data;
 			if (ret == null)
 				data = {
-					type: 2
+					type: 5
 				};
 			else {
 				let messages;

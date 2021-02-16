@@ -8,7 +8,7 @@ module.exports = {
 		const permissions = [];
 		for (const category of Object.keys(object.client.commands))
 			for (const instance of Object.values(object.client.commands[category]))
-				if (instance.permissions)
+				if (!object.client.config.disable.includes(instance.name) && instance.permissions)
 					for (const permission of instance.permissions)
 						permissions.push(permission);
 		permissions.push('ADMINISTRATOR');

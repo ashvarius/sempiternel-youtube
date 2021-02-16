@@ -392,11 +392,6 @@ module.exports = {
 	description: 'description_music',
 	permissions: ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY', 'CONNECT', 'SPEAK', 'CHANGE_NICKNAME'],
 	command: async object => {
-		for (const permission of ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
-			if (!object.guild.me.hasPermission(permission))
-				return object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
-					permission
-				});
 		const guildData = await object.client.utils.readFile(object.client.utils.docRef.collection('guild').doc(object.guild.id));
 		if (guildData.music && object.guild.channels.cache.get(guildData.music.channel)) {
 			object.client.utils.sendMessage(object.channel, 'error_channel_exists');
