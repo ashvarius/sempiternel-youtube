@@ -251,6 +251,7 @@ class DiscordBot extends EventEmitter {
 				channel
 			});
 			const ret = await command(object);
+			const embeds = [];
 			let data;
 			if (ret == null)
 				data = {
@@ -262,7 +263,6 @@ class DiscordBot extends EventEmitter {
 					messages = ret;
 				else
 					messages = [ret];
-				const embeds = [];
 				for (const message of messages) {
 					let embed;
 					if (message instanceof MessageEmbed)
@@ -278,7 +278,10 @@ class DiscordBot extends EventEmitter {
 					}
 				};
 			}
-			client.api.interactions(interaction.id, interaction.token).callback.post({ data });
+			client.api.interactions(interaction.id, interaction.token).callback.post({ data }).catch(() => {
+				for (const embed of embeds)
+					channel.send(embed);
+			});
 		});
 		const register = Object.keys(client._events);
 		for (const event of Object.values(Constants.Events))

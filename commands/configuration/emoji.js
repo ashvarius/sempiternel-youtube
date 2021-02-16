@@ -1,13 +1,8 @@
 module.exports = {
 	name: 'emoji',
 	description: 'description_emoji',
+	permissions: ['MANAGE_EMOJIS'],
 	command: async object => {
-		if (!object.guild.me.hasPermission('MANAGE_EMOJIS')) {
-			object.client.utils.sendMessage(object.channel, 'error_bot_no_permission', {
-				permission: 'MANAGE_EMOJIS'
-			});
-			return;
-		}
 		const message = await object.client.utils.sendMessage(object.channel, 'emoji_await_reaction');
 		let reaction;
 		do {
