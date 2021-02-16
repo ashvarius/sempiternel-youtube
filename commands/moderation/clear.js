@@ -1,10 +1,11 @@
 module.exports = {
 	name: 'clear',
 	description: 'description_clear',
+	permissions: ['MANAGE_MESSAGES'],
 	options: [
 		{
 			type: 4,
-			name: 'integer',
+			name: 'amount',
 			description: 'description_clear',
 			required: true
 		}

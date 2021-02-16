@@ -390,6 +390,7 @@ const add = async (infos, channel, member, silence = false) => {
 module.exports = {
 	name: 'music',
 	description: 'description_music',
+	permissions: ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY', 'CONNECT', 'SPEAK', 'CHANGE_NICKNAME'],
 	command: async object => {
 		for (const permission of ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
 			if (!object.guild.me.hasPermission(permission))

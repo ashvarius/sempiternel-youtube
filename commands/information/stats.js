@@ -3,7 +3,6 @@ const os = require('os');
 module.exports = {
 	name: 'stats',
 	private: true,
-	standart: true,
 	description: 'description_stats',
 	command: async object => {
 		const embed = object.client.utils.createEmbed();

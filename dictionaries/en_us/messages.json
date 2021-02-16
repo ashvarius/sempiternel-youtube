@@ -18,6 +18,7 @@
 	"reaction_reset": "The reactions have been reset.",
 	"autorole_add": "The role <role> will be given when someone joins.",
 	"autorole_remove": "The role <role> will no longer be assigned when someone joins.",
+	"autorole_list": "The roles that will be assigned to newcomers are: <list>",
 	"autorole_restore": "Restore roles has been set to `<option>`.",
 	"clear_success": "`<amount>` messages have been deleted.",
 	"temporary_add": "The channel <channel> has been registered.",

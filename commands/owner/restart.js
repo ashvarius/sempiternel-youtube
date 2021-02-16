@@ -3,7 +3,7 @@ const process = require('process');
 module.exports = {
 	name: 'restart',
 	private: true,
-	standart: true,
+	permissions: ['MANAGE_ROLES'],
 	description: 'description_restart',
 	command: async object => {
 		process.nextTick(() => object.client.emit('exit', 1));

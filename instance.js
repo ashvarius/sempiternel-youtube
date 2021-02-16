@@ -8,8 +8,6 @@ const default_config = require('./config.json');
 const updateOptions = (client, options = []) => {
 	const new_options = [];
 	for (const option of options) {
-		if (option.type > 2)
-			option.name = client.utils.getMessage(client.config.language, option.name).toLowerCase();
 		option.description = client.utils.getMessage(client.config.language, option.description);
 		if (option.options)
 			option.options = updateOptions(client, option.options);
@@ -197,7 +195,7 @@ class DiscordBot extends EventEmitter {
 					unique: true
 				});
 				const embed = client.utils.createEmbed(client.utils.getMessage(message.channel, 'thanks', {
-					link: 'https://discord.com/api/oauth2/authorize?client_id=705376114540806174&scope=applications.commands',
+					link: `https://discord.com/api/oauth2/authorize?client_id=${client.user.id}&scope=applications.commands`,
 					server: invite,
 				}));
 				embed.setImage('https://discord.com/assets/a660b11b63a95e932719346ff67ea60f.png');
@@ -246,22 +244,31 @@ class DiscordBot extends EventEmitter {
 				user,
 				channel
 			});
-			const message = await command(object);
+			const ret = await command(object);
 			let data;
-			if (message == null)
+			if (ret == null)
 				data = {
 					type: 2
 				};
 			else {
-				let embed;
-				if (message instanceof MessageEmbed)
-					embed = message;
+				let messages;
+				if (Array.isArray(ret))
+					messages = ret;
 				else
-					embed = client.utils.createEmbed(message);
+					messages = [ret];
+				const embeds = [];
+				for (const message of messages) {
+					let embed;
+					if (message instanceof MessageEmbed)
+						embed = message;
+					else
+						embed = client.utils.createEmbed(message);
+					embeds.push(embed);
+				}
 				data = {
 					type: 4,
 					data: {
-						embeds: [embed]
+						embeds
 					}
 				};
 			}
