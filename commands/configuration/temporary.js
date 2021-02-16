@@ -2,87 +2,149 @@ const cache = {};
 
 module.exports = {
 	name: 'temporary',
-	aliases: [],
 	description: 'description_temporary',
-	command: command => {
-		if (!command.args.length || !['add', 'remove'].includes(command.args[0].toLowerCase())) {
-			const embed = command.message.client.utils.createEmbed();
-			embed.addField(`${command.prefix}${command.command} add <channelId>`, command.message.client.utils.getMessage(command.message.channel, 'temporary_help_add'));
-			embed.addField(`${command.prefix}${command.command} remove <channelId>`, command.message.client.utils.getMessage(command.message.channel, 'temporary_help_remove'));
-			command.message.client.utils.sendEmbed(command.message.channel, embed);
-			return;
+	options: [
+		{
+			type: 1,
+			name: 'add',
+			description: 'temporary_help_add',
+			options: [
+				{
+					type: 7,
+					name: 'channel',
+					description: 'temporary_help_add',
+					required: true
+				}
+			]
+		},
+		{
+			type: 1,
+			name: 'remove',
+			description: 'temporary_help_remove',
+			options: [
+				{
+					type: 7,
+					name: 'channel',
+					description: 'temporary_help_remove',
+					required: true
+				}
+			]
 		}
-		const cmd = command.args[0].toLowerCase();
-		if (command.args.length < 2) {
-			const embed = command.message.client.utils.createEmbed();
-			embed.addField(`${command.prefix}${command.command} ${cmd} <channelId>`, `${command.message.client.utils.getMessage(command.message.channel, `temporary_help_${cmd}`)}\n${command.message.client.utils.getMessage(command.message.channel, 'help_id')}`);
-			command.message.client.utils.sendEmbed(command.message.channel, embed);
-			return;
-		}
-		const channel = command.message.guild.channels.cache.get(command.args[1]);
-		if (!(channel && channel.type == 'voice')) {
-			command.message.client.utils.sendMessage(command.message.channel, 'error_channel_not_found');
-			return;
-		}
-		const guildData = command.message.client.utils.readFile(`guilds/${command.message.guild.id}.json`);
+	],
+	command: async object => {
+		const channel = object.guild.channels.cache.get(object.options[0].options[0].value);
+		if (!(channel && channel.type == 'voice'))
+			return object.client.utils.getMessage(object.channel, 'error_not_found', {
+				type: 'channel',
+				item: object.options[0].options[0].value
+			});
+		const guildData = await object.client.utils.readFile(object.client.utils.docRef.collection('guild').doc(object.guild.id));
 		if (!guildData.temporary)
 			guildData.temporary = [];
-		if (cmd == 'add') {
+		if (object.options[0].name == 'add') {
 			if (guildData.temporary.indexOf(channel.id) == -1)
 				guildData.temporary.push(channel.id);
 		} else if (!guildData.temporary.indexOf(channel.id) != -1)
 			guildData.temporary.splice(guildData.temporary.indexOf(channel.id), 1);
-		command.message.client.utils.savFile(`guilds/${command.message.guild.id}.json`, guildData);
-		command.message.client.utils.sendMessage(command.message.channel, `temporary_${cmd}`, { channel });
+		object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
+		return object.client.utils.getMessage(object.channel, `temporary_${object.options[0].name}`, { channel });
 	},
-	permission: (message) => {
-		if (!message.member.hasPermission('ADMINISTRATOR'))
+	permission: object => {
+		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;
 	},
 	voiceStateUpdate: async (oldState, newState) => {
-		const guildData = newState.member.client.utils.readFile(`guilds/${newState.guild.id}.json`);
+		const guildData = await newState.guild.client.utils.readFile(newState.guild.client.utils.docRef.collection('guild').doc(newState.guild.id));
 		if (!guildData.temporary)
 			return;
 		if (oldState.channelID
 			&& cache[newState.guild.id]
-			&& cache[newState.guild.id].includes(oldState.channelID)
-			&& !Array.from(oldState.channel.members.filter(member => !member.user.bot)).length)
-			oldState.channel.delete().then(() => cache[newState.guild.id].splice(cache[newState.guild.id].indexOf(oldState.channelID), 1)).catch(() => { });
+			&& !Array.from(oldState.channel.members).length)
+			for (const index of cache[newState.guild.id].keys()) {
+				const object = cache[newState.guild.id][index];
+				if (object.channel == oldState.channelID) {
+					const channel = newState.guild.channels.cache.get(object.channel);
+					if (channel)
+						channel.delete();
+					const waiting = newState.guild.channels.cache.get(object.waiting);
+					if (waiting)
+						waiting.delete();
+					break;
+				}
+			}
 		if (!(newState.channelID && guildData.temporary.includes(newState.channelID)))
 			return;
 		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
 			if (!newState.guild.me.hasPermission(permission))
 				return;
-		const channel = await newState.guild.channels.create(newState.member.displayName, {
+		const permissionOverwrites = newState.channel.parent && newState.channel.parent.permissionOverwrites;
+		console.log(permissionOverwrites);
+		const channel = await newState.guild.channels.create(newState.guild.client.utils.getMessage(newState.channel, 'temporary_channel', {
+			user: newState.member.displayName
+		}), {
 			type: 'voice',
 			parent: newState.channel.parent,
 			permissionOverwrites: [
 				{
 					id: newState.guild.me.id,
-					allow: ['VIEW_CHANNEL', 'MANAGE_CHANNELS', 'CONNECT'],
+					allow: ['CONNECT', 'MANAGE_CHANNELS'],
 				},
 				{
 					id: newState.member.id,
-					allow: ['MANAGE_CHANNELS', 'MUTE_MEMBERS', 'MOVE_MEMBERS'],
+					allow: ['CONNECT', 'MOVE_MEMBERS'],
+				},
+				{
+					id: newState.guild.roles.everyone.id,
+					deny: ['CONNECT'],
+				}
+			],
+			reason: this.name
+		});
+		const waiting = await newState.guild.channels.create(newState.guild.client.utils.getMessage(newState.channel, 'temporary_waiting', {
+			user: newState.member.displayName
+		}), {
+			type: 'voice',
+			parent: newState.channel.parent,
+			permissionOverwrites: [
+				{
+					id: newState.guild.me.id,
+					allow: ['MANAGE_CHANNELS'],
+				},
+				{
+					id: newState.member.id,
+					allow: ['MOVE_MEMBERS'],
+				},
+				{
+					id: newState.guild.roles.everyone.id,
+					deny: ['SPEAK'],
 				}
 			],
 			reason: this.name
 		});
 		if (!cache[newState.guild.id])
 			cache[newState.guild.id] = [];
-		const index = cache[newState.guild.id].push(channel.id) - 1;
-		newState.setChannel(channel).catch(() => channel.delete().then(() => cache[newState.guild.id].splice(index, 1)).catch(() => { }));
+		newState.setChannel(channel)
+			.then(() => cache[newState.guild.id].push({ channel: channel.id, waiting: waiting.id }))
+			.catch(() => {
+				channel.delete();
+				waiting.delete();
+			});
 	},
 	destroy: async client => {
 		for (let guild of Object.keys(cache)) {
 			guild = client.guilds.cache.get(guild);
 			if (!guild)
 				continue;
-			for (let channel of cache[guild.id]) {
-				channel = guild.channels.cache.get(channel);
+			for (const index of cache[guild.id].keys()) {
+				const object = cache[guild.id][index];
+				const channel = guild.channels.cache.get(object.channel);
 				if (channel)
 					await channel.delete();
+				const waiting = guild.channels.cache.get(object.waiting);
+				if (waiting)
+					await waiting.delete();
+				break;
 			}
 		}
 	}

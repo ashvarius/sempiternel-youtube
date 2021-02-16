@@ -115,13 +115,13 @@ class DiscordBot extends EventEmitter {
 						if (command.options)
 							command.options = updateOptions(client, command.options);
 						let command_registered = commands_registered.find(item => item.name == command.name);
-						if (command_registered != null)
-							if (command_registered.description != command.description
-								|| JSON.stringify(command_registered.options) != JSON.stringify(command.options)) {
-								logger.log('info', `Deleting command ${command.name}...`);
-								await client.api.applications(client.user.id).commands(command_registered.id).delete();
-								command_registered = null;
-							}
+						if (command_registered != null
+							&& (command_registered.description != command.description
+								|| JSON.stringify(command_registered.options) != JSON.stringify(command.options))) {
+							logger.log('info', `Deleting command ${command.name}...`);
+							await client.api.applications(client.user.id).commands(command_registered.id).delete();
+							command_registered = null;
+						}
 						if (command_registered == null) {
 							logger.log('info', `Creating command ${command.name}...`);
 							await client.api.applications(client.user.id).commands.post({
@@ -132,7 +132,11 @@ class DiscordBot extends EventEmitter {
 								}
 							});
 						}
-						commands_registered.splice(commands_registered.indexOf(command_registered), 1);
+						for (const index of commands_registered.keys())
+							if (commands_registered[index] && commands_registered[index].name == command.name) {
+								commands_registered.splice(index, 1);
+								break;
+							}
 					}
 			for (const command_registered of commands_registered) {
 				logger.log('info', `Deleting command ${command_registered.name}...`);
@@ -164,11 +168,14 @@ class DiscordBot extends EventEmitter {
 									&& instance.permission && !instance.permission(object))
 									resolve(client.utils.getMessage(object.channel, 'error_no_access'));
 								else {
-									for (const permission of ['ADD_REACTIONS', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY'])
-										if (!object.guild.me.hasPermission(permission))
-											return object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
-												permission
-											});
+									if (instance.permissions)
+										for (const permission of instance.permissions)
+											if (!object.guild.me.hasPermission(permission)) {
+												resolve(object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
+													permission
+												}));
+												return;
+											}
 									try {
 										resolve(await instance.command(object));
 									} catch (error) {

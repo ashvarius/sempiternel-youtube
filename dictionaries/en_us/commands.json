@@ -14,5 +14,6 @@
 	"description_stats": "Get bot statistics.",
 	"description_embed": "Send an embed with the bot.",
 	"description_server": "Obtain information about a server.",
-	"description_webhook": "Send bot messages through a webhook."
+	"description_webhook": "Send bot messages through a webhook.",
+	"description_event": "Get notified when an event is called."
 }

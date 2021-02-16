@@ -503,6 +503,8 @@ module.exports = {
 					send.delete({ timeout: 10 * 1000 });
 				}
 			else {
+				if (!message.content.length)
+					return;
 				let filters = await ytsr.getFilters(message.content);
 				let filter = filters.get('Type').get('Video');
 				filters = await ytsr.getFilters(filter.url);
@@ -668,13 +670,13 @@ module.exports = {
 			const guildData = await client.utils.readFile(client.utils.docRef.collection('guild').doc(guild.id));
 			if (!guildData.music)
 				continue;
-			const channel = await client.channels.fetch(guildData.music.channel);
+			const channel = await client.channels.fetch(guildData.music.channel).catch(() => {});
 			if (!channel) {
 				delete guildData.music;
-				client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id));
+				client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id), guildData);
 				continue;
 			}
-			if (!channel.permissionsFor(client.user).has(['READ_MESSAGE_HISTORY', 'MANAGE_MESSAGES']))
+			if (!channel.permissionsFor(client.user).has(['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'MANAGE_MESSAGES']))
 				continue;
 			const minimumTime = Date.now() - 2 * 7 * 24 * 60 * 60 * 1000;
 			let removed;
