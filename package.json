@@ -16,16 +16,17 @@
     "ffmpeg-static": "^4.2.7",
     "firebase": "^8.2.7",
     "firebase-admin": "^9.5.0",
+    "genius-lyrics": "^4.2.1",
     "google-tts-api": "^2.0.1",
     "libsodium-wrappers": "^0.7.9",
     "miniget": "^4.2.0",
-    "prism-media": "^1.2.6",
+    "prism-media": "^1.2.7",
     "soundcloud-downloader": "^0.2.4",
     "spotify-url-info": "^2.2.0",
     "winston": "^3.3.3",
     "ytdl-core": "^4.4.5",
     "ytpl": "^2.0.5",
-    "ytsr": "^3.3.0"
+    "ytsr": "^3.3.1"
   },
   "devDependencies": {
     "eslint": "^7.20.0"

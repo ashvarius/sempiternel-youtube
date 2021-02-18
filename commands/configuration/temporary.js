@@ -78,10 +78,12 @@ module.exports = {
 		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
 			if (!newState.guild.me.hasPermission(permission))
 				return;
-		const permissionOverwrites = newState.channel.parent && newState.channel.parent.permissionOverwrites;
-		console.log(permissionOverwrites);
+		let name = newState.member.displayName;
+		name = name.split(' ')[0];
+		if (name.length > 8)
+			name = name.substring(0, 8);
 		const channel = await newState.guild.channels.create(newState.guild.client.utils.getMessage(newState.channel, 'temporary_channel', {
-			user: newState.member.displayName
+			user: name
 		}), {
 			type: 'voice',
 			parent: newState.channel.parent,
@@ -92,7 +94,7 @@ module.exports = {
 				},
 				{
 					id: newState.member.id,
-					allow: ['CONNECT', 'MOVE_MEMBERS'],
+					allow: ['CONNECT', 'MANAGE_CHANNELS', 'MOVE_MEMBERS'],
 				},
 				{
 					id: newState.guild.roles.everyone.id,
@@ -102,7 +104,7 @@ module.exports = {
 			reason: this.name
 		});
 		const waiting = await newState.guild.channels.create(newState.guild.client.utils.getMessage(newState.channel, 'temporary_waiting', {
-			user: newState.member.displayName
+			user: name
 		}), {
 			type: 'voice',
 			parent: newState.channel.parent,
@@ -136,15 +138,13 @@ module.exports = {
 			guild = client.guilds.cache.get(guild);
 			if (!guild)
 				continue;
-			for (const index of cache[guild.id].keys()) {
-				const object = cache[guild.id][index];
+			for (const object of cache[guild.id]) {
 				const channel = guild.channels.cache.get(object.channel);
 				if (channel)
 					await channel.delete();
 				const waiting = guild.channels.cache.get(object.waiting);
 				if (waiting)
 					await waiting.delete();
-				break;
 			}
 		}
 	}

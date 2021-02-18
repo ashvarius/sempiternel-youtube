@@ -149,6 +149,8 @@ class DiscordBot extends EventEmitter {
 			this.emit('ready');
 		});
 		const command = (object = {}) => {
+			if (object.channel.type != 'dm' && !object.channel.viewable)
+				return;
 			// eslint-disable-next-line no-async-promise-executor
 			return new Promise(async resolve => {
 				for (const category of Object.keys(commands))
@@ -196,9 +198,9 @@ class DiscordBot extends EventEmitter {
 		client.on('message', async message => {
 			dispatcher('message', message);
 			const user = getUserFromMention(message.content);
-			if (user && user.id == client.user.id) {
+			if (user != null && user.id == client.user.id) {
 				const guild = await client.guilds.fetch(client.config['support-server']);
-				if (!guild || !guild.me.hasPermission('CREATE_INSTANT_INVITE'))
+				if (guild == null || !guild.me.hasPermission('CREATE_INSTANT_INVITE'))
 					return;
 				const textChannel = guild.channels.cache.find(channel => channel.type == 'text');
 				if (!textChannel)
@@ -213,7 +215,6 @@ class DiscordBot extends EventEmitter {
 				}));
 				embed.setImage('https://discord.com/assets/a660b11b63a95e932719346ff67ea60f.png');
 				message.channel.send(embed);
-				return;
 			}
 		});
 		client.on('exit', async (code = 0) => {

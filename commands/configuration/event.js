@@ -152,7 +152,6 @@ const log = async (guild, user, type, content) => {
 
 module.exports = {
 	name: 'event',
-	aliases: [],
 	description: 'description_event',
 	command: async command => {
 		for (const permission of ['BAN_MEMBERS', 'VIEW_AUDIT_LOG', 'ATTACH_FILES'])
@@ -235,12 +234,12 @@ module.exports = {
 			command.message.client.utils.sendMessage(command.message.channel, `event_${cmd}_activation`, { option });
 		}
 	},
-	permission: message => {
-		if (!message.member.hasPermission('ADMINISTRATOR'))
+	permission: object => {
+		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;
 	},
-	guildMemberAdd: async member => {
+	/*guildMemberAdd: async member => {
 		await sendImage(member.guild, member.user, 'join');
 	},
 	guildMemberRemove: async member => {
@@ -254,5 +253,5 @@ module.exports = {
 	},
 	guildBanAdd: async (guild, user) => {
 		await log(guild, user, 'MEMBER_BAN_ADD');
-	}
+	}*/
 };

@@ -3,7 +3,6 @@ const Canvas = require('canvas');
 
 module.exports = {
 	name: 'bot',
-	aliases: ['token'],
 	private: true,
 	description: 'description_bot',
 	command: async command => {
@@ -150,8 +149,9 @@ module.exports = {
 						}
 						const number = parseInt(command.args[1]);
 						if (number <= 0 || number > botsData[command.message.author.id].length) {
-							command.message.client.utils.sendMessage(command.message.channel, 'error_index_not_found', {
-								index: number
+							command.message.client.utils.sendMessage(command.message.channel, 'error_not_found', {
+								type: client.utils.getMessage(message.channel, 'index'),
+								item: number
 							});
 							return;
 						}
@@ -219,7 +219,10 @@ module.exports = {
 				}
 				const type = command.args[1].toLowerCase();
 				if (!['playing', 'streaming', 'listening', 'watching', 'competing'].includes(type)) {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_type_not_found', { type });
+					command.message.client.utils.sendMessage(command.message.channel, 'error_not_found', {
+						type: client.utils.getMessage(message.channel, 'type'),
+						item: type
+					});
 					return;
 				}
 				let message = '';
@@ -301,22 +304,22 @@ module.exports = {
 		}
 		command.message.client.utils.sendEmbed(command.message.channel, embed);
 	},
-	permission: (message) => {
-		if (message.client.main) {
-			if (message.client.config.owners.includes(message.author.id))
+	permission: object => {
+		if (object.client.main) {
+			if (object.client.config.owners.includes(object.user.id))
 				return true;
-			const userData = message.client.utils.readFile(`users/${message.author.id}.json`);
+			const userData = object.client.utils.readFile(`users/${object.user.id}.json`);
 			if (userData.bot)
 				return true;
 		}
-		if (message.client.config.owners.includes(message.author.id))
+		if (object.client.config.owners.includes(object.user.id))
 			return true;
 		return false;
 	},
 	ready: (client) => {
-		if (!client.main)
+		/*if (!client.main)
 			return;
-		const botsData = client.utils.readFile('../bots.json');
+		const botsData = client.utils.readFile('bots.json');
 		for (const id of Object.keys(botsData))
 			for (const token of botsData[id]) {
 				const pending = new client.BotClass(client.logger, {
@@ -327,6 +330,6 @@ module.exports = {
 				});
 				client.bots.push(pending);
 				pending.login();
-			}
+			}*/
 	}
 };
