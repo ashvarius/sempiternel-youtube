@@ -78,11 +78,6 @@ class DiscordBot extends EventEmitter {
 					name: 'logging',
 					type: 'WATCHING'
 				}
-			},
-			ws: {
-				properties: {
-					$browser: 'Discord iOS'
-				}
 			}
 		}, options));
 		client.logger = logger;

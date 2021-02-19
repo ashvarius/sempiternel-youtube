@@ -9,24 +9,28 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.4.0",
+    "@discordjs/opus": "0.3.3",
+    "bufferutil": "^4.0.3",
     "canvas": "^2.6.1",
     "discord.js": "^12.5.1",
+    "erlpack": "github:discord/erlpack",
     "events": "^3.2.0",
     "ffmpeg-static": "^4.2.7",
-    "firebase": "^8.2.7",
+    "firebase": "^8.2.8",
     "firebase-admin": "^9.5.0",
     "genius-lyrics": "^4.2.1",
     "google-tts-api": "^2.0.1",
-    "libsodium-wrappers": "^0.7.9",
     "miniget": "^4.2.0",
-    "prism-media": "^1.2.7",
+    "prism-media": "1.2.4",
+    "sodium": "^3.0.2",
     "soundcloud-downloader": "^0.2.4",
     "spotify-url-info": "^2.2.0",
+    "utf-8-validate": "^5.0.4",
     "winston": "^3.3.3",
     "ytdl-core": "^4.4.5",
     "ytpl": "^2.0.5",
-    "ytsr": "^3.3.1"
+    "ytsr": "^3.3.1",
+    "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
     "eslint": "^7.20.0"

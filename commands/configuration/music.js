@@ -284,7 +284,7 @@ const play = async (client, guildId) => {
 		title = title.substring(0, 32);
 	if (guild.me.hasPermission('CHANGE_NICKNAME'))
 		await guild.me.setNickname(title);
-	const dispatcher = client.utils.playeTranscoder(client.music[guildId].connection.player, transcoder);
+	const dispatcher = client.utils.playTranscoder(client.music[guildId].connection.player, transcoder);
 	dispatcher.on('finish', async () => {
 		try {
 			await client.music[guildId].connection.voice.setSelfMute(true);
@@ -580,11 +580,7 @@ module.exports = {
 		const guildData = await messageReaction.client.utils.readFile(messageReaction.client.utils.docRef.collection('guild').doc(messageReaction.message.guild.id));
 		if (guildData.music == null)
 			return;
-		if (messageReaction.message.id == guildData.music.message)
-			messageReaction.users.remove(user);
 		const music = messageReaction.client.music && messageReaction.client.music[messageReaction.message.guild.id];
-		if (!(music && music.connection && music.connection.dispatcher))
-			return;
 		if (music && music.lyrics)
 		{
 			const channel = messageReaction.message.guild.channels.cache.get(guildData.music.channel);
@@ -592,6 +588,7 @@ module.exports = {
 				return;
 			const id = music.lyrics && music.lyrics.message;
 			if (messageReaction.message.id == id) {
+				messageReaction.users.remove(user);
 				const lyrics_message = channel.messages.cache.get(id);
 				if (lyrics_message != null) {
 					messageReaction.users.remove(user);
@@ -618,7 +615,7 @@ module.exports = {
 			}
 			return;
 		}
-		if (!music.connection.channel.members.get(user.id))
+		if (!(music.connection && music.connection.dispatcher && music.connection.channel.members.get(user.id)))
 			return;
 		if (messageReaction.emoji.name == emojis.previous || messageReaction.emoji.name == emojis.next) {
 			if (!music.connection.dispatcher.paused) {

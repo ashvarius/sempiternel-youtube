@@ -149,7 +149,7 @@ class Utils {
 			options = options.concat(args);
 		return new prism.FFmpeg({ args: options });
 	}
-	playeTranscoder(player, trancoder) {
+	playTranscoder(player, trancoder) {
 		const opus = trancoder.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
 		const dispatcher = player.createDispatcher({
 			type: 'opus',
