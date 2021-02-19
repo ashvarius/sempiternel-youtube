@@ -663,22 +663,22 @@ module.exports = {
 			const send = await messageReaction.client.utils.sendMessage(messageReaction.message.channel, key);
 			send.delete({ timeout: 10 * 1000 });
 			return;
-		} else if (messageReaction.emoji.name == emojis.trash) {
-			music.connection.disconnect();
-			return;
-		} else if (messageReaction.emoji.name == emojis.lyrics) {
+		} else if (messageReaction.emoji.name == emojis.trash)
+			music.playlist = [];
+		else if (messageReaction.emoji.name == emojis.lyrics) {
+			if (music.lyrics)
+				return;
 			const info = music.now;
 			const track = await getTrack(messageReaction.client, info);
 			const lyrics = await getLyrics(channel, track.artist, track.title);
 			const message = await channel.send(messageReaction.client.utils.createEmbed(lyrics[0]));
-			messageReaction.client.music[messageReaction.message.guild.id].lyrics = {
+			music.lyrics = {
 				message: message.id,
 				text: lyrics,
 				page: 0
 			};
 			message.react(emojis.pageup);
 			message.react(emojis.pagedown);
-			return;
 		} else if (messageReaction.emoji.name == emojis.own)
 			return;
 		else

@@ -223,16 +223,32 @@ class DiscordBot extends EventEmitter {
 		});
 
 		client.ws.on('INTERACTION_CREATE', async interaction => {
-			if (interaction.type != 2)
+			if (interaction.type != 2) {
+				client.api.interactions(interaction.id, interaction.token).callback.post({
+					data: {
+						type: 1
+					}
+				});
 				return;
+			}
+			let channel;
+			if (interaction.channel_id)
+				channel = await client.channels.fetch(interaction.channel_id);
+			if (channel.type != 'dm' && !channel.viewable) {
+				client.api.interactions(interaction.id, interaction.token).callback.post({
+					data: {
+						type: 2
+					}
+				});
+				return;
+			}
+			await client.api.interactions(interaction.id, interaction.token).callback.post({
+				data: {
+					type: 5
+				}
+			});
 			if (interaction.data.options == null)
 				interaction.data.options = [];
-			const object = {
-				name: interaction.data.name,
-				options: interaction.data.options,
-				prefix: '/',
-				client,
-			};
 			let guild;
 			if (interaction.guild_id != null)
 				guild = await client.guilds.fetch(interaction.guild_id);
@@ -244,47 +260,29 @@ class DiscordBot extends EventEmitter {
 				user = await client.users.fetch(interaction.user.id);
 			else if (member)
 				user = member.user;
-			let channel;
-			if (interaction.channel_id)
-				channel = await client.channels.fetch(interaction.channel_id);
-			Object.assign(object, {
+			const object = {
+				name: interaction.data.name,
+				options: interaction.data.options,
+				prefix: '/',
+				client,
 				guild,
 				member,
 				user,
 				channel
-			});
+			};
 			const ret = await command(object);
-			const embeds = [];
-			let data;
 			if (ret == null)
-				data = {
-					type: 5
-				};
-			else {
-				let messages;
-				if (Array.isArray(ret))
-					messages = ret;
-				else
-					messages = [ret];
-				for (const message of messages) {
-					let embed;
-					if (message instanceof MessageEmbed)
-						embed = message;
-					else
-						embed = client.utils.createEmbed(message);
-					embeds.push(embed);
-				}
-				data = {
-					type: 4,
-					data: {
-						embeds
-					}
-				};
+				return;
+			let messages;
+			if (Array.isArray(ret))
+				messages = ret;
+			else
+				messages = [ret];
+			for (let message of messages) {
+				if (!(message instanceof MessageEmbed))
+					message = client.utils.createEmbed(message);
+				channel.send(message);
 			}
-			client.api.interactions(interaction.id, interaction.token).callback.post({ data }).catch(() => {
-				for (const embed of embeds)
-					channel.send(embed);
-			});
 		});
 		const register = Object.keys(client._events);
 		for (const event of Object.values(Constants.Events))
