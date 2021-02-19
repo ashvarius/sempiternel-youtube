@@ -58,7 +58,7 @@ module.exports = {
 		const guildData = await newState.guild.client.utils.readFile(newState.guild.client.utils.docRef.collection('guild').doc(newState.guild.id));
 		if (!guildData.temporary)
 			return;
-		if (oldState.channelID
+		if (oldState.channel
 			&& cache[newState.guild.id]
 			&& !Array.from(oldState.channel.members).length)
 			for (const index of cache[newState.guild.id].keys()) {
