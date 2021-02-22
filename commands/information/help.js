@@ -2,13 +2,23 @@ module.exports = {
 	name: 'help',
 	private: true,
 	description: 'description_help',
-	options: [
-		{
-			type: 3,
-			name: 'string',
-			description: 'description_help'
-		}
-	],
+	options: client => {
+		const commands = [];
+		for (const category of Object.keys(client.commands))
+			for (const instance of Object.values(client.commands[category]))
+				commands.push({
+					name: instance.name,
+					value: instance.name
+				});
+		return [
+			{
+				type: 3,
+				name: 'string',
+				description: 'description_help',
+				choices: commands
+			}
+		];
+	},
 	command: object => {
 		if (object.options.length) {
 			const command = object.options[0].value.toLowerCase();

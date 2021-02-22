@@ -1,7 +1,6 @@
 const { Client, Constants, VoiceState, MessageEmbed } = require('discord.js');
 const EventEmitter = require('events');
 const fs = require('fs');
-const admin = require('firebase-admin');
 const Utils = require('./utils.js');
 const default_config = require('./config.json');
 
@@ -19,7 +18,7 @@ const updateOptions = (client, options = []) => {
 let dispatcher;
 
 class DiscordBot extends EventEmitter {
-	constructor(logger, config = {}, options = {}) {
+	constructor(logger, firebase, config = {}, options = {}) {
 		super();
 		config = Object.assign({
 			color: '#000000',
@@ -58,9 +57,6 @@ class DiscordBot extends EventEmitter {
 							logger.log('error', error);
 						}
 		};
-		this.firebase = admin.initializeApp({
-			credential: admin.credential.cert(config['firebase-credential'])
-		});
 		const client = this.client = new Client(Object.assign({
 			messageCacheLifetime: 60 * 60,
 			messageSweepInterval: 10 * 60,
@@ -81,6 +77,7 @@ class DiscordBot extends EventEmitter {
 			}
 		}, options));
 		client.logger = logger;
+		client.firebase = firebase;
 		client.config = config;
 		client.commands = commands;
 		client.on('debug', m => logger.log('debug', m));
@@ -105,9 +102,14 @@ class DiscordBot extends EventEmitter {
 			for (const category of Object.keys(commands))
 				for (let command of Object.values(commands[category]))
 					if (!client.config.disable.includes(command.name)) {
+						let options = null;
+						if (command.options != null && typeof command.options == 'function')
+							options = await command.options(client);
 						command = JSON.parse(JSON.stringify(command));
 						command.description = client.utils.getMessage(client.config.language, command.description);
-						if (command.options)
+						if (options)
+							command.options = options;
+						if (command.options != null)
 							command.options = updateOptions(client, command.options);
 						let command_registered = commands_registered.find(item => item.name == command.name);
 						if (command_registered != null
@@ -300,7 +302,7 @@ class DiscordBot extends EventEmitter {
 		}
 		return new Promise((executor, reject) => {
 			this.client.login(this.client.config.token).then(async token => {
-				this.client.utils = new Utils(this.client, this.firebase.firestore());
+				this.client.utils = new Utils(this.client, this.client.firebase.firestore());
 				this.client.user.setPresence({
 					status: 'idle',
 					activity: {

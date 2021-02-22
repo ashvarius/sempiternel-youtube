@@ -14,7 +14,7 @@ module.exports = {
 			},
 			{
 				name: `🧑 ${object.client.utils.getMessage(object.channel, 'users')}`,
-				value: object.client.users.cache.size,
+				value: `${object.client.users.cache.size}/${object.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)}`,
 				inline: true,
 			},
 			{

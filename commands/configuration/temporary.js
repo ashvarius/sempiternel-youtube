@@ -31,6 +31,7 @@ module.exports = {
 			]
 		}
 	],
+	permissions: ['MANAGE_CHANNELS', 'MOVE_MEMBERS'],
 	command: async object => {
 		const channel = object.guild.channels.cache.get(object.options[0].options[0].value);
 		if (!(channel && channel.type == 'voice'))
@@ -46,7 +47,7 @@ module.exports = {
 				guildData.temporary.push(channel.id);
 		} else if (!guildData.temporary.indexOf(channel.id) != -1)
 			guildData.temporary.splice(guildData.temporary.indexOf(channel.id), 1);
-		object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
+		await object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
 		return object.client.utils.getMessage(object.channel, `temporary_${object.options[0].name}`, { channel });
 	},
 	permission: object => {

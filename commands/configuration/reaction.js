@@ -106,7 +106,7 @@ module.exports = {
 				});
 		} else
 			delete guildData.reaction;
-		object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
+		await object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
 		if (object.options[0].name == 'reset')
 			return object.client.utils.getMessage(object.channel, 'reaction_reset');
 	},

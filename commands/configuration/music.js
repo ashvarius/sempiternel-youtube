@@ -454,7 +454,7 @@ module.exports = {
 			channel: channel.id,
 			message: message.id
 		};
-		object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
+		await object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
 		for (const emoji of Object.values(emojis))
 			message.react(emoji);
 		return object.client.utils.getMessage(object.channel, 'music_success');
@@ -659,7 +659,7 @@ module.exports = {
 				userData.music.push(info);
 				key = 'music_add';
 			}
-			messageReaction.client.utils.savFile(messageReaction.client.utils.docRef.collection('user').doc(user.id), userData);
+			await messageReaction.client.utils.savFile(messageReaction.client.utils.docRef.collection('user').doc(user.id), userData);
 			const send = await messageReaction.client.utils.sendMessage(messageReaction.message.channel, key);
 			send.delete({ timeout: 10 * 1000 });
 			return;
@@ -695,7 +695,7 @@ module.exports = {
 			return;
 		message = await message.client.utils.sendEmbed(message.channel, waitingEmbed(message.client, message.channel), true);
 		guildData.music.message = message.id;
-		message.client.utils.savFile(message.client.utils.docRef.collection('guild').doc(message.guild.id), guildData);
+		await message.client.utils.savFile(message.client.utils.docRef.collection('guild').doc(message.guild.id), guildData);
 		for (const emoji of Object.values(emojis)) {
 			if (message.deleted)
 				return;
@@ -744,7 +744,7 @@ module.exports = {
 			const channel = await client.channels.fetch(guildData.music.channel).catch(() => { });
 			if (!channel) {
 				delete guildData.music;
-				client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id), guildData);
+				await client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id), guildData);
 				continue;
 			}
 			if (!channel.permissionsFor(client.user).has(['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY', 'MANAGE_MESSAGES']))
@@ -781,7 +781,7 @@ module.exports = {
 					continue;
 				message = await client.utils.sendEmbed(channel, waitingEmbed(client, channel), true);
 				guildData.music.message = message.id;
-				client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id), guildData);
+				await client.utils.savFile(client.utils.docRef.collection('guild').doc(guild.id), guildData);
 				for (const emoji of Object.values(emojis)) {
 					if (message.deleted)
 						return;

@@ -117,7 +117,7 @@ module.exports = {
 					guildData.autorole.roles.splice(guildData.autorole.roles.indexOf(role.id), 1);
 			}
 		}
-		object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
+		await object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
 		if (object.options[0].name == 'restore')
 			return object.client.utils.getMessage(object.channel, 'autorole_restore', { option: object.options[0].options[0].value });
 		if (object.options[0].name == 'add')
@@ -168,6 +168,6 @@ module.exports = {
 		for (const role of member.roles.cache.values())
 			if (role != everyone)
 				userData.autorole[member.guild.id].push(role.id);
-		member.client.utils.savFile(member.client.utils.docRef.collection('user').doc(member.id), userData);
+		await member.client.utils.savFile(member.client.utils.docRef.collection('user').doc(member.id), userData);
 	}
 };

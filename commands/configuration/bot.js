@@ -1,335 +1,334 @@
 const { Constants, Util } = require('discord.js');
-const Canvas = require('canvas');
 
 module.exports = {
 	name: 'bot',
 	private: true,
 	description: 'description_bot',
-	command: async command => {
-		const embed = command.message.client.utils.createEmbed();
-		if (command.message.client.main) {
-			if (command.message.client.config.owners.includes(command.message.author.id))
-				embed.addField(`${command.prefix}${command.command} <add/remove> <userId>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_owner'));
-			const userData = command.message.client.utils.readFile(`users/${command.message.author.id}.json`);
-			if (!userData.bot)
-				userData.bot = 0;
-			if (userData.bot) {
-				if (embed.fields.length)
-					embed.addField('\u200B', '\u200B');
-				embed.addField(`${command.prefix}${command.command} addtoken <token>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_addtoken'));
-				embed.addField(`${command.prefix}${command.command} list`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_list'));
-				embed.addField(`${command.prefix}${command.command} removetoken <number>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_removetoken'));
-			}
-		}
-		if (command.message.client.config.owners.includes(command.message.author.id)) {
-			if (embed.fields.length)
-				embed.addField('\u200B', '\u200B');
-			embed.addField(`${command.prefix}${command.command} setname <name>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setname'));
-			embed.addField(`${command.prefix}${command.command} setavatar <url>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setavatar'));
-			embed.addField(`${command.prefix}${command.command} setpresence <type> <message>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence'));
-			embed.addField(`${command.prefix}${command.command} setcolor <hex>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setcolor'));
-			embed.addField(`${command.prefix}${command.command} <enable/disable> <command>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_command'));
-		}
-		if (!embed.fields.length) {
-			command.message.client.utils.sendMessage(command.message.channel, 'error_no_access');
-			return;
-		}
-		if (!command.args.length) {
-			command.message.client.utils.sendEmbed(command.message.channel, embed);
-			return;
-		}
-		const cmd = command.args[0].toLowerCase();
-		if (command.message.client.main) {
-			if (['add', 'remove'].includes(cmd)
-				&& command.message.client.config.owners.includes(command.message.author.id)) {
-				if (command.args.length == 1) {
-					const embed = command.message.client.utils.createEmbed();
-					if (cmd == 'add')
-						embed.addField(`${command.prefix}${command.command} add <userId>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_owner_add')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_id')}`);
-					else
-						embed.addField(`${command.prefix}${command.command} remove <userId>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_owner_remove')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_id')}`);
-					command.message.client.utils.sendEmbed(command.message.channel, embed);
-					return;
+	options: client => {
+		let options;
+		if (client.main)
+			options = [
+				{
+					type: 1,
+					name: 'addtoken',
+					description: 'bot_help_addtoken',
+					options: [
+						{
+							type: 3,
+							name: 'token',
+							description: 'bot_help_addtoken',
+							required: true
+						}
+					]
+				},
+				{
+					type: 1,
+					name: 'removetoken',
+					description: 'bot_help_removetoken',
+					options: [
+						{
+							type: 4,
+							name: 'number',
+							description: 'bot_help_removetoken',
+							required: true
+						}
+					]
+				},
+				{
+					type: 1,
+					name: 'list',
+					description: 'bot_help_list'
 				}
-				const user = await command.message.client.users.fetch(command.args[1], false).catch(error => {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_api', { error });
-					return;
-				});
-				if (!user)
-					return;
-				const userData = command.message.client.utils.readFile(`users/${user.id}.json`);
-				if (!userData.bot)
-					userData.bot = 0;
-				if (cmd == 'add')
-					userData.bot++;
-				else if (userData.bot > 0)
-					userData.bot--;
-				command.message.client.utils.savFile(`users/${user.id}.json`, userData);
-				command.message.client.utils.sendMessage(command.message.channel, 'bot_add', {
-					user: user.username,
-					count: userData.bot
-				});
-				return;
-			}
-			if (['addtoken', 'list', 'removetoken'].includes(cmd)) {
-				const userData = command.message.client.utils.readFile(`users/${command.message.author.id}.json`);
-				if (!userData.bot)
-					userData.bot = 0;
-				if (userData.bot) {
-					const botsData = command.message.client.utils.readFile('../bots.json');
-					if (!botsData[command.message.author.id])
-						botsData[command.message.author.id] = [];
-					if (cmd == 'list') {
-						if (!botsData[command.message.author.id].length)
-							command.message.client.utils.sendMessage(command.message.channel, 'bot_list_empty');
-						else {
-							const embed = command.message.client.utils.createEmbed();
-							for (const bot of command.message.client.bots)
-								if (botsData[command.message.author.id].includes(bot.client.config.token))
-									botsData[command.message.author.id].splice(botsData[command.message.author.id].indexOf(bot.client.config.token), 1, bot);
-							let index = 0;
-							for (const bot of botsData[command.message.author.id]) {
-								let status = 'Offline :red_circle:';
-								let name;
-								if (typeof bot == 'object') {
-									name = bot.client.user.tag;
-									if (bot.client.ws.status == Constants.Status.READY)
-										status = 'Online :green_circle:';
-								} else
-									name = bot;
-								embed.addField(`${++index} - ${name}`, `Status: ${status}`);
+			];
+		else
+			options = [];
+		const commands = [];
+		for (const category of Object.keys(client.commands))
+			for (const instance of Object.values(client.commands[category]))
+				if (instance.name != module.exports.name)
+					commands.push({
+						name: instance.name,
+						value: instance.name
+					});
+		options = options.concat([
+			{
+				type: 1,
+				name: 'setname',
+				description: 'bot_help_setname',
+				options: [
+					{
+						type: 3,
+						name: 'name',
+						description: 'bot_help_setname',
+						required: true
+					}
+				]
+			},
+			{
+				type: 1,
+				name: 'setavatar',
+				description: 'bot_help_setavatar',
+				options: [
+					{
+						type: 3,
+						name: 'image_url',
+						description: 'bot_help_setavatar',
+						required: true
+					}
+				]
+			},
+			{
+				type: 1,
+				name: 'setpresence',
+				description: 'bot_help_setpresence',
+				options: [
+					{
+						type: 3,
+						name: 'type',
+						description: 'bot_help_setpresence',
+						required: true,
+						choices: [
+							{
+								name: 'playing',
+								value: 'PLAYING'
+							},
+							{
+								name: 'streaming',
+								value: 'STREAMING'
+							},
+							{
+								name: 'listening',
+								value: 'LISTENING'
+							},
+							{
+								name: 'watching',
+								value: 'WATCHING'
+							},
+							{
+								name: 'competing',
+								value: 'COMPETING'
 							}
-							command.message.client.utils.sendEmbed(command.message.channel, embed);
-						}
-						return;
+						]
+					},
+					{
+						type: 3,
+						name: 'message',
+						description: 'bot_help_setpresence',
+						required: true
 					}
-					if (command.args.length == 1) {
-						const embed = command.message.client.utils.createEmbed();
-						if (cmd == 'addtoken')
-							embed.addField(`${command.prefix}${command.command} ${command.args[0]} <token>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_addtoken')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_token')}`);
-						else
-							embed.addField(`${command.prefix}${command.command} ${command.args[0]} <number>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_removetoken'));
-						command.message.client.utils.sendEmbed(command.message.channel, embed);
-						return;
+				]
+			},
+			{
+				type: 1,
+				name: 'setcolor',
+				description: 'bot_help_setcolor',
+				options: [
+					{
+						type: 3,
+						name: 'color',
+						description: 'bot_help_setcolor',
+						required: true
 					}
-					if (cmd == 'addtoken') {
-						for (const tokens of Object.values(botsData))
-							if (tokens.includes(command.args[1])) {
-								command.message.client.utils.sendMessage(command.message.channel, 'error_token_already_registered');
-								return;
-							}
-						if (userData.bot <= botsData[command.message.author.id].length) {
-							command.message.client.utils.sendMessage(command.message.channel, 'error_max_bot');
-							return;
-						}
-						const bot = new command.message.client.BotClass(command.message.client.logger, {
-							owners: [
-								command.message.author.id
-							],
-							token: command.args[1]
-						});
-						const token = await bot.login().catch(error => {
-							command.message.client.utils.sendMessage(command.message.channel, 'error_api', { error });
-							return;
-						});
-						if (!token)
-							return;
-						botsData[command.message.author.id].push(token);
-						command.message.client.utils.savFile('../bots.json', botsData);
-						command.message.client.bots.push(bot);
-						command.message.client.utils.sendMessage(command.message.channel, 'bot_addtoken', {
-							tag: bot.client.user.tag
-						});
-					} else {
-						if (isNaN(command.args[1])) {
-							command.message.client.utils.sendMessage(command.message.channel, 'error_nan', {
-								arg: command.args[1]
-							});
-							return;
-						}
-						const number = parseInt(command.args[1]);
-						if (number <= 0 || number > botsData[command.message.author.id].length) {
-							command.message.client.utils.sendMessage(command.message.channel, 'error_not_found', {
-								type: client.utils.getMessage(message.channel, 'index'),
-								item: number
-							});
-							return;
-						}
-						const token = botsData[command.message.author.id][number - 1];
-						let bot = command.message.client.bots.find(bot => bot.client.config.token == token);
-						if (bot) {
-							command.message.client.bots.splice(command.message.client.bots.indexOf(bot), 1);
-							bot.client.emit('exit');
-							bot = bot.client.user.tag;
-						} else
-							bot = token;
-						botsData[command.message.author.id].splice(number - 1, 1);
-						command.message.client.utils.savFile('../bots.json', botsData);
-						command.message.client.utils.sendMessage(command.message.channel, 'bot_removetoken', {
-							tag: bot
-						});
-					}
-					return;
-				}
+				]
 			}
-		}
-		if (['setname', 'setavatar', 'setpresence', 'setcolor', 'enable', 'disable'].includes(cmd)
-			&& command.message.client.config.owners.includes(command.message.author.id)) {
-			const botData = command.message.client.utils.readFile('config.json');
-			if (cmd == 'setname') {
-				if (command.args.length < 2) {
-					const embed = command.message.client.utils.createEmbed();
-					embed.addField(`${command.prefix}${command.command} ${command.args[0]} <name>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setname'));
-					command.message.client.utils.sendEmbed(command.message.channel, embed);
-					return;
-				}
-				const name = command.args.slice(1).join(' ');
-				if (name.length > 32) {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_too_large', {
-						type: command.message.client.utils.getMessage(command.message.channel, 'name'),
-						max: '32 characters'
-					});
-					return;
-				}
-				command.message.client.user.setUsername(name);
-				command.message.client.utils.sendMessage(command.message.channel, 'bot_setname');
-			} else if (cmd == 'setavatar') {
-				if (command.args.length < 2) {
-					const embed = command.message.client.utils.createEmbed();
-					embed.addField(`${command.prefix}${command.command} ${command.args[0]} <url>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_setavatar'));
-					command.message.client.utils.sendEmbed(command.message.channel, embed);
-					return;
-				}
-				const url = command.args[1];
-				try {
-					new URL(url);
-					await Canvas.loadImage(url);
-					await command.message.client.user.setAvatar(url);
-				} catch (error) {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_api', { error: error.message });
-					return;
-				}
-				command.message.client.utils.sendMessage(command.message.channel, 'bot_setavatar');
-			} else if (cmd == 'setpresence') {
-				if (command.args.length <= 2) {
-					const embed = command.message.client.utils.createEmbed();
-					embed.addField(`${command.prefix}${command.command} ${command.args[0]} <type> <message>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence')}\n${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setpresence_flags')}`);
-					command.message.client.utils.sendEmbed(command.message.channel, embed);
-					return;
-				}
-				const type = command.args[1].toLowerCase();
-				if (!['playing', 'streaming', 'listening', 'watching', 'competing'].includes(type)) {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_not_found', {
-						type: client.utils.getMessage(message.channel, 'type'),
-						item: type
-					});
-					return;
-				}
-				let message = '';
-				for (let index = 2; index < command.args.length; index++) {
-					if (message.length)
-						message += ' ';
-					message += command.args[index];
-				}
-				botData.presence = {
-					activity: {
-						name: message,
-						type: type.toUpperCase()
-					}
-				};
-				command.message.client.utils.savFile('config.json', botData);
-				command.message.client.config.presence = botData.presence;
-				command.message.client.user.setPresence(botData.presence);
-				command.message.client.utils.sendMessage(command.message.channel, 'bot_setpresence');
-			} else if (cmd == 'setcolor') {
-				if (command.args.length == 1) {
-					const embed = command.message.client.utils.createEmbed();
-					embed.addField(`${command.prefix}${command.command} setcolor <hex>`, `${command.message.client.utils.getMessage(command.message.channel, 'bot_help_setcolor')}\n${command.message.client.utils.getMessage(command.message.channel, 'help_hex_color')}`);
-					command.message.client.utils.sendEmbed(command.message.channel, embed);
-					return;
-				}
-				const color = Util.resolveColor(command.args[1]);
-				if (isNaN(color)) {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_invalid_color');
-					return;
-				}
-				botData.color = color;
-				command.message.client.utils.savFile('config.json', botData);
-				command.message.client.config.color = botData.color;
-				command.message.client.utils.sendMessage(command.message.channel, 'bot_setcolor');
-			} else {
-				if (command.args.length == 1) {
-					const embed = command.message.client.utils.createEmbed();
-					if (cmd == 'enable')
-						embed.addField(`${command.prefix}${command.command} enable <command>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_command_enable'));
-					else
-						embed.addField(`${command.prefix}${command.command} disable <command>`, command.message.client.utils.getMessage(command.message.channel, 'bot_help_command_disable'));
-					command.message.client.utils.sendEmbed(command.message.channel, embed);
-					return;
-				}
-				const arg = command.args[1].toLowerCase();
-				let _command;
-				for (const category of Object.keys(command.message.client.commands))
-					for (const instance of Object.values(command.message.client.commands[category]))
-						if (instance.name == arg || instance.aliases.includes(arg)) {
-							_command = instance.name;
-							break;
+		]);
+		if (!client.main)
+			options = options.concat([
+				{
+					type: 1,
+					name: 'enable',
+					description: 'bot_help_command_enable',
+					options: [
+						{
+							type: 3,
+							name: 'command',
+							description: 'bot_help_command_enable',
+							required: true,
+							choices: commands
 						}
-				if (_command == module.exports.name)
-					_command = null;
-				if (!_command) {
-					command.message.client.utils.sendMessage(command.message.channel, 'error_no_command', {
-						command: `${command.prefix}${arg}`
-					});
-					return;
+					]
+				},
+				{
+					type: 1,
+					name: 'disable',
+					description: 'bot_help_command_disable',
+					options: [
+						{
+							type: 3,
+							name: 'command',
+							description: 'bot_help_command_disable',
+							required: true,
+							choices: commands
+						}
+					]
 				}
-				if (!botData.disable)
-					botData.disable = [];
-				if (botData.disable.includes(_command))
-					botData.disable.splice(botData.disable.indexOf(_command), 1);
-				if (cmd == 'disable')
-					botData.disable.push(_command);
-				command.message.client.utils.savFile('config.json', botData);
-				command.message.client.config.disable = botData.disable;
-				if (cmd == 'enable')
-					command.message.client.utils.sendMessage(command.message.channel, 'bot_enable', {
-						command: _command
-					});
-				else
-					command.message.client.utils.sendMessage(command.message.channel, 'bot_disable', {
-						command: _command
-					});
-			}
-			return;
-		}
-		command.message.client.utils.sendEmbed(command.message.channel, embed);
+			]);
+		return options;
 	},
-	permission: object => {
+	command: async object => {
 		if (object.client.main) {
-			if (object.client.config.owners.includes(object.user.id))
-				return true;
-			const userData = object.client.utils.readFile(`users/${object.user.id}.json`);
+			if (['addtoken', 'list', 'removetoken'].includes(object.options[0].name)) {
+				const userData = await object.client.utils.readFile(object.client.utils.docRef.collection('user').doc(object.user.id));
+				if (!userData.bot)
+					userData.bot = 0;
+				const botConfig = await object.client.utils.readFile(object.client.utils.docRef);
+				if (!botConfig.bot)
+					botConfig.bot = {};
+				if (!botConfig.bot[object.user.id])
+					botConfig.bot[object.user.id] = [];
+				if (object.options[0].name == 'list') {
+					if (!botConfig.bot[object.user.id].length)
+						return object.client.utils.getMessage(object.channel, 'bot_list_empty');
+					else {
+						const embed = object.client.utils.createEmbed();
+						for (const bot of object.client.bot)
+							if (botConfig.bot[object.user.id].includes(bot.client.config.token))
+								botConfig.bot[object.user.id].splice(botConfig.bot[object.user.id].indexOf(bot.client.config.token), 1, bot);
+						let index = 0;
+						for (const bot of botConfig.bot[object.user.id]) {
+							let status = 'Offline :red_circle:';
+							let name;
+							if (typeof bot == 'object') {
+								name = bot.client.user.tag;
+								if (bot.client.ws.status == Constants.Status.READY)
+									status = 'Online :green_circle:';
+							} else
+								name = bot;
+							embed.addField(`${++index} - ${name}`, `Status: ${status}`);
+						}
+						return embed;
+					}
+				} else if (object.options[0].name == 'addtoken') {
+					for (const tokens of Object.values(botConfig.bot))
+						if (tokens.includes(object.options[0].options[0].value))
+							return object.client.utils.getMessage(object.channel, 'error_token_already_registered');
+					if (object.client.config.owners.includes(object.user.id)
+						|| userData.bot <= botConfig.bot[object.user.id].length)
+						return object.client.utils.getMessage(object.channel, 'error_max_bot');
+					const bot = new object.client.BotClass(object.client.logger, object.client.firebase, {
+						owners: [
+							object.user.id
+						],
+						token: object.options[0].options[0].value
+					});
+					const token = await bot.login().catch(error => {
+						object.client.utils.sendMessage(object.channel, 'error_api', { error });
+					});
+					if (!token)
+						return;
+					botConfig.bot[object.user.id].push(token);
+					await object.client.utils.savFile(object.client.utils.docRef, botConfig);
+					object.client.bot.push(bot);
+					return object.client.utils.getMessage(object.channel, 'bot_addtoken', {
+						tag: bot.client.user.tag
+					});
+				} else {
+					const number = object.options[0].options[0].value;
+					if (number <= 0 || number > botConfig.bot[object.user.id].length)
+						return object.client.utils.getMessage(object.channel, 'error_index_not_found', {
+							index: number
+						});
+					const token = botConfig.bot[object.user.id][number - 1];
+					let bot = object.client.bot.find(bot => bot.client.config.token == token);
+					if (bot) {
+						object.client.bot.splice(object.client.bot.indexOf(bot), 1);
+						bot.client.emit('exit');
+						bot = bot.client.user.tag;
+					} else
+						bot = token;
+					botConfig.bot[object.user.id].splice(number - 1, 1);
+					await object.client.utils.savFile(object.client.utils.docRef, botConfig);
+					return object.client.utils.getMessage(object.channel, 'bot_removetoken', {
+						tag: bot
+					});
+				}
+			}
+		}
+		if (!object.client.config.owners.includes(object.user.id))
+			return object.client.utils.getMessage(object.channel, 'error_not_owner');
+		if (object.options[0].name == 'setname') {
+			const name = object.options[0].options[0].value;
+			if (name.length > 32)
+				return object.client.utils.getMessage(object.channel, 'error_too_large', {
+					type: object.client.utils.getMessage(object.channel, 'name'),
+					max: '32'
+				});
+			object.client.user.setUsername(name);
+			return object.client.utils.getMessage(object.channel, 'bot_setname');
+		} else if (object.options[0].name == 'setavatar') {
+			const url = object.options[0].options[0].value;
+			try {
+				new URL(url);
+				await object.client.user.setAvatar(url);
+			} catch (error) {
+				return object.client.utils.getMessage(object.channel, 'error_api', { error: error.message });
+			}
+			return object.client.utils.getMessage(object.channel, 'bot_setavatar');
+		}
+		const botConfig = await object.client.utils.readFile(object.client.utils.docRef);
+		if (object.options[0].name == 'setpresence') {
+			const type = object.options[0].options[0].value;
+			const message = object.options[0].options[1].value;
+			botConfig.presence = {
+				activity: {
+					name: message,
+					type: type.toUpperCase()
+				}
+			};
+			await object.client.utils.savFile(object.client.utils.docRef, botConfig);
+			object.client.config.presence = botConfig.presence;
+			object.client.options.presence = botConfig.presence;
+			object.client.user.setPresence(botConfig.presence);
+			return object.client.utils.getMessage(object.channel, 'bot_setpresence');
+		} else if (object.options[0].name == 'setcolor') {
+			const color = Util.resolveColor(object.options[0].options[0].value);
+			if (isNaN(color))
+				return object.client.utils.getMessage(object.channel, 'error_invalid_color');
+			botConfig.color = color;
+			await object.client.utils.savFile(object.client.utils.docRef, botConfig);
+			object.client.config.color = botConfig.color;
+			return object.client.utils.getMessage(object.channel, 'bot_setcolor');
+		}
+		const command = object.options[0].options[0].value;
+		if (command == null || command == module.exports.name)
+			return object.client.utils.getMessage(object.channel, 'error_no_command', { command });
+		if (!botConfig.disable)
+			botConfig.disable = [];
+		if (object.options[0].name == 'enable'
+			&& botConfig.disable.includes(command))
+			botConfig.disable.splice(botConfig.disable.indexOf(command), 1);
+		else if (object.options[0].name == 'disable')
+			botConfig.disable.push(command);
+		await object.client.utils.savFile(object.client.utils.docRef, botConfig);
+		object.client.config.disable = botConfig.disable;
+		if (object.options[0].name == 'enable')
+			return object.client.utils.getMessage(object.channel, 'bot_enable', { command });
+		return object.client.utils.getMessage(object.channel, 'bot_disable', { command });
+	},
+	permission: async object => {
+		if (object.client.config.owners.includes(object.user.id))
+			return true;
+		if (object.client.main) {
+			const userData = await object.client.utils.readFile(object.client.utils.docRef.collection('user').doc(object.user.id));
 			if (userData.bot)
 				return true;
 		}
-		if (object.client.config.owners.includes(object.user.id))
-			return true;
 		return false;
 	},
 	ready: (client) => {
-		/*if (!client.main)
+		if (!client.main)
 			return;
-		const botsData = client.utils.readFile('bots.json');
-		for (const id of Object.keys(botsData))
-			for (const token of botsData[id]) {
-				const pending = new client.BotClass(client.logger, {
-					owners: [
-						id
-					],
-					token
-				});
-				client.bots.push(pending);
-				pending.login();
-			}*/
+		if (client.config.bot)
+			for (const id of Object.keys(client.config.bot))
+				for (const token of client.config.bot[id]) {
+					const pending = new client.BotClass(client.logger, client.firebase, {
+						owners: [
+							id
+						],
+						token
+					});
+					client.bot.push(pending);
+					pending.login();
+				}
 	}
 };

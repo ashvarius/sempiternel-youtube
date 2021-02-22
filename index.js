@@ -1,5 +1,6 @@
 const process = require('process');
 const winston = require('winston');
+const admin = require('firebase-admin');
 const BotClass = require('./instance.js');
 
 const logger = winston.createLogger({
@@ -24,7 +25,10 @@ const logger = winston.createLogger({
 	)
 });
 
-const bot = new BotClass(logger, {}, require('./config.json').client);
+const config = require('./config.json');
+const bot = new BotClass(logger, admin.initializeApp({
+	credential: admin.credential.cert(config['firebase-credential'])
+}), {}, config.client);
 bot.client.main = true;
 bot.client.BotClass = BotClass;
 bot.client.bot = [];
