@@ -50,7 +50,7 @@ module.exports = {
 		await object.client.utils.savFile(object.client.utils.docRef.collection('guild').doc(object.guild.id), guildData);
 		return object.client.utils.getMessage(object.channel, `temporary_${object.options[0].name}`, { channel });
 	},
-	permission: object => {
+	checkPermission: object => {
 		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;

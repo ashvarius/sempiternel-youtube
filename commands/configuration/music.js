@@ -459,7 +459,7 @@ module.exports = {
 			message.react(emoji);
 		return object.client.utils.getMessage(object.channel, 'music_success');
 	},
-	permission: object => {
+	checkPermission: object => {
 		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;

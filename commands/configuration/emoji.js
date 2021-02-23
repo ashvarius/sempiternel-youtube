@@ -24,7 +24,7 @@ module.exports = {
 				message.delete();
 		} while (reaction);
 	},
-	permission: object => {
+	checkPermission: object => {
 		if (!object.member.hasPermission('MANAGE_EMOJIS'))
 			return false;
 		return true;

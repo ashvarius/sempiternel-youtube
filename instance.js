@@ -164,7 +164,7 @@ class DiscordBot extends EventEmitter {
 								if (object.channel.type == 'dm' && !instance.private)
 									resolve(client.utils.getMessage(object.channel, 'error_private_disable'));
 								else if (!client.config.owners.includes(object.user.id)
-									&& instance.permission && !instance.permission(object))
+									&& instance.checkPermission && !instance.checkPermission(object))
 									resolve(client.utils.getMessage(object.channel, 'error_no_access'));
 								else {
 									if (instance.permissions)

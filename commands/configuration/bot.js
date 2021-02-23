@@ -305,7 +305,7 @@ module.exports = {
 			return object.client.utils.getMessage(object.channel, 'bot_enable', { command });
 		return object.client.utils.getMessage(object.channel, 'bot_disable', { command });
 	},
-	permission: async object => {
+	checkPermission: async object => {
 		if (object.client.config.owners.includes(object.user.id))
 			return true;
 		if (object.client.main) {

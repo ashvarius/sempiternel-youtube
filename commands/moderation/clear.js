@@ -24,7 +24,7 @@ module.exports = {
 		}
 		return object.client.utils.getMessage(object.channel, 'clear_success', { amount: deleted });
 	},
-	permission: object => {
+	checkPermission: object => {
 		if (!object.member.hasPermission('MANAGE_MESSAGES'))
 			return false;
 		return true;

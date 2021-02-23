@@ -52,5 +52,13 @@
 	"footer": "Footer",
 	"image": "Image",
 	"bassboost": "Bass Boost",
-	"lyrics": "Lyrics"
+	"lyrics": "Lyrics",
+	"inviter": "Inviter",
+	"code": "Code",
+	"uses": "Uses",
+	"empty": "Empty",
+	"tag": "Tag",
+	"executor": "Executor",
+	"old": "Old",
+	"new": "New"
 }

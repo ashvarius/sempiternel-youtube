@@ -107,7 +107,7 @@ module.exports = {
 					},
 					{
 						name: `🎫 ${object.client.utils.getMessage(object.channel, 'permissions')}`,
-						value: member.permissions.toArray().map(item => `\`${item}\``).join(', ')
+						value: member.permissions.toArray().map(item => `\`${item}\``).join(', ') || object.client.utils.getMessage(object.channel, 'empty')
 					}
 				]);
 			embeds.push(embed);

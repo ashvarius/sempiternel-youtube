@@ -124,7 +124,7 @@ module.exports = {
 			return object.client.utils.getMessage(object.channel, 'autorole_add', { role });
 		return object.client.utils.getMessage(object.channel, 'autorole_remove', { role });
 	},
-	permission: object => {
+	checkPermission: object => {
 		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;

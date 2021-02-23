@@ -110,7 +110,7 @@ module.exports = {
 		if (object.options[0].name == 'reset')
 			return object.client.utils.getMessage(object.channel, 'reaction_reset');
 	},
-	permission: object => {
+	checkPermission: object => {
 		if (!object.member.hasPermission('ADMINISTRATOR'))
 			return false;
 		return true;
