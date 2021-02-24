@@ -60,5 +60,6 @@
 	"tag": "Tag",
 	"executor": "Executor",
 	"old": "Old",
-	"new": "New"
+	"new": "New",
+	"nomicro": "No Micro"
 }

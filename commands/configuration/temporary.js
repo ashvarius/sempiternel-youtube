@@ -56,8 +56,10 @@ module.exports = {
 		return true;
 	},
 	voiceStateUpdate: async (oldState, newState) => {
+		if (oldState.channelID == newState.channelID)
+			return;
 		const guildData = await newState.guild.client.utils.readFile(newState.guild.client.utils.docRef.collection('guild').doc(newState.guild.id));
-		if (!guildData.temporary)
+		if (!guildData.temporary || !newState.guild.me.hasPermission('MANAGE_CHANNELS'))
 			return;
 		if (oldState.channel
 			&& cache[newState.guild.id]
@@ -74,11 +76,9 @@ module.exports = {
 					break;
 				}
 			}
-		if (!(newState.channelID && guildData.temporary.includes(newState.channelID)))
+		if (!(newState.channelID && guildData.temporary.includes(newState.channelID))
+			|| newState.guild.me.hasPermission('MOVE_MEMBERS'))
 			return;
-		for (const permission of ['MANAGE_CHANNELS', 'MOVE_MEMBERS'])
-			if (!newState.guild.me.hasPermission(permission))
-				return;
 		let name = newState.member.displayName;
 		name = name.split(' ')[0];
 		if (name.length > 8)
@@ -148,5 +148,8 @@ module.exports = {
 					await waiting.delete();
 			}
 		}
+	},
+	guildDelete: guild => {
+		delete cache[guild.id];
 	}
 };

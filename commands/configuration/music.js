@@ -400,6 +400,7 @@ const add = async (infos, channel, member, silence = false) => {
 					if (!guild.client.music)
 						return;
 					const nickname = guild.client.music[guild.id].nickname;
+					const lyrics = guild.client.music[guild.id].lyrics && guild.client.music[guild.id].lyrics.message;
 					delete guild.client.music[guild.id];
 					if (guild.me.hasPermission('CHANGE_NICKNAME'))
 						guild.me.setNickname(nickname);
@@ -410,6 +411,9 @@ const add = async (infos, channel, member, silence = false) => {
 					const message = channel.messages.cache.get(guildData.music.message);
 					if (message)
 						channel.client.utils.replaceEmbed(message, waitingEmbed(channel.client, channel));
+					const lyrics_message = channel.messages.cache.get(lyrics);
+					if (lyrics_message)
+						await lyrics_message.delete();
 				} catch (error) {
 					channel.client.logger.log('error', error);
 				}

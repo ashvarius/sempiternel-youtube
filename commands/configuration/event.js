@@ -269,6 +269,8 @@ module.exports = {
 			member.client.utils.sendEmbed(channel, embed);
 		}
 		const event = 'management';
+		if (!guildData.event[event])
+			return;
 		channel = await member.client.channels.fetch(guildData.event[event]);
 		if (!(member.guild.me.hasPermission('MANAGE_GUILD') && channel
 			&& channel.permissionsFor(member.guild.me).has(['EMBED_LINKS', 'ATTACH_FILES'])))
@@ -311,6 +313,8 @@ module.exports = {
 		if (!guildData.event)
 			guildData.event = {};
 		const event = 'message';
+		if (!guildData.event[event])
+			return;
 		const channel = await message.client.channels.fetch(guildData.event[event]);
 		if (!(channel && channel.permissionsFor(message.guild.me).has(['EMBED_LINKS', 'ATTACH_FILES'])))
 			return;
@@ -330,6 +334,8 @@ module.exports = {
 		if (!guildData.event)
 			guildData.event = {};
 		const event = 'message';
+		if (!guildData.event[event])
+			return;
 		const channel = await newMessage.client.channels.fetch(guildData.event[event]);
 		if (!(channel && channel.permissionsFor(newMessage.guild.me).has(['EMBED_LINKS', 'ATTACH_FILES'])))
 			return;
@@ -347,6 +353,8 @@ module.exports = {
 		if (!guildData.event)
 			guildData.event = {};
 		const event = 'vocal';
+		if (!guildData.event[event])
+			return;
 		const channel = await newState.guild.client.channels.fetch(guildData.event[event]);
 		if (!(channel && channel.permissionsFor(newState.guild.me).has(['EMBED_LINKS', 'ATTACH_FILES'])))
 			return;

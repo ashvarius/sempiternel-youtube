@@ -62,5 +62,7 @@
 	"webhook_activation_on": "Webhook has been activated.",
 	"webhook_activation_off": "Webhook has been desactivated.",
 	"webhook_setname": "The name has been changed.",
-	"webhook_setavatar": "The avatar has been changed."
+	"webhook_setavatar": "The avatar has been changed.",
+	"nomicro_true": "Automatic channel creation for those without a microphone is enabled.",
+	"nomicro_false": "Automatic channel creation for those without a microphone is disabled."
 }

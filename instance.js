@@ -74,6 +74,11 @@ class DiscordBot extends EventEmitter {
 					name: 'logging',
 					type: 'WATCHING'
 				}
+			},
+			ws: {
+				properties: {
+					$browser: 'Discord iOS'
+				}
 			}
 		}, options));
 		client.logger = logger;
@@ -167,7 +172,7 @@ class DiscordBot extends EventEmitter {
 									&& instance.checkPermission && !instance.checkPermission(object))
 									resolve(client.utils.getMessage(object.channel, 'error_no_access'));
 								else {
-									if (instance.permissions)
+									if (object.channel.type != 'dm' && instance.permissions)
 										for (const permission of instance.permissions)
 											if (!object.guild.me.hasPermission(permission)) {
 												resolve(object.client.utils.getMessage(object.channel, 'error_bot_no_permission', {
