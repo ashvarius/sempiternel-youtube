@@ -76,8 +76,8 @@ module.exports = {
 					break;
 				}
 			}
-		if (!(newState.channelID && guildData.temporary.includes(newState.channelID))
-			|| newState.guild.me.hasPermission('MOVE_MEMBERS'))
+		if (!(newState.channelID && guildData.temporary.includes(newState.channelID)
+			&& newState.guild.me.hasPermission('MOVE_MEMBERS')))
 			return;
 		let name = newState.member.displayName;
 		name = name.split(' ')[0];
