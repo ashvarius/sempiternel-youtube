@@ -262,6 +262,8 @@ module.exports = {
 			guildData.event = {};
 		if (!guildData.event.image)
 			guildData.event.image = {};
+		if (!guildData.event.image.channel)
+			return;
 		let channel = await member.client.channels.fetch(guildData.event.image.channel);
 		if (channel && channel.permissionsFor(member.guild.me).has(['EMBED_LINKS', 'ATTACH_FILES'])) {
 			const embed = member.client.utils.createEmbed();
