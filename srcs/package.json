@@ -2,7 +2,7 @@
   "name": "sempiternel",
   "version": "0.0.2",
   "description": "discord bot",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "main": "./start.sh"
   },
@@ -11,12 +11,12 @@
   "dependencies": {
     "@discordjs/opus": "0.3.3",
     "bufferutil": "^4.0.3",
-    "canvas": "^2.6.1",
+    "canvas": "^2.7.0",
     "discord.js": "^12.5.1",
     "erlpack": "github:discord/erlpack",
-    "events": "^3.2.0",
+    "events": "^3.3.0",
     "ffmpeg-static": "^4.2.7",
-    "firebase": "^8.2.9",
+    "firebase": "^8.2.10",
     "firebase-admin": "^9.5.0",
     "google-tts-api": "^2.0.1",
     "lyrics-finder": "^21.7.0",
@@ -33,6 +33,6 @@
     "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
-    "eslint": "^7.20.0"
+    "eslint": "^7.21.0"
   }
 }

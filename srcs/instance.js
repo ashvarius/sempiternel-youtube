@@ -58,8 +58,6 @@ class DiscordBot extends EventEmitter {
 						}
 		};
 		const client = this.client = new Client(Object.assign({
-			messageCacheLifetime: 60 * 60,
-			messageSweepInterval: 10 * 60,
 			fetchAllMembers: false,
 			partials: [
 				'USER',

@@ -42,6 +42,7 @@ bot.on('exit', async (code = 0) => {
 	process.exit(code);
 });
 
+process.on('SIGTERM', () => bot.emit('exit'));
 process.on('SIGINT', () => bot.emit('exit'));
 process.on('uncaughtException', error => logger.log('error', error));
 process.on('unhandledRejection', error => logger.log('error', error));

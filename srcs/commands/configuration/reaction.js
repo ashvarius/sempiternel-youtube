@@ -115,16 +115,6 @@ module.exports = {
 			return false;
 		return true;
 	},
-	ready: async client => {
-		for (const guild of client.guilds.cache.values()) {
-			const guildData = await client.utils.readFile(client.utils.docRef.collection('guild').doc(guild.id));
-			if (guildData.reaction)
-				for (const channel of guild.channels.cache.values())
-					if (guildData.reaction[channel.id])
-						if (channel.type == 'text' && channel.viewable)
-							channel.messages.fetch({ cache: true, force: true });
-		}
-	},
 	messageReactionAdd: async (messageReaction, user) => {
 		if (user.bot || messageReaction.message.channel.type == 'dm')
 			return;

@@ -15,6 +15,12 @@ if (fs.existsSync('dictionaries'))
 		}
 	}
 
+const needPersistent = (docRef) => {
+	const collection  = docRef._path.segments[docRef._path.segments.length - 2];
+	console.log(collection, ['guild'].includes(collection);
+	return ['guild'].includes(collection);
+};
+
 class Utils {
 	constructor(client, firestore) {
 		this.client = client;
@@ -61,7 +67,7 @@ class Utils {
 		if (Object.is(loadedFiles.get(docRef.path), object))
 			return object;
 		await docRef.set(object);
-		loadedFiles.set(docRef.path, object);
+		loadedFiles.set(docRef.path, object, needPersistent(docRef));
 		return object;
 	}
 	async readFile(docRef) {
@@ -72,7 +78,7 @@ class Utils {
 			const doc = await docRef.get();
 			if (doc.exists) {
 				object = doc.data();
-				loadedFiles.set(docRef.path, object);
+				loadedFiles.set(docRef.path, object, needPersistent(docRef));
 			}
 		}
 		if (object == null)
