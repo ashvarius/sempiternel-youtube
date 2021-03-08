@@ -83,7 +83,7 @@ class DiscordBot extends EventEmitter {
 		client.firebase = firebase;
 		client.config = config;
 		client.commands = commands;
-		client.on('debug', m => logger.log('debug', m));
+		//client.on('debug', m => logger.log('debug', m));
 		client.on('warn', m => logger.log('warn', m));
 		client.on('error', m => logger.log('error', m));
 		client.on('shardError', m => logger.log('error', m));

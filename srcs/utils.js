@@ -17,7 +17,7 @@ if (fs.existsSync('dictionaries'))
 
 const needPersistent = (docRef) => {
 	const collection  = docRef._path.segments[docRef._path.segments.length - 2];
-	console.log(collection, ['guild'].includes(collection);
+	console.log(collection, ['guild'].includes(collection));
 	return ['guild'].includes(collection);
 };
 
