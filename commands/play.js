@@ -16,10 +16,7 @@ const { FFmpeg, opus } = require('prism-media');
 const play = async guild => {
 	guild.music.current = guild.music.queue.shift();
 	const info = await getInfo(guild.music.current.url);
-	const format = chooseFormat(info.formats, {
-		filter: 'audioonly',
-		quality: 'highestaudio',
-	});
+	const format = chooseFormat(info.formats, { quality: 'highestaudio' });
 	let options = [
 		'-reconnect', '1',
 		'-reconnect_streamed', '1',
@@ -49,7 +46,6 @@ module.exports = {
 		.addStringOption(option => option.setName('input').setDescription('The video to search on Youtube.').setRequired(true)),
 	async execute(interaction) {
 		if (!interaction.inGuild()) return interaction.reply({ content: 'You must be on a server to run this command.', ephemeral: true });
-		if (!interaction.guild.music) interaction.guild.music = {};
 		const voiceChannel = interaction.member.voice.channel;
 		if (!voiceChannel) return interaction.reply({ content: 'You must be in a voice channel.', ephemeral: true });
 		const botVoiceChannel = interaction.guild.me.voice.channel;
@@ -63,16 +59,8 @@ module.exports = {
 
 		if (ytpl.validateID(value)) {
 			let playlist = await ytpl(value, { pages: 1 });
-			row.addComponents(
-				new MessageButton()
-					.setLabel('Playlist')
-					.setStyle('LINK')
-					.setURL(playlist.url),
-				new MessageButton()
-					.setLabel('Channel')
-					.setStyle('LINK')
-					.setURL(playlist.author.url),
-			);
+			row.addComponents(new MessageButton().setLabel('Playlist').setStyle('LINK').setURL(playlist.url));
+			if (playlist.author) row.addComponents(new MessageButton().setLabel('Channel').setStyle('LINK').setURL(playlist.author.url));
 			embed.setDescription(playlist.title)
 				.setImage(playlist.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url);
 			for (const item of playlist.items) if (item.isPlayable) videos.push({ title: item.title, url: item.url });
@@ -123,6 +111,7 @@ module.exports = {
 				.setImage(video.thumbnail);
 		}
 
+		if (!interaction.guild.music) interaction.guild.music = {};
 		if (!interaction.guild.music.queue) interaction.guild.music.queue = [];
 		embed.setTitle(`Add in ${interaction.guild.music.queue.length + 1} position.`);
 		interaction.guild.music.queue = interaction.guild.music.queue.concat(videos);
