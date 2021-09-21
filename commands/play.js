@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const ytdl = require('ytdl-core');
+const { getBasicInfo, chooseFormat, validateURL, getInfo } = require('ytdl-core');
 const {
 	AudioPlayerStatus,
 	StreamType,
@@ -11,15 +11,36 @@ const {
 const ytsr = require('ytsr');
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const ytpl = require('ytpl');
+const { FFmpeg, opus } = require('prism-media');
 
-const play = (guild) => {
+const play = async guild => {
+	console.log('play :D');
 	guild.music.current = guild.music.queue.shift();
-	const stream = ytdl(guild.music.current.url, {
+	const info = await getInfo(guild.music.current.url);
+	const format = chooseFormat(info.formats, {
 		filter: 'audioonly',
-		quality: 'lowestaudio',
+		quality: 'highestaudio',
 	});
-	const resource = createAudioResource(stream, { inputType: StreamType.Arbitrary });
+	let options = [
+		'-reconnect', '1',
+		'-reconnect_streamed', '1',
+		'-reconnect_delay_max', '5',
+		'-ss', 0,
+		'-i', format.url,
+		'-analyzeduration', '0',
+		'-loglevel', '0',
+		'-f', 's16le',
+		'-ar', '48000',
+		'-ac', '2',
+	];
+	if (guild.music.filter) options = options.concat(['-af', guild.music.filter]);
+	const transcoder = new FFmpeg({ args: options });
+	const stream = transcoder.pipe(new opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
+	const resource = createAudioResource(stream, { inputType: StreamType.Opus });
 	guild.music.player.play(resource);
+	let nick = guild.music.current.title;
+	if (nick.length > 32) nick = nick.substring(0, 32);
+	guild.me.setNickname(nick);
 };
 
 module.exports = {
@@ -64,8 +85,8 @@ module.exports = {
 
 		if (videos.length == 0) {
 			let video;
-			if (ytdl.validateURL(value)) {
-				const basicInfo = await ytdl.getBasicInfo(value);
+			if (validateURL(value)) {
+				const basicInfo = await getBasicInfo(value);
 				videos.push({ title: basicInfo.videoDetails.title, url: basicInfo.videoDetails.video_url });
 				video = {
 					video_url: basicInfo.videoDetails.video_url,
