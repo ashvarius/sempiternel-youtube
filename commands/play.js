@@ -14,7 +14,6 @@ const ytpl = require('ytpl');
 const { FFmpeg, opus } = require('prism-media');
 
 const play = async guild => {
-	console.log('play :D');
 	guild.music.current = guild.music.queue.shift();
 	const info = await getInfo(guild.music.current.url);
 	const format = chooseFormat(info.formats, {
@@ -49,6 +48,7 @@ module.exports = {
 		.setDescription('Play a video on YouTube.')
 		.addStringOption(option => option.setName('input').setDescription('The video to search on Youtube.').setRequired(true)),
 	async execute(interaction) {
+		if (!interaction.inGuild()) return interaction.reply({ content: 'You must be on a server to run this command.', ephemeral: true });
 		if (!interaction.guild.music) interaction.guild.music = {};
 		const voiceChannel = interaction.member.voice.channel;
 		if (!voiceChannel) return interaction.reply({ content: 'You must be in a voice channel.', ephemeral: true });

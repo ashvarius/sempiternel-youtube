@@ -22,6 +22,7 @@ module.exports = {
 		.setDescription('Add a filter to the video.')
 		.addStringOption(option => option.setName('input').setDescription('The filter you want.').setRequired(true).addChoices(Object.keys(filters).map(name => [name, filters[name]]))),
 	async execute(interaction) {
+		if (!interaction.inGuild()) return interaction.reply({ content: 'You must be on a server to run this command.', ephemeral: true });
 		if (!interaction.guild.music) return interaction.reply({ content: 'No video is playing.', ephemeral: true });
 		const value = interaction.options.getString('input');
 		if (value == filters.clear) delete interaction.guild.music.filter;
