@@ -46,4 +46,10 @@ client.on('error', m => client.logger.log('error', m));
 
 process.on('uncaughtException', error => client.logger.log('error', error));
 
+process.on('exit', () => client.destroy());
+
+process.on('SIGINT', () => process.exit());
+process.on('SIGUSR1', () => process.exit());
+process.on('SIGUSR2', () => process.exit());
+
 client.login(token);
