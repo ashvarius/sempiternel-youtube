@@ -15,13 +15,8 @@ const rest = new REST({ version: '9' }).setToken(token);
 
 (async () => {
 	try {
-		await rest.put(
-			Routes.applicationCommands('705376114540806174'),
-			{ body: commands },
-		);
-
+		await rest.put(Routes.applicationCommands('705376114540806174'), { body: commands });
 		console.log('Successfully registered application commands.');
-	} catch (error) {
-		console.error(error);
 	}
+	catch (error) { console.error(error); }
 })();
