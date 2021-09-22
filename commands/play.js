@@ -28,6 +28,7 @@ const play = async guild => {
 		'-f', 's16le',
 		'-ar', '48000',
 		'-ac', '2',
+		'-vn',
 	];
 	if (guild.music.filter) options = options.concat(['-af', guild.music.filter]);
 	const transcoder = new FFmpeg({ args: options });
