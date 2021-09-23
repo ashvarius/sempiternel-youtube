@@ -53,7 +53,7 @@ module.exports = {
 		if (botVoiceChannel && voiceChannel.id != botVoiceChannel.id) return interaction.reply({ content: 'You must be in the same channel as the bot.', ephemeral: true });
 		await interaction.deferReply();
 
-		const value = interaction.options.getString('input');
+		let value = interaction.options.getString('input', true);
 		const videos = [];
 		const row = new MessageActionRow();
 		const embed = new MessageEmbed();
@@ -64,40 +64,31 @@ module.exports = {
 			if (playlist.author) row.addComponents(new MessageButton().setLabel('Channel').setStyle('LINK').setURL(playlist.author.url));
 			embed.setDescription(playlist.title)
 				.setImage(playlist.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url);
-			for (const item of playlist.items) if (item.isPlayable) videos.push({ title: item.title, url: item.url });
+			for (const item of playlist.items) if (item.isPlayable) videos.push({ title: item.title, url: item.url, duration: item.durationSec });
 			while (playlist.continuation) {
 				playlist = await ytpl.continueReq(playlist.continuation);
-				for (const item of playlist.items) if (item.isPlayable) videos.push({ title: item.title, url: item.url });
+				for (const item of playlist.items) if (item.isPlayable) videos.push({ title: item.title, url: item.url, duration: item.durationSec });
 			}
 			embed.addField('Videos', videos.length.toString());
 		}
 
 		if (videos.length == 0) {
-			let video;
-			if (validateURL(value)) {
-				const basicInfo = await getBasicInfo(value);
-				videos.push({ title: basicInfo.videoDetails.title, url: basicInfo.videoDetails.video_url });
-				video = {
-					video_url: basicInfo.videoDetails.video_url,
-					channel_url: basicInfo.videoDetails.author.channel_url,
-					title: basicInfo.videoDetails.title,
-					thumbnail: basicInfo.videoDetails.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
-				};
-			}
-			else {
+			if (!validateURL(value)) {
 				const filters = await ytsr.getFilters(value);
 				const filter = filters.get('Type').get('Video');
 				const searchResults = await ytsr(filter.url, { limit: 1 });
 				if (searchResults.items.length == 0) return interaction.editReply({ content: 'Could not find the video.', ephemeral: true });
-				const item = searchResults.items[0];
-				videos.push({ title: item.title, url: item.url });
-				video = {
-					video_url: item.url,
-					channel_url: item.author.url,
-					title: item.title,
-					thumbnail: item.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
-				};
+				value = searchResults.items[0].url;
 			}
+			const basicInfo = await getBasicInfo(value);
+			const video = {
+				video_url: basicInfo.videoDetails.video_url,
+				channel_url: basicInfo.videoDetails.author.channel_url,
+				title: basicInfo.videoDetails.title,
+				thumbnail: basicInfo.videoDetails.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
+				duration: basicInfo.videoDetails.lengthSeconds,
+			};
+			videos.push({ title: video.title, url: video.video_url, duration: video.duration });
 			row.addComponents(
 				new MessageButton()
 					.setLabel('Video')

@@ -24,7 +24,7 @@ module.exports = {
 	async execute(interaction) {
 		if (!interaction.inGuild()) return interaction.reply({ content: 'You must be on a server to run this command.', ephemeral: true });
 		if (!interaction.guild.music) return interaction.reply({ content: 'No video is playing.', ephemeral: true });
-		const value = interaction.options.getString('input');
+		const value = interaction.options.getString('input', true);
 		if (value == filters.clear) delete interaction.guild.music.filter;
 		else interaction.guild.music.filter = value;
 		return interaction.reply('The filter has been applied.\nNote: The filter will only apply to the next video.');
