@@ -47,10 +47,6 @@ module.exports = {
 		.addStringOption(option => option.setName('input').setDescription('The video to search on Youtube.').setRequired(true)),
 	async execute(interaction) {
 		if (!interaction.inGuild()) return interaction.reply({ content: 'You must be on a server to run this command.', ephemeral: true });
-		const voiceChannel = interaction.member.voice.channel;
-		if (!voiceChannel) return interaction.reply({ content: 'You must be in a voice channel.', ephemeral: true });
-		const botVoiceChannel = interaction.guild.me.voice.channel;
-		if (botVoiceChannel && voiceChannel.id != botVoiceChannel.id) return interaction.reply({ content: 'You must be in the same channel as the bot.', ephemeral: true });
 		await interaction.deferReply();
 
 		let value = interaction.options.getString('input', true);
@@ -108,8 +104,14 @@ module.exports = {
 		embed.setTitle(`Add in ${interaction.guild.music.queue.length + 1} position.`);
 		interaction.guild.music.queue = interaction.guild.music.queue.concat(videos);
 
-		if (botVoiceChannel && interaction.guild.music.current) return interaction.editReply({ embeds: [embed], components: [row] });
+		if (interaction.guild.music.current) return interaction.editReply({ embeds: [embed], components: [row] });
+
+		const voiceChannel = interaction.member.voice.channel;
+		if (!voiceChannel) return interaction.editReply({ content: 'You must be in a voice channel.', ephemeral: true });
 		if (!voiceChannel.joinable) return interaction.editReply({ content: 'Unable to join this channel.', ephemeral: true });
+		const botVoiceChannel = interaction.guild.me.voice.channel;
+		if (botVoiceChannel && voiceChannel.id != botVoiceChannel.id) return interaction.editReply({ content: 'You must be in the same channel as the bot.', ephemeral: true });
+
 		const connection = joinVoiceChannel({
 			channelId: voiceChannel.id,
 			guildId: interaction.guild.id,
