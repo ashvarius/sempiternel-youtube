@@ -9,7 +9,7 @@ const {
 	VoiceConnectionStatus,
 } = require('@discordjs/voice');
 const ytsr = require('ytsr');
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { MessageActionRow, MessageButton, MessageEmbed, Permissions } = require('discord.js');
 const ytpl = require('ytpl');
 const { FFmpeg, opus } = require('prism-media');
 
@@ -37,7 +37,7 @@ const play = async guild => {
 	guild.music.player.play(resource);
 	let nick = guild.music.current.title;
 	if (nick.length > 32) nick = nick.substring(0, 32);
-	guild.me.setNickname(nick);
+	if (guild.me.permissions.has(Permissions.FLAGS.CHANGE_NICKNAME)) guild.me.setNickname(nick);
 };
 
 module.exports = {
@@ -109,6 +109,7 @@ module.exports = {
 		interaction.guild.music.queue = interaction.guild.music.queue.concat(videos);
 
 		if (botVoiceChannel && interaction.guild.music.current) return interaction.editReply({ embeds: [embed], components: [row] });
+		if (!voiceChannel.joinable) return interaction.editReply({ content: 'Unable to join this channel.', ephemeral: true });
 		const connection = joinVoiceChannel({
 			channelId: voiceChannel.id,
 			guildId: interaction.guild.id,

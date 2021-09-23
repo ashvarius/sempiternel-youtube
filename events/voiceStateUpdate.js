@@ -4,7 +4,7 @@ module.exports = {
 	name: 'voiceStateUpdate',
 	execute(oldState, newState) {
 		if (!oldState.channelId) return;
-		if (newState.channelId) return;
+		if (oldState.channelId == newState.channelId) return;
 		const channel = oldState.channel;
 		const connection = getVoiceConnection(channel.guildId);
 		if (!connection) return;

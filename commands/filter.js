@@ -27,6 +27,6 @@ module.exports = {
 		const value = interaction.options.getString('input', true);
 		if (value == filters.clear) delete interaction.guild.music.filter;
 		else interaction.guild.music.filter = value;
-		return interaction.reply('The filter has been applied.\nNote: The filter will only apply to the next video.');
+		return interaction.reply('The filter has been applied.\nNote: The filter will only apply from the next video.');
 	},
 };

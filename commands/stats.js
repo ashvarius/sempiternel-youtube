@@ -3,7 +3,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('stats')
-		.setDescription('Quickly view your bot\'s statistics.'),
+		.setDescription('Quickly view bot statistics.'),
 	execute(interaction) {
 		const promises = [
 			interaction.client.shard.fetchClientValues('guilds.cache.size'),
