@@ -35,7 +35,7 @@ const play = async guild => {
 	const stream = transcoder.pipe(new opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
 	const resource = createAudioResource(stream, { inputType: StreamType.Opus });
 	guild.music.player.play(resource);
-	let nick = `🔉🎶${guild.music.current.title}`;
+	let nick = guild.music.current.title;
 	if (nick.length > 32) nick = nick.substring(0, 32);
 	if (guild.me.permissions.has(Permissions.FLAGS.CHANGE_NICKNAME)) guild.me.setNickname(nick);
 };
@@ -82,7 +82,7 @@ module.exports = {
 				channel_url: basicInfo.videoDetails.author.channel_url,
 				title: basicInfo.videoDetails.title,
 				thumbnail: basicInfo.videoDetails.thumbnails.reduce((a, b) => (a.width > b.width ? a : b)).url,
-				duration: basicInfo.videoDetails.lengthSeconds,
+				duration: parseInt(basicInfo.videoDetails.lengthSeconds),
 			};
 			videos.push({ title: video.title, url: video.video_url, duration: video.duration });
 			row.addComponents(
