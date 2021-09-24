@@ -35,7 +35,7 @@ const play = async guild => {
 	const stream = transcoder.pipe(new opus.Encoder({ rate: 48000, channels: 2, frameSize: 48 * 20 }));
 	const resource = createAudioResource(stream, { inputType: StreamType.Opus });
 	guild.music.player.play(resource);
-	let nick = guild.music.current.title;
+	let nick = `🔉🎶${guild.music.current.title}`;
 	if (nick.length > 32) nick = nick.substring(0, 32);
 	if (guild.me.permissions.has(Permissions.FLAGS.CHANGE_NICKNAME)) guild.me.setNickname(nick);
 };
@@ -102,15 +102,15 @@ module.exports = {
 		if (!interaction.guild.music) interaction.guild.music = {};
 		if (!interaction.guild.music.queue) interaction.guild.music.queue = [];
 		embed.setTitle(`Add in ${interaction.guild.music.queue.length + 1} position.`);
-		interaction.guild.music.queue = interaction.guild.music.queue.concat(videos);
-
-		if (interaction.guild.music.current) return interaction.editReply({ embeds: [embed], components: [row] });
 
 		const voiceChannel = interaction.member.voice.channel;
 		if (!voiceChannel) return interaction.editReply({ content: 'You must be in a voice channel.', ephemeral: true });
 		if (!voiceChannel.joinable) return interaction.editReply({ content: 'Unable to join this channel.', ephemeral: true });
 		const botVoiceChannel = interaction.guild.me.voice.channel;
 		if (botVoiceChannel && voiceChannel.id != botVoiceChannel.id) return interaction.editReply({ content: 'You must be in the same channel as the bot.', ephemeral: true });
+
+		interaction.guild.music.queue = interaction.guild.music.queue.concat(videos);
+		if (interaction.guild.music.current) return interaction.editReply({ embeds: [embed], components: [row] });
 
 		const connection = joinVoiceChannel({
 			channelId: voiceChannel.id,

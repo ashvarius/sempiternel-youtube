@@ -1,18 +1,26 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
 const filters = {
-	bassboost: 'bass=g=20,dynaudnorm=f=200',
 	'8D': 'apulsator=hz=0.08',
+	bassboost: 'bass=g=10,dynaudnorm=f=150',
 	vaporwave: 'aresample=48000,asetrate=48000*0.8',
 	nightcore: 'aresample=48000,asetrate=48000*1.25',
+	asetrate: 'asetrate',
+	deesser: 'deesser=i=1',
 	phaser: 'aphaser=in_gain=0.4',
+	treble: 'treble=g=5',
 	tremolo: 'tremolo',
+	normalizer: 'dynaudnorm=f=200',
 	vibrato: 'vibrato=f=6.5',
-	surrounding: 'surround',
-	pulsator: 'apulsator=hz=1',
-	chorus: 'chorus=0.5:0.9:50|60|40:0.4|0.32|0.3:0.25|0.4|0.3:2|2.3|1.3',
-	karaoke: 'stereotools=mlev=0.015625',
-	desilencer: 'silenceremove=window=0:detection=peak:stop_mode=all:start_mode=all:stop_periods=-1:stop_threshold=0',
+	karaoke: 'stereotools=mlev=0.1',
+	reverse: 'areverse',
+	gate: 'agate',
+	mcompand: 'mcompand',
+	echo: 'aecho=0.8:0.9:1000:0.3',
+	earwax: 'earwax',
+	surround: 'surround',
+	haas: 'haas',
+	mono: 'pan=mono|c0=.5*c0+.5*c1',
 	clear: 'clear',
 };
 
